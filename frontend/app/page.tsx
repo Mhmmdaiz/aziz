@@ -13,9 +13,10 @@ import {
 import Link from "next/link";
 import axios from "axios";
 
-/** * KONFIGURASI
+/** * KONFIGURASI: Menggunakan HTTPS Railway agar tidak Network Error di Vercel
  */
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "https://chckt-api.railway.app";
 
 /** * HELPER: URL Gambar Laravel Storage
  */
@@ -25,10 +26,12 @@ const getStorageImg = (
 ) => {
   if (!path) return "/placeholder-cloth.jpg";
   const fileName = path.replace(/^(public\/|storage\/|products\/|posts\/)/, "");
+  // Pastikan menggunakan API_BASE_URL yang benar
   return `${API_BASE_URL}/storage/${folder}/${fileName}`;
 };
 
 export default function FashionLandingPage() {
+  // Menggunakan Record<string, any> untuk menghindari error 'never[]'
   const [products, setProducts] = useState<any[]>([]);
   const [journals, setJournals] = useState<any[]>([]);
   const { scrollY } = useScroll();
@@ -44,12 +47,13 @@ export default function FashionLandingPage() {
           axios.get(`${API_BASE_URL}/api/posts`),
         ]);
 
+        // Mapping data dengan fallback array kosong
         const prodData = prodRes.data?.data?.data || prodRes.data?.data || [];
         const journalData =
           journalRes.data?.data?.data || journalRes.data?.data || [];
 
-        setProducts(Array.isArray(prodData) ? prodData : []);
-        setJournals(Array.isArray(journalData) ? journalData : []);
+        setProducts(Array.isArray(prodData) ? (prodData as any[]) : []);
+        setJournals(Array.isArray(journalData) ? (journalData as any[]) : []);
       } catch (err) {
         console.error("Failed to fetch landing data:", err);
       }
@@ -59,7 +63,7 @@ export default function FashionLandingPage() {
 
   return (
     <main className="relative min-h-screen bg-white text-black pt-28 md:pt-40 overflow-x-hidden selection:bg-black selection:text-white">
-      {/* 1. HERO SECTION (Fix Terpotong & Full Content) */}
+      {/* 1. HERO SECTION */}
       <section className="relative pb-16 md:pb-24 lg:pb-32 px-4 sm:px-6 lg:px-8 max-w-screen-xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <motion.div
@@ -72,7 +76,6 @@ export default function FashionLandingPage() {
               Spring/Summer '26 Collection
             </span>
 
-            {/* Perbaikan Leading: Jarak antar baris diperlebar agar font Italic tidak terpotong */}
             <h1 className="text-[clamp(2.5rem,8vw,6.5rem)] font-black leading-[1.1] md:leading-[0.95] tracking-tighter uppercase italic break-words py-2">
               Wear the <br />
               <span className="text-zinc-200">Archive</span>
@@ -110,7 +113,6 @@ export default function FashionLandingPage() {
               />
             </div>
 
-            {/* Testimonial Floating Badge */}
             <motion.div
               animate={{ y: [0, -15, 0] }}
               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
@@ -154,7 +156,7 @@ export default function FashionLandingPage() {
       </section>
 
       {/* 3. NEW ARRIVALS */}
-      <section className="bg-black text-white py-20 md:py-32 lg:py-25  mx-2  overflow-hidden ml-0 mr-0">
+      <section className="bg-black text-white py-20 md:py-32 lg:py-25 mx-0 overflow-hidden">
         <div className="max-w-screen-xl mx-auto px-6 sm:px-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-24 gap-6">
             <h2 className="text-[clamp(2.5rem,7vw,5rem)] font-black italic uppercase tracking-tighter leading-none">
@@ -169,7 +171,7 @@ export default function FashionLandingPage() {
           </div>
 
           <div className="flex md:grid md:grid-cols-4 gap-6 md:gap-12 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-6">
-            {products.slice(0, 6).map((item, i) => (
+            {products.slice(0, 4).map((item, i) => (
               <motion.div
                 key={i}
                 whileHover={{ y: -10 }}
@@ -188,7 +190,7 @@ export default function FashionLandingPage() {
                     <FiShoppingBag size={18} />
                   </div>
                 </div>
-                <div className="flex justify-between items-start px-2">
+                <div className="flex justify-between items-start px-2 mt-4">
                   <div className="max-w-[70%]">
                     <h4 className="text-lg md:text-xl font-black italic uppercase tracking-tighter leading-none truncate">
                       {item.name}
@@ -271,9 +273,8 @@ export default function FashionLandingPage() {
 
           {journals.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
-              {/* Featured Post */}
               <div className="lg:col-span-7 group cursor-pointer">
-                <Link href={`/journal/${journals[0].slug}`}>
+                <Link href={`/journal/${journals[0].id}`}>
                   <div className="aspect-[16/10] sm:aspect-[16/9] rounded-[2rem] md:rounded-[4rem] overflow-hidden bg-zinc-100 mb-8 relative">
                     <img
                       src={getStorageImg(journals[0].image, "posts")}
@@ -289,10 +290,9 @@ export default function FashionLandingPage() {
                       {journals[0].title}
                     </h3>
                     <p className="text-zinc-500 text-sm md:text-base leading-relaxed line-clamp-2">
-                      {journals[0].excerpt ||
-                        journals[0].content
-                          ?.replace(/<[^>]*>/g, "")
-                          .substring(0, 160) + "..."}
+                      {journals[0].content
+                        ?.replace(/<[^>]*>/g, "")
+                        .substring(0, 160) + "..."}
                     </p>
                     <div className="pt-2">
                       <span className="text-[10px] font-black uppercase tracking-widest border-b-2 border-black pb-1 italic">
@@ -303,11 +303,10 @@ export default function FashionLandingPage() {
                 </Link>
               </div>
 
-              {/* Sidebar Posts */}
               <div className="lg:col-span-5 flex flex-col gap-16 md:gap-20">
                 {journals.slice(1, 3).map((item, i) => (
                   <Link
-                    href={`/journal/${item.slug}`}
+                    href={`/journal/${item.id}`}
                     key={i}
                     className="group flex flex-col sm:flex-row lg:flex-col gap-6 cursor-pointer"
                   >
@@ -343,7 +342,7 @@ export default function FashionLandingPage() {
         </div>
       </section>
 
-      {/* 6. CTA & FOOTER (KEMBALI LENGKAP) */}
+      {/* 6. CTA & FOOTER */}
       <section className="px-4 md:px-6 mb-20">
         <div className="max-w-screen-xl mx-auto bg-zinc-950 p-10 sm:p-20 md:p-32 rounded-[2.5rem] md:rounded-[5.5rem] text-center space-y-8 relative overflow-hidden shadow-2xl">
           <h2 className="text-[clamp(2rem,8vw,5.5rem)] font-black italic uppercase tracking-tighter text-white leading-none relative z-10">
@@ -359,34 +358,10 @@ export default function FashionLandingPage() {
               Subscribe
             </button>
           </div>
-          <div className="absolute -top-10 -right-10 w-64 h-64 bg-zinc-900 rounded-full blur-3xl opacity-50" />
         </div>
       </section>
 
       <footer className="pt-20 pb-10 px-6 bg-white border-t border-zinc-100">
-        <div className="max-w-screen-xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-          <div className="space-y-6">
-            <div className="text-2xl font-black uppercase italic tracking-tighter">
-              Archive.
-            </div>
-            <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed max-w-[240px]">
-              Minimalist garments for the modern collector. Architecture in
-              fabric form.
-            </p>
-          </div>
-          {["Shop", "Policies", "Social"].map((title, i) => (
-            <div key={i} className="space-y-4">
-              <h5 className="text-[11px] font-black uppercase tracking-[0.3em]">
-                {title}
-              </h5>
-              <ul className="space-y-3 opacity-40 text-[10px] font-black uppercase tracking-widest">
-                <li>Contact</li>
-                <li>Shipping</li>
-                <li>Archives</li>
-              </ul>
-            </div>
-          ))}
-        </div>
         <div className="max-w-screen-xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-6 pt-10 border-t border-zinc-50 opacity-20">
           <p className="text-[10px] font-black uppercase tracking-widest italic">
             © 2026 ARCHIVE_STORES. ALL RIGHTS RESERVED.
