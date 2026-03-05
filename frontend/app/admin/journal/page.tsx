@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import Link from "next/link";
+import Image from "next/image";
 import {
   FiPlus,
   FiEdit2,
@@ -13,40 +14,64 @@ import {
   FiCreditCard,
   FiCalendar,
 } from "react-icons/fi";
+import { ReactNode } from "react";
 import Swal from "sweetalert2";
 
+// TypeScript Interface for Post
+interface Post {
+  id: number;
+  title: string;
+  slug: string;
+  category: string;
+  image: string | null;
+  content: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// TypeScript Interface for StatCard Props
+interface StatCardProps {
+  label: string;
+  value: string | number;
+  unit: string;
+  icon: ReactNode;
+  color?: string;
+}
+
 export default function JournalList() {
-  // FIX: Menggunakan any[] untuk menghindari error "Type any is not assignable to type never"
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [posts, setPosts] = useState<Record<string, any>[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Ambil URL API dari env atau fallback ke railway
   const API_URL =
     process.env.NEXT_PUBLIC_API_URL || "https://chckt-api.railway.app";
 
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     try {
       setLoading(true);
       const token =
         typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-      const res = await axios.get(`${API_URL}/api/posts`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get<{ status: string; data: Post[] }>(
+        `${API_URL}/api/posts`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
 
       const dataResult = res.data?.data || res.data;
       setPosts(Array.isArray(dataResult) ? dataResult : []);
-    } catch (err: unknown) {
+    } catch (err) {
       console.error("Fetch error:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [API_URL]);
 
   useEffect(() => {
     fetchPosts();
-  }, []);
+  }, [fetchPosts]);
 
   const handleDelete = async (id: number) => {
     const result = await Swal.fire({
@@ -66,7 +91,7 @@ export default function JournalList() {
         });
         fetchPosts();
         Swal.fire("DELETED", "Record has been erased.", "success");
-      } catch (err) {
+      } catch {
         Swal.fire("ERROR", "Delete failed", "error");
       }
     }
@@ -145,16 +170,21 @@ export default function JournalList() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {posts.map((post: any) => (
+                  {posts.map((post: Post) => (
                     <tr
                       key={post.id}
                       className="group hover:bg-gray-50/50 transition-all duration-500"
                     >
                       <td className="px-6 md:px-12 py-6">
                         <div className="w-14 h-14 md:w-20 md:h-20 bg-gray-50 rounded-[1rem] md:rounded-[1.5rem] overflow-hidden border border-gray-100">
-                          <img
-                            src={`${API_URL}/storage/${post.image}`}
-                            className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000"
+                          <Image
+                            src={
+                              post.image
+                                ? `${API_URL}/storage/posts/${post.image}`
+                                : "/placeholder.jpg"
+                            }
+                            fill
+                            className="object-cover grayscale group-hover:grayscale-0 transition-all duration-1000"
                             alt="thumb"
                           />
                         </div>
@@ -175,7 +205,7 @@ export default function JournalList() {
                       <td className="px-6 md:px-12 py-6 text-right">
                         <div className="flex justify-end gap-1 md:gap-2">
                           <Link
-                            href={`/journal/${post.id}`}
+                            href={`/journal/${post.slug}`}
                             className="p-2 md:p-3.5 bg-white border border-gray-100 rounded-xl hover:bg-black hover:text-white transition-all"
                           >
                             <FiEye size={14} />
@@ -206,7 +236,13 @@ export default function JournalList() {
   );
 }
 
-function StatCard({ label, value, unit, icon, color = "text-black" }: any) {
+function StatCard({
+  label,
+  value,
+  unit,
+  icon,
+  color = "text-black",
+}: StatCardProps) {
   return (
     <div className="bg-white p-4 md:p-10 rounded-[1.2rem] md:rounded-[2.5rem] border border-gray-100 shadow-sm relative overflow-hidden group hover:shadow-xl transition-all duration-700">
       <div className="hidden md:block absolute top-8 right-8 text-gray-100 group-hover:text-blue-100 transition-colors text-3xl">
