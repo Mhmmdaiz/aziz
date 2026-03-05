@@ -8,13 +8,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    // Tambahkan suppressHydrationWarning di sini
+    <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Mencegah Google Translate mengacak-acak teks dan memicu error hydration */}
+        <meta name="google" content="notranslate" />
+
         {/* Midtrans Snap Script */}
         <Script
           src="https://app.sandbox.midtrans.com/snap/snap.js" // Sandbox URL
           data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
-          strategy="beforeInteractive" // Load sebelum interaksi user
+          strategy="beforeInteractive"
         />
       </head>
       <body className="antialiased bg-[#FBFBFD]">

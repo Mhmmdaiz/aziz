@@ -14,7 +14,7 @@ return [
 
     'allowed_origins' => [
         'http://localhost:3000',                  // Untuk testing lokal
-        'https://aziz-project.vercel.app',        // Ganti dengan URL asli dari Vercel Anda
+        'https://chckt-stor3.vercel.app/',        // Ganti dengan URL asli dari Vercel Anda
         'https://chckt.com',                      // Domain utama Anda (jika ada)
     ],
 
