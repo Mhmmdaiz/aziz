@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Tambahan biar feel "High-End" nya dapet banget */
+html {
+  scroll-behavior: smooth;
+  /* Bikin warna background default item biar nggak ada 'flash' putih saat loading */
+  background-color: #050505;
+}
+
+@layer utilities {
+  /* Class yang lu buat tadi buat Journal Slider */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Bonus: Custom Selection warna biar senada sama brand */
+  ::selection {
+    background-color: white;
+    color: black;
+  }
+}
