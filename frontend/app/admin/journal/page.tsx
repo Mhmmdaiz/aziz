@@ -16,7 +16,7 @@ import {
 import Swal from "sweetalert2";
 
 export default function JournalList() {
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState<any>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchPosts = async () => {
