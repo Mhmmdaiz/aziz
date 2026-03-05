@@ -16,16 +16,24 @@ import {
 import Swal from "sweetalert2";
 
 export default function JournalList() {
-  const [posts, setPosts] = useState<any>([]);
+  // FIX: Menggunakan any[] untuk menghindari error "Type any is not assignable to type never"
+  const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Ambil URL API dari env atau fallback ke railway
+  const API_URL =
+    process.env.NEXT_PUBLIC_API_URL || "https://chckt-api.railway.app";
 
   const fetchPosts = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      const res = await axios.get("http://127.0.0.1:8000/api/posts", {
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+      const res = await axios.get(`${API_URL}/api/posts`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       const dataResult = res.data?.data || res.data;
       setPosts(Array.isArray(dataResult) ? dataResult : []);
     } catch (err: any) {
@@ -42,6 +50,7 @@ export default function JournalList() {
   const handleDelete = async (id: number) => {
     const result = await Swal.fire({
       title: "ARE YOU SURE?",
+      text: "This action cannot be undone.",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#000",
@@ -51,10 +60,11 @@ export default function JournalList() {
     if (result.isConfirmed) {
       try {
         const token = localStorage.getItem("token");
-        await axios.delete(`http://127.0.0.1:8000/api/posts/${id}`, {
+        await axios.delete(`${API_URL}/api/posts/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         fetchPosts();
+        Swal.fire("DELETED", "Record has been erased.", "success");
       } catch (err) {
         Swal.fire("ERROR", "Delete failed", "error");
       }
@@ -76,24 +86,24 @@ export default function JournalList() {
           </div>
           <Link
             href="/admin/journal/add"
-            className="w-full md:w-auto bg-black text-white px-10 py-5 rounded-full text-[10px] font-black uppercase tracking-widest flex justify-center items-center gap-3 hover:bg-blue-600 transition-all shadow-xl shadow-blue-50/50"
+            className="w-full md:w-auto bg-black text-white px-10 py-5 rounded-full text-[10px] font-black uppercase tracking-widest flex justify-center items-center gap-3 hover:bg-blue-600 transition-all shadow-xl"
           >
             Create_New <FiPlus className="text-lg" />
           </Link>
         </div>
 
-        {/* STATS: DIPAKSA SEJAJAR KE SAMPING (3 KOLOM) DI SEMUA LAYAR */}
+        {/* STATS GRID */}
         <div className="grid grid-cols-3 gap-2 md:gap-6 mb-12">
           <StatCard
-            label="01 / Orders"
+            label="01 / Journal"
             value={posts.length}
             unit="Entries"
             icon={<FiHash />}
           />
           <StatCard
-            label="02 / Revenue"
-            value="Rp 0"
-            unit="IDR"
+            label="02 / Database"
+            value="Stable"
+            unit="Sync"
             color="text-blue-600"
             icon={<FiCreditCard />}
           />
@@ -105,13 +115,13 @@ export default function JournalList() {
           />
         </div>
 
-        {/* CONTENT AREA: TABLE SYSTEM */}
+        {/* CONTENT AREA */}
         <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] border border-gray-100 shadow-[0_40px_100px_rgba(0,0,0,0.03)] overflow-hidden">
           {loading ? (
             <div className="py-32 text-center flex flex-col items-center gap-4">
               <FiLoader className="animate-spin text-3xl text-blue-600" />
               <span className="text-[10px] font-black uppercase tracking-[1em] text-gray-300">
-                Syncing...
+                Syncing_Vault...
               </span>
             </div>
           ) : (
@@ -142,8 +152,8 @@ export default function JournalList() {
                       <td className="px-6 md:px-12 py-6">
                         <div className="w-14 h-14 md:w-20 md:h-20 bg-gray-50 rounded-[1rem] md:rounded-[1.5rem] overflow-hidden border border-gray-100">
                           <img
-                            src={`http://127.0.0.1:8000/storage/${post.image}`}
-                            className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 scale-110 group-hover:scale-100"
+                            src={`${API_URL}/storage/${post.image}`}
+                            className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000"
                             alt="thumb"
                           />
                         </div>
@@ -158,26 +168,26 @@ export default function JournalList() {
                       </td>
                       <td className="px-6 py-6 hidden md:table-cell">
                         <span className="text-[9px] font-black uppercase tracking-widest px-4 py-1.5 bg-gray-50 rounded-full border border-gray-100">
-                          {post.status}
+                          {post.status || "PUBLISHED"}
                         </span>
                       </td>
                       <td className="px-6 md:px-12 py-6 text-right">
                         <div className="flex justify-end gap-1 md:gap-2">
                           <Link
                             href={`/journal/${post.id}`}
-                            className="p-2 md:p-3.5 bg-white border border-gray-100 rounded-xl md:rounded-2xl hover:bg-black hover:text-white transition-all"
+                            className="p-2 md:p-3.5 bg-white border border-gray-100 rounded-xl hover:bg-black hover:text-white transition-all"
                           >
                             <FiEye size={14} />
                           </Link>
                           <Link
                             href={`/admin/journal/edit/${post.id}`}
-                            className="p-2 md:p-3.5 bg-white border border-gray-100 rounded-xl md:rounded-2xl hover:bg-black hover:text-white transition-all"
+                            className="p-2 md:p-3.5 bg-white border border-gray-100 rounded-xl hover:bg-black hover:text-white transition-all"
                           >
                             <FiEdit2 size={14} />
                           </Link>
                           <button
                             onClick={() => handleDelete(post.id)}
-                            className="p-2 md:p-3.5 bg-red-50 text-red-400 rounded-xl md:rounded-2xl hover:bg-red-500 hover:text-white transition-all"
+                            className="p-2 md:p-3.5 bg-red-50 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all"
                           >
                             <FiTrash2 size={14} />
                           </button>
@@ -195,19 +205,15 @@ export default function JournalList() {
   );
 }
 
-// STAT CARD COMPONENT: OPTIMIZED FOR MOBILE HORIZONTAL
 function StatCard({ label, value, unit, icon, color = "text-black" }: any) {
   return (
     <div className="bg-white p-4 md:p-10 rounded-[1.2rem] md:rounded-[2.5rem] border border-gray-100 shadow-sm relative overflow-hidden group hover:shadow-xl transition-all duration-700">
-      {/* Icon hidden on Mobile to save space */}
-      <div className="hidden md:block absolute top-8 right-8 text-gray-100 group-hover:text-blue-100 transition-colors duration-700 text-3xl">
+      <div className="hidden md:block absolute top-8 right-8 text-gray-100 group-hover:text-blue-100 transition-colors text-3xl">
         {icon}
       </div>
-
-      <p className="text-[7px] md:text-[9px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-gray-400 mb-1 md:mb-2">
+      <p className="text-[7px] md:text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1 md:mb-2">
         {label}
       </p>
-
       <div className="flex flex-col md:flex-row items-baseline gap-1 md:gap-3">
         <h2
           className={`text-xl md:text-5xl font-black italic uppercase tracking-tighter ${color} leading-none`}
@@ -218,8 +224,6 @@ function StatCard({ label, value, unit, icon, color = "text-black" }: any) {
           {unit}
         </span>
       </div>
-
-      {/* Blue Line Decor */}
       <div className="absolute bottom-0 left-0 w-0 h-1 bg-blue-600 group-hover:w-full transition-all duration-1000"></div>
     </div>
   );
