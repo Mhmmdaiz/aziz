@@ -13,15 +13,16 @@ return new class extends Migration
 {
     Schema::create('orders', function (Blueprint $table) {
         $table->id();
-        $table->string('order_id')->unique(); // ID Unik (Contoh: TRX-12345)
+        $table->string('order_id')->unique(); 
         $table->foreignId('user_id')->constrained()->onDelete('cascade');
-        $table->decimal('amount', 15, 2); // Nominal asli dari server
+        $table->decimal('amount', 15, 2); 
         
-        // Status awal harus PENDING. 
-        // Jangan pernah percaya status 'PAID' dari input user.
+        // --- TAMBAHKAN KOLOM ITEMS DI SINI ---
+        $table->text('items')->nullable(); 
+        // -------------------------------------
+
         $table->enum('status', ['PENDING', 'PAID', 'FAILED', 'EXPIRED'])->default('PENDING');
-        
-        $table->string('snap_token')->nullable(); // Disimpan untuk redundansi/retry di frontend
+        $table->string('snap_token')->nullable(); 
         $table->timestamps();
     });
 }
