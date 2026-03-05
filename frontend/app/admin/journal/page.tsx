@@ -17,7 +17,8 @@ import Swal from "sweetalert2";
 
 export default function JournalList() {
   // FIX: Menggunakan any[] untuk menghindari error "Type any is not assignable to type never"
-  const [posts, setPosts] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [posts, setPosts] = useState<Record<string, any>[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Ambil URL API dari env atau fallback ke railway
@@ -36,7 +37,7 @@ export default function JournalList() {
 
       const dataResult = res.data?.data || res.data;
       setPosts(Array.isArray(dataResult) ? dataResult : []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Fetch error:", err);
     } finally {
       setLoading(false);
