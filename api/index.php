@@ -1,9 +1,10 @@
 <?php
 
+// 1. Load Autoload & App
 require __DIR__ . '/../backend/vendor/autoload.php';
 $app = require_once __DIR__ . '/../backend/bootstrap/app.php';
 
-// BARIS PENTING: Menyiapkan Laravel agar Facade (seperti DB & Artisan) bisa digunakan
+// 2. BOOTSTRAP: Menyiapkan Laravel agar Facades (DB/Artisan) aktif
 $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
 $kernel->handle(Illuminate\Http\Request::capture());
 
@@ -15,7 +16,7 @@ echo "<h2>Laravel to Supabase Migration Tool</h2><hr>";
 
 try {
     echo "Menghubungkan ke database... ";
-    // Mengetes koneksi ke Supabase
+    // Tes koneksi fisik ke Supabase
     DB::connection()->getPdo();
     echo "<b style='color:green'>BERHASIL!</b><br><br>";
 
@@ -26,4 +27,5 @@ try {
 } catch (\Exception $e) {
     echo "<b style='color:red'>GAGAL!</b><br>";
     echo "<b>Pesan Error:</b><pre>" . $e->getMessage() . "</pre>";
+    echo "<br><i>Cek Environment Variables di Vercel jika error koneksi.</i>";
 }
