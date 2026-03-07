@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -9,6 +10,15 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\DashboardController;
+
+Route::get('/migrate-database', function () {
+    try {
+        Artisan::call('migrate', ['--force' => true]);
+        return "Migrasi Berhasil: " . Artisan::output();
+    } catch (\Exception $e) {
+        return "Error Migrasi: " . $e->getMessage();
+    }
+});
 
 /*
 |--------------------------------------------------------------------------
