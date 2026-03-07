@@ -1,14 +1,18 @@
 {
   "version": 2,
   "functions": {
-    "api/index.php": {
+    "api/*.php": {
       "runtime": "vercel-php@0.7.1"
     }
   },
-  "installCommand": "sh vercel-php.sh",
   "routes": [
-    { "src": "/api/migrate-database", "dest": "/api/index.php" },
-    { "src": "/api/(.*)", "dest": "/api/index.php" },
-    { "src": "/(.*)", "dest": "/api/index.php" }
+    {
+      "src": "/api/migrate-database",
+      "dest": "/api/index.php"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.php"
+    }
   ]
 }
