@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { supabase } from "@/lib/supabaseClient"; // Pastikan path file ini benar di Drive D
+import { supabase } from "@/lib/supabaseClient";
 import { FiShoppingBag, FiSearch } from "react-icons/fi";
 
 // --- SKELETON COMPONENT FOR LOADING ---
@@ -26,15 +26,19 @@ export default function ShopPage() {
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
-      // MENGAMBIL DATA DARI SUPABASE (Bukan Laravel lagi)
-      const { data, error } = await supabase.from("products").select("*");
+      try {
+        const { data, error } = await supabase.from("products").select("*");
 
-      if (error) {
-        console.error("Fetch Error:", error.message);
-      } else {
-        setProducts(data || []);
+        if (error) {
+          console.error("Fetch Error:", error.message);
+        } else {
+          setProducts(data || []);
+        }
+      } catch (err) {
+        console.error("System Error:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchProducts();
@@ -47,13 +51,13 @@ export default function ShopPage() {
         ?.toLowerCase()
         .includes(searchQuery.toLowerCase());
 
-      // Jika Anda ada kolom category di Supabase, aktifkan ini:
-      // const matchesCat = activeCategory === "All" || p.category === activeCategory;
-      const matchesCat = true;
+      // Filter kategori (Jika ada kolom category di Supabase)
+      const matchesCat =
+        activeCategory === "All" || p.category === activeCategory;
 
-      <p className="text-xs text-zinc-400 font-mono">
-  IDR {Number(item.price || 0).toLocaleString()}
-</p>//0 jika price null atau undefined
+      return matchesSearch && matchesCat;
+    });
+  }, [products, searchQuery, activeCategory]);
 
   return (
     <main className="min-h-screen bg-[#fafafa] text-zinc-900 selection:bg-blue-100">
@@ -117,11 +121,10 @@ export default function ShopPage() {
             </div>
           </section>
 
-          {/* --- PRODUCT GRID (HORIZONTAL SCROLL) --- */}
+          {/* --- PRODUCT GRID --- */}
           <section className="px-6 md:px-10 py-10">
             <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory">
               {loading ? (
-                // Show Skeletons while loading
                 [...Array(4)].map((_, i) => <ProductSkeleton key={i} />)
               ) : filteredProducts.length > 0 ? (
                 filteredProducts.map((item) => (
@@ -138,7 +141,6 @@ export default function ShopPage() {
                           alt={item.name}
                           className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
                         />
-                        {/* Overlay Price on Hover */}
                         <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
 
@@ -147,7 +149,7 @@ export default function ShopPage() {
                           {item.name}
                         </h3>
                         <p className="text-xs text-zinc-400 font-mono">
-                          IDR {Number(item.price).toLocaleString()}
+                          IDR {Number(item.price || 0).toLocaleString()}
                         </p>
                       </div>
                     </Link>
