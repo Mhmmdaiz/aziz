@@ -9,6 +9,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
+import { createClient } from "@/utils/supabase/client"; // Pastikan path ini benar
 import {
   FiShoppingBag,
   FiMenu,
@@ -16,19 +17,21 @@ import {
   FiChevronRight,
   FiLogOut,
   FiSearch,
-  FiGrid,
-  FiBookOpen,
-  FiHome,
   FiZap,
   FiPlusCircle,
   FiClipboard,
-  FiSettings,
+  FiHome,
+  FiGrid,
+  FiBookOpen,
   FiUser,
+  FiSettings,
 } from "react-icons/fi";
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
+  const supabase = createClient();
+
   const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -41,6 +44,7 @@ export default function Navbar() {
   const lastScrollY = useRef(0);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // 1. SCROLL ANIMATION LOGIC
   useMotionValueEvent(scrollY, "change", (latest) => {
     const previous = lastScrollY.current;
     if (latest > previous && latest > 150) {
@@ -53,36 +57,53 @@ export default function Navbar() {
     lastScrollY.current = latest;
   });
 
+  // 2. SUPABASE AUTH LOGIC (REALTIME)
   useEffect(() => {
     setMounted(true);
-    const checkAuth = () => {
-      const savedUser = localStorage.getItem("user");
-      if (savedUser) {
-        try {
-          setUser(JSON.parse(savedUser));
-        } catch (e) {
-          setUser(null);
-        }
+
+    const fetchUserAndRole = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", session.user.id)
+          .single();
+
+        // Gabungkan data auth dan data profile
+        setUser(profile ? { ...session.user, ...profile } : session.user);
       } else {
         setUser(null);
       }
     };
-    checkAuth();
-    window.addEventListener("storage", checkAuth);
-    return () => window.removeEventListener("storage", checkAuth);
-  }, [pathname]);
+
+    fetchUserAndRole();
+
+    // Listen to changes (Login/Logout)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN") fetchUserAndRole();
+      if (event === "SIGNED_OUT") setUser(null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [pathname, supabase]);
 
   if (!mounted) return null;
 
-  const handleLogout = () => {
-    localStorage.clear();
-    setUser(null);
+  // 3. LOGOUT HANDLER
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setIsOpen(false);
-    router.replace("/login");
+    router.push("/login");
+    router.refresh();
   };
 
   const isAdmin = user?.role === "admin" || user?.role === "superadmin";
-  const isSuperAdmin = user?.role === "superadmin";
 
   const userLinks = [
     { href: "/", label: "Home", icon: <FiHome /> },
@@ -94,59 +115,51 @@ export default function Navbar() {
   const adminLinks = [
     { href: "/admin/dashboard", label: "Dashboard", icon: <FiZap /> },
     { href: "/admin/orders", label: "Orders", icon: <FiClipboard /> },
-    { href: "/admin/journal", label: "Journal", icon: <FiPlusCircle /> },
-    { href: "/admin/users", label: "user", icon: <FiClipboard /> },
+    { href: "/admin/users", label: "Users", icon: <FiUser /> },
+    { href: "/admin/settings", label: "Settings", icon: <FiSettings /> },
   ];
-
-  if (isSuperAdmin) {
-    adminLinks.push({
-      href: "/admin/settings",
-      label: "Settings",
-      icon: <FiSettings />,
-    });
-  }
 
   const activeLinks = isAdmin ? adminLinks : userLinks;
 
   return (
     <>
-      {!isAdmin && (
-        <AnimatePresence>
-          {isSearchOpen && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-white/80 backdrop-blur-2xl z-[200] flex flex-col items-center justify-start pt-[15vh] px-6"
+      {/* SEARCH OVERLAY */}
+      <AnimatePresence>
+        {isSearchOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-white/80 backdrop-blur-2xl z-[200] flex flex-col items-center justify-start pt-[15vh] px-6"
+          >
+            <button
+              onClick={() => setIsSearchOpen(false)}
+              className="absolute top-10 right-10 p-4 hover:rotate-90 transition-all"
             >
-              <button
-                onClick={() => setIsSearchOpen(false)}
-                className="absolute top-10 right-10 p-4 hover:rotate-90 transition-all"
+              <FiX size={32} />
+            </button>
+            <div className="w-full max-w-2xl">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  router.push(`/shop?search=${searchQuery}`);
+                  setIsSearchOpen(false);
+                }}
               >
-                <FiX size={32} />
-              </button>
-              <div className="w-full max-w-2xl">
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    router.push(`/shop?search=${searchQuery}`);
-                    setIsSearchOpen(false);
-                  }}
-                >
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    placeholder="Search artifacts..."
-                    className="w-full text-4xl md:text-6xl font-black italic tracking-tighter bg-transparent border-b-4 border-black pb-4 outline-none uppercase"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </form>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      )}
+                <input
+                  ref={searchInputRef}
+                  autoFocus
+                  type="text"
+                  placeholder="Search Archive..."
+                  className="w-full text-4xl md:text-6xl font-black italic tracking-tighter bg-transparent border-b-4 border-black pb-4 outline-none uppercase"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </form>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <motion.nav
         variants={{ visible: { y: 0 }, hidden: { y: "-110%" } }}
@@ -196,9 +209,6 @@ export default function Navbar() {
                     className="relative p-2.5 hover:bg-zinc-100 rounded-full transition-all"
                   >
                     <FiShoppingBag size={19} className="text-zinc-900" />
-                    <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-blue-600 text-white text-[8px] font-black flex items-center justify-center rounded-full ring-2 ring-white">
-                      0
-                    </span>
                   </Link>
                   <button
                     onClick={() => setIsSearchOpen(true)}
@@ -212,11 +222,11 @@ export default function Navbar() {
               {user ? (
                 <div className="flex items-center gap-3">
                   <div className="hidden md:flex flex-col items-end">
-                    <span className="text-[7px] font-black uppercase tracking-[0.2em] text-zinc-400">
-                      {user.role}
+                    <span className="text-[7px] font-black uppercase tracking-[0.2em] text-blue-600">
+                      {user.role || "member"}
                     </span>
                     <span className="text-[10px] font-black uppercase italic text-zinc-900">
-                      {user.name}
+                      {user.full_name || user.email?.split("@")[0]}
                     </span>
                   </div>
                   <button
@@ -282,22 +292,12 @@ export default function Navbar() {
   );
 }
 
-function NavLink({
-  href,
-  active,
-  label,
-}: {
-  href: string;
-  active: boolean;
-  label: string;
-}) {
-  const isAddButton = label.toLowerCase() === "add";
-
+// SUB-COMPONENTS
+function NavLink({ href, active, label }: any) {
   return (
     <Link href={href} className="relative px-5 py-2 group">
       <div
-        className={`relative z-10 text-[9px] font-black uppercase tracking-widest transition-all duration-300 
-        ${isAddButton ? "text-blue-600" : active ? "text-zinc-900" : "text-zinc-400 group-hover:text-zinc-900"}`}
+        className={`relative z-10 text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${active ? "text-zinc-900" : "text-zinc-400 group-hover:text-zinc-900"}`}
       >
         {label}
       </div>
@@ -313,8 +313,6 @@ function NavLink({
 }
 
 function MobileLink({ href, label, onClick, icon }: any) {
-  const isAddButton = label.toLowerCase() === "add";
-
   return (
     <Link
       href={href}
@@ -322,14 +320,8 @@ function MobileLink({ href, label, onClick, icon }: any) {
       className="flex items-center justify-between p-4 rounded-2xl hover:bg-zinc-50 transition-colors group"
     >
       <div className="flex items-center gap-4">
-        <span
-          className={`${isAddButton ? "text-blue-600" : "text-zinc-300 group-hover:text-blue-600"}`}
-        >
-          {icon}
-        </span>
-        <span
-          className={`text-lg font-black uppercase italic tracking-tighter ${isAddButton ? "text-blue-600" : "text-zinc-900"}`}
-        >
+        <span className="text-zinc-300 group-hover:text-blue-600">{icon}</span>
+        <span className="text-lg font-black uppercase italic tracking-tighter text-zinc-900">
           {label}
         </span>
       </div>
