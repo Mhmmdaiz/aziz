@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient"; // Menggunakan Supabase Client
+import { supabase } from "@/lib/supabaseClient";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiUser,
@@ -72,25 +72,27 @@ export default function RegisterPage() {
 
       if (authError) throw authError;
 
-      // 2. (Opsional) Simpan Data Tambahan (Phone, Address, City) ke tabel 'profiles'
-      // Pastikan Anda sudah membuat tabel 'profiles' di Supabase jika ingin menyimpan ini
+      // 2. Simpan Data Tambahan ke tabel 'profiles'
       if (authData.user) {
-        const { error: profileError } = await supabase
-          .from("profiles") // Sesuaikan nama tabel di Supabase
-          .insert([
-            {
-              id: authData.user.id,
-              full_name: form.name,
-              phone: form.phone,
-              city: form.city,
-              address: form.address,
-            },
-          ]);
+        const { error: profileError } = await supabase.from("profiles").insert([
+          {
+            id: authData.user.id,
+            full_name: form.name,
+            phone: form.phone,
+            city: form.city,
+            address: form.address,
+          },
+        ]);
 
-        // Kita abaikan error profile dulu agar user tetap bisa masuk jika auth sukses
+        if (profileError) {
+          console.error("Profile storage error:", profileError.message);
+          // Kita lanjutkan karena auth sudah berhasil
+        }
       }
 
-      router.push("/login?registered=true");
+      // 3. Langsung arahkan ke Shop (Supabase biasanya otomatis login setelah signup)
+      router.push("/shop");
+      router.refresh();
     } catch (err: any) {
       setErrorMessage(err.message || "Protocol_Error: Registration Failed");
     } finally {
@@ -101,7 +103,7 @@ export default function RegisterPage() {
   return (
     <main className="min-h-screen w-full bg-[#fafafa] overflow-y-auto overflow-x-hidden font-sans">
       <div className="flex justify-center items-start md:items-center min-h-screen p-4 pt-24 pb-20">
-        {/* Background Text Decor */}
+        {/* Decorative Background */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none select-none">
           <div className="absolute top-5 left-[-5%] text-[15vw] font-black italic text-zinc-200/40 uppercase tracking-tighter">
             Archive_
@@ -147,7 +149,7 @@ export default function RegisterPage() {
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
-                  className="mb-6 p-4 bg-black text-white text-[10px] font-black uppercase italic tracking-widest flex items-center gap-3"
+                  className="mb-6 p-4 bg-black text-white text-[10px] font-black uppercase italic tracking-widest flex items-center gap-3 rounded-xl"
                 >
                   <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                   Error: {errorMessage}
@@ -156,190 +158,192 @@ export default function RegisterPage() {
             </AnimatePresence>
 
             <form onSubmit={handleRegister}>
-              {step === 1 ? (
-                <motion.div
-                  key="step1"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-5"
-                >
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 ml-1">
-                      Legal_Name
-                    </label>
-                    <div className="relative">
-                      <FiUser className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-300" />
-                      <input
-                        required
-                        name="name"
-                        type="text"
-                        value={form.name}
-                        onChange={handleInputChange}
-                        placeholder="NAME"
-                        className="w-full p-5 pl-14 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs uppercase text-black"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 ml-1">
-                      Communication_Email
-                    </label>
-                    <div className="relative">
-                      <FiMail className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-300" />
-                      <input
-                        required
-                        name="email"
-                        type="email"
-                        value={form.email}
-                        onChange={handleInputChange}
-                        placeholder="NAME@DOMAIN.COM"
-                        className="w-full p-5 pl-14 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs uppercase text-black"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 ml-1">
-                        Access_Key
-                      </label>
-                      <input
-                        required
-                        name="password"
-                        type="password"
-                        value={form.password}
-                        onChange={handleInputChange}
-                        placeholder="••••••••"
-                        className="w-full p-5 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs tracking-widest text-black"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 ml-1">
-                        Verify_Key
-                      </label>
-                      <input
-                        required
-                        name="confirmPassword"
-                        type="password"
-                        value={form.confirmPassword}
-                        onChange={handleInputChange}
-                        placeholder="••••••••"
-                        className="w-full p-5 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs tracking-widest text-black"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    disabled={!isStep1Valid}
-                    onClick={() => setStep(2)}
-                    className="w-full bg-black text-white py-6 rounded-full font-black uppercase text-[10px] tracking-[0.4em] hover:bg-zinc-800 disabled:bg-zinc-100 disabled:text-zinc-400 transition-all flex items-center justify-center gap-4 group mt-4"
+              <AnimatePresence mode="wait">
+                {step === 1 ? (
+                  <motion.div
+                    key="step1"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-5"
                   >
-                    Proceed_to_Logistics{" "}
-                    <FiArrowRight className="group-hover:translate-x-2 transition-transform" />
-                  </button>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="step2"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-5"
-                >
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 ml-1">
-                      Contact_Phone
-                    </label>
-                    <div className="relative">
-                      <FiPhone className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-300" />
-                      <input
-                        required
-                        name="phone"
-                        type="text"
-                        value={form.phone}
-                        onChange={handleInputChange}
-                        placeholder="+62"
-                        className="w-full p-5 pl-14 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs text-black"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 ml-1">
-                        City
+                        Legal_Name
                       </label>
-                      <input
-                        required
-                        name="city"
-                        type="text"
-                        value={form.city}
-                        onChange={handleInputChange}
-                        placeholder="CITY"
-                        className="w-full p-5 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs uppercase text-black"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 ml-1">
-                        Address
-                      </label>
-                      <input
-                        required
-                        name="address"
-                        type="text"
-                        value={form.address}
-                        onChange={handleInputChange}
-                        placeholder="STREET NAME"
-                        className="w-full p-5 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs uppercase text-black"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="py-4">
-                    <label className="flex items-center gap-4 cursor-pointer group">
-                      <input
-                        type="checkbox"
-                        checked={agreed}
-                        onChange={(e) => setAgreed(e.target.checked)}
-                        className="hidden"
-                      />
-                      <div
-                        className={`w-5 h-5 border-2 rounded-lg flex items-center justify-center transition-all ${agreed ? "bg-black border-black" : "border-zinc-200"}`}
-                      >
-                        {agreed && (
-                          <FiCheckCircle className="text-white text-xs" />
-                        )}
+                      <div className="relative">
+                        <FiUser className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-300" />
+                        <input
+                          required
+                          name="name"
+                          type="text"
+                          value={form.name}
+                          onChange={handleInputChange}
+                          placeholder="FULL NAME"
+                          className="w-full p-5 pl-14 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs uppercase text-black"
+                        />
                       </div>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 group-hover:text-black italic">
-                        I_Accept_Privacy_Protocol
-                      </span>
-                    </label>
-                  </div>
+                    </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 ml-1">
+                        Communication_Email
+                      </label>
+                      <div className="relative">
+                        <FiMail className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-300" />
+                        <input
+                          required
+                          name="email"
+                          type="email"
+                          value={form.email}
+                          onChange={handleInputChange}
+                          placeholder="NAME@DOMAIN.COM"
+                          className="w-full p-5 pl-14 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs uppercase text-black"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 ml-1">
+                          Access_Key
+                        </label>
+                        <input
+                          required
+                          name="password"
+                          type="password"
+                          value={form.password}
+                          onChange={handleInputChange}
+                          placeholder="••••••••"
+                          className="w-full p-5 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs tracking-widest text-black"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 ml-1">
+                          Verify_Key
+                        </label>
+                        <input
+                          required
+                          name="confirmPassword"
+                          type="password"
+                          value={form.confirmPassword}
+                          onChange={handleInputChange}
+                          placeholder="••••••••"
+                          className="w-full p-5 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs tracking-widest text-black"
+                        />
+                      </div>
+                    </div>
+
                     <button
                       type="button"
-                      onClick={() => setStep(1)}
-                      className="py-6 rounded-full border-2 border-zinc-100 font-black uppercase text-[10px] tracking-widest hover:bg-zinc-50 transition-all flex items-center justify-center gap-3 text-black"
+                      disabled={!isStep1Valid}
+                      onClick={() => setStep(2)}
+                      className="w-full bg-black text-white py-6 rounded-full font-black uppercase text-[10px] tracking-[0.4em] hover:bg-zinc-800 disabled:bg-zinc-100 disabled:text-zinc-400 transition-all flex items-center justify-center gap-4 group mt-4"
                     >
-                      <FiArrowLeft /> Back
+                      Proceed_to_Logistics{" "}
+                      <FiArrowRight className="group-hover:translate-x-2 transition-transform" />
                     </button>
-                    <button
-                      disabled={loading || !agreed}
-                      className="bg-black text-white py-6 rounded-full font-black uppercase text-[10px] tracking-[0.4em] hover:bg-zinc-800 disabled:opacity-50 transition-all flex items-center justify-center gap-4 relative"
-                    >
-                      {loading ? (
-                        <FiLoader className="animate-spin text-lg" />
-                      ) : (
-                        "Authorize_ID"
-                      )}
-                    </button>
-                  </div>
-                </motion.div>
-              )}
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="step2"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-5"
+                  >
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 ml-1">
+                        Contact_Phone
+                      </label>
+                      <div className="relative">
+                        <FiPhone className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-300" />
+                        <input
+                          required
+                          name="phone"
+                          type="text"
+                          value={form.phone}
+                          onChange={handleInputChange}
+                          placeholder="+62"
+                          className="w-full p-5 pl-14 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs text-black"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 ml-1">
+                          City
+                        </label>
+                        <input
+                          required
+                          name="city"
+                          type="text"
+                          value={form.city}
+                          onChange={handleInputChange}
+                          placeholder="CITY"
+                          className="w-full p-5 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs uppercase text-black"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 ml-1">
+                          Address
+                        </label>
+                        <input
+                          required
+                          name="address"
+                          type="text"
+                          value={form.address}
+                          onChange={handleInputChange}
+                          placeholder="STREET NAME"
+                          className="w-full p-5 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs uppercase text-black"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="py-4">
+                      <label className="flex items-center gap-4 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={agreed}
+                          onChange={(e) => setAgreed(e.target.checked)}
+                          className="hidden"
+                        />
+                        <div
+                          className={`w-5 h-5 border-2 rounded-lg flex items-center justify-center transition-all ${agreed ? "bg-black border-black" : "border-zinc-200"}`}
+                        >
+                          {agreed && (
+                            <FiCheckCircle className="text-white text-xs" />
+                          )}
+                        </div>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 group-hover:text-black italic">
+                          I_Accept_Privacy_Protocol
+                        </span>
+                      </label>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setStep(1)}
+                        className="py-6 rounded-full border-2 border-zinc-100 font-black uppercase text-[10px] tracking-widest hover:bg-zinc-50 transition-all flex items-center justify-center gap-3 text-black"
+                      >
+                        <FiArrowLeft /> Back
+                      </button>
+                      <button
+                        disabled={loading || !agreed}
+                        className="bg-black text-white py-6 rounded-full font-black uppercase text-[10px] tracking-[0.4em] hover:bg-zinc-800 disabled:opacity-50 transition-all flex items-center justify-center gap-4 relative overflow-hidden"
+                      >
+                        {loading ? (
+                          <FiLoader className="animate-spin text-lg" />
+                        ) : (
+                          "Authorize_ID"
+                        )}
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </form>
 
             <footer className="mt-12 text-center">
