@@ -2,7 +2,8 @@
 
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+// Update: Menggunakan client util buatan sendiri
+import { createClient } from "@/utils/supabase/client";
 import {
   FiEye,
   FiEyeOff,
@@ -16,9 +17,9 @@ import { motion, AnimatePresence } from "framer-motion";
 function LoginModule() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = createClientComponentClient();
+  // Update: Inisialisasi client baru
+  const supabase = createClient();
 
-  // --- STATES ---
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -43,7 +44,6 @@ function LoginModule() {
 
       if (data.user) {
         // 2. AMBIL ROLE DARI TABEL PROFILES
-        // Menggunakan .maybeSingle() agar tidak error jika profile belum terbuat
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("role")
@@ -52,18 +52,16 @@ function LoginModule() {
 
         if (profileError) throw profileError;
 
-        // 3. LOGIKA REDIRECT BERDASARKAN ROLE
+        // 3. LOGIKA REDIRECT
         if (profile?.role === "admin") {
           router.push("/admin/users");
         } else {
-          // Redirect ke callback (jika ada) atau ke /shop
           router.push(callback || "/shop");
         }
 
         router.refresh();
       }
     } catch (err: any) {
-      // Mapping error message agar lebih "user-friendly" namun tetap bergaya tech
       const msg =
         err.message === "Invalid login credentials"
           ? "Access_Denied: Invalid_Credentials"
@@ -111,7 +109,6 @@ function LoginModule() {
         )}
       </AnimatePresence>
 
-      {/* LOGIN FORM */}
       <form onSubmit={handleLogin} className="space-y-5">
         <div className="space-y-1.5">
           <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-1">
@@ -172,7 +169,6 @@ function LoginModule() {
         </button>
       </form>
 
-      {/* REGISTER REDIRECT */}
       <div className="mt-8 text-center">
         <button
           type="button"
@@ -183,7 +179,6 @@ function LoginModule() {
         </button>
       </div>
 
-      {/* FOOTER */}
       <div className="mt-auto pt-16 flex flex-col gap-6">
         <div className="h-px bg-zinc-100 w-full" />
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
@@ -207,7 +202,6 @@ function LoginModule() {
 export default function LoginPage() {
   return (
     <main className="min-h-screen w-full bg-[#fafafa] flex flex-col lg:flex-row overflow-x-hidden">
-      {/* LEFT: VISUAL (DESKTOP) */}
       <section className="hidden lg:flex lg:w-5/12 bg-black p-16 flex-col justify-between relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-50" />
         <div className="relative z-10 text-white text-[10vw] font-black italic uppercase leading-[0.75] tracking-tighter opacity-10 select-none">
@@ -227,7 +221,6 @@ export default function LoginPage() {
         </div>
       </section>
 
-      {/* RIGHT: FORM */}
       <section className="flex-1 flex flex-col bg-white overflow-y-auto">
         <div className="flex-1 px-6 py-12 md:px-20 lg:px-24 flex items-center">
           <Suspense
