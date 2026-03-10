@@ -76,7 +76,7 @@ function LoginModule() {
           // Menggunakan window.location.href lebih aman untuk redirect antar folder /admin
           window.location.href = "/admin/users";
         } else {
-          window.location.href = callback || "/shop";
+          window.location.href = callback || "/admin/dashboard";
         }
       }
     } catch (err: any) {
