@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+// Update: Menggunakan client utilitas terbaru
+import { createClient } from "@/utils/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiUsers,
@@ -24,7 +25,9 @@ import Link from "next/link";
 import Swal from "sweetalert2";
 
 export default function UserManagement() {
-  const supabase = createClientComponentClient();
+  // Inisialisasi client baru
+  const supabase = createClient();
+
   const [users, setUsers] = useState<any[]>([]);
   const [stats, setStats] = useState({
     total: 0,
@@ -35,7 +38,6 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  // MODAL & FORM STATES
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -47,7 +49,7 @@ export default function UserManagement() {
     role: "customer",
   });
 
-  // 1. FETCH DATA FROM SUPABASE
+  // 1. FETCH DATA
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
@@ -57,29 +59,24 @@ export default function UserManagement() {
         .order("created_at", { ascending: false });
 
       if (search) {
-        query = query.ilike("name", `%${search}%`);
+        // Sesuaikan kolom pencarian, ganti 'name' menjadi 'full_name' jika di DB kamu namanya itu
+        query = query.ilike("full_name", `%${search}%`);
       }
 
       const { data, error } = await query;
-
       if (error) throw error;
 
       if (data) {
         setUsers(data);
         setStats({
           total: data.length,
-          active: data.filter((u) => u.status === "active").length,
+          active: data.filter((u) => u.status === "active" || !u.status).length,
           suspended: data.filter((u) => u.status === "suspended").length,
-          growth: "+12%", // Mockup trend
+          growth: "+12%",
         });
       }
     } catch (err: any) {
       console.error("Fetch error:", err.message);
-      Swal.fire(
-        "Connection Error",
-        "Gagal mengambil data dari Supabase",
-        "error",
-      );
     } finally {
       setLoading(false);
     }
@@ -88,7 +85,7 @@ export default function UserManagement() {
   useEffect(() => {
     fetchUsers();
 
-    // 2. REALTIME SUBSCRIPTION (Opsional: Update otomatis jika database berubah)
+    // Realtime subscription
     const channel = supabase
       .channel("realtime-profiles")
       .on(
@@ -103,12 +100,12 @@ export default function UserManagement() {
     };
   }, [fetchUsers, supabase]);
 
-  // 3. HANDLE CREATE / UPDATE
+  // 2. HANDLE CREATE / UPDATE
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const payload = {
-        name: formData.name,
+        full_name: formData.name, // Pastikan nama kolom sesuai tabel DB (full_name)
         email: formData.email,
         phone: formData.phone,
         address: formData.address,
@@ -117,14 +114,12 @@ export default function UserManagement() {
       };
 
       if (formData.id) {
-        // UPDATE
         const { error } = await supabase
           .from("profiles")
           .update(payload)
           .eq("id", formData.id);
         if (error) throw error;
       } else {
-        // INSERT (Note: Manual insert to profiles only, not Auth)
         const { error } = await supabase.from("profiles").insert([payload]);
         if (error) throw error;
       }
@@ -137,7 +132,6 @@ export default function UserManagement() {
     }
   };
 
-  // 4. UPDATE STATUS (Active/Suspended)
   const handleUpdateStatus = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === "active" ? "suspended" : "active";
     const result = await Swal.fire({
@@ -163,7 +157,6 @@ export default function UserManagement() {
     }
   };
 
-  // 5. DELETE USER
   const confirmDelete = async (id: string, name: string) => {
     const result = await Swal.fire({
       title: "PURGE DATA?",
@@ -188,11 +181,11 @@ export default function UserManagement() {
     if (user) {
       setFormData({
         id: user.id,
-        name: user.name,
-        email: user.email,
+        name: user.full_name || "",
+        email: user.email || "",
         phone: user.phone || "",
         address: user.address || "",
-        role: user.role,
+        role: user.role || "customer",
       });
     } else {
       setFormData({
@@ -210,7 +203,6 @@ export default function UserManagement() {
   return (
     <main className="min-h-screen bg-[#FBFBFB] pt-32 pb-20 px-6 relative overflow-x-hidden text-zinc-900">
       <div className="max-w-7xl mx-auto">
-        {/* HEADER SECTION */}
         <header className="flex flex-col md:flex-row justify-between items-end gap-8 mb-16">
           <div>
             <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 mb-4 italic">
@@ -241,7 +233,6 @@ export default function UserManagement() {
           </div>
         </header>
 
-        {/* KPI CARDS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
           <KPICard
             label="Total_Database"
@@ -270,7 +261,6 @@ export default function UserManagement() {
           />
         </div>
 
-        {/* DATA TABLE */}
         <div className="bg-white rounded-[3rem] border border-zinc-100 shadow-xl shadow-zinc-200/40 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
@@ -292,15 +282,6 @@ export default function UserManagement() {
                       />
                     </td>
                   </tr>
-                ) : users.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={4}
-                      className="p-20 text-center text-zinc-400 font-bold italic uppercase tracking-widest text-[10px]"
-                    >
-                      No data found in registry.
-                    </td>
-                  </tr>
                 ) : (
                   users.map((u) => (
                     <tr
@@ -311,11 +292,11 @@ export default function UserManagement() {
                       <td className="p-8">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 rounded-2xl bg-zinc-100 flex items-center justify-center font-black text-zinc-400 italic border border-zinc-200/50 uppercase">
-                            {u.name?.charAt(0) || "?"}
+                            {(u.full_name || u.email)?.charAt(0) || "?"}
                           </div>
                           <div>
                             <p className="text-sm font-black italic uppercase leading-none mb-1">
-                              {u.name}
+                              {u.full_name || "No Name"}
                             </p>
                             <p className="text-[10px] font-bold text-zinc-400">
                               {u.email}
@@ -325,11 +306,7 @@ export default function UserManagement() {
                       </td>
                       <td className="p-8">
                         <span
-                          className={`px-4 py-1 rounded-full text-[9px] font-black uppercase italic ${
-                            u.status === "active"
-                              ? "bg-emerald-50 text-emerald-500"
-                              : "bg-red-50 text-red-500"
-                          }`}
+                          className={`px-4 py-1 rounded-full text-[9px] font-black uppercase italic ${u.status === "suspended" ? "bg-red-50 text-red-500" : "bg-emerald-50 text-emerald-500"}`}
                         >
                           ● {u.status || "active"}
                         </span>
@@ -356,7 +333,7 @@ export default function UserManagement() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              confirmDelete(u.id, u.name);
+                              confirmDelete(u.id, u.full_name);
                             }}
                             className="p-3 bg-red-50 text-red-400 hover:bg-red-500 hover:text-white rounded-xl transition-all"
                           >
@@ -373,7 +350,7 @@ export default function UserManagement() {
         </div>
       </div>
 
-      {/* MODAL FORM */}
+      {/* MODAL & PANEL (Tetap Sama Seperti Logika Kamu) */}
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
@@ -390,15 +367,10 @@ export default function UserManagement() {
               exit={{ scale: 0.9, opacity: 0 }}
               className="relative bg-white w-full max-w-lg rounded-[3rem] p-12 shadow-2xl overflow-hidden"
             >
-              <div className="mb-8">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 mb-2 italic">
-                  Entry_Portal
-                </p>
-                <h2 className="text-4xl font-black italic uppercase tracking-tighter leading-none">
-                  {formData.id ? "Modify" : "Create"} <br />{" "}
-                  <span className="text-zinc-300">Identity.</span>
-                </h2>
-              </div>
+              <h2 className="text-4xl font-black italic uppercase tracking-tighter leading-none mb-8">
+                {formData.id ? "Modify" : "Create"} <br />{" "}
+                <span className="text-zinc-300">Identity.</span>
+              </h2>
               <form
                 onSubmit={handleSubmit}
                 className="space-y-4 text-[11px] font-bold uppercase italic"
@@ -461,7 +433,6 @@ export default function UserManagement() {
         )}
       </AnimatePresence>
 
-      {/* DETAIL SIDE PANEL */}
       <AnimatePresence>
         {selectedUser && !isModalOpen && (
           <>
@@ -485,24 +456,19 @@ export default function UserManagement() {
               >
                 <FiX />
               </button>
-              <div className="mb-12">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 mb-2 italic">
-                  Intelligence_Brief
-                </p>
-                <h2 className="text-4xl font-black italic tracking-tighter uppercase leading-[0.8]">
-                  User <br /> <span className="text-zinc-300">File.</span>
-                </h2>
-              </div>
+              <h2 className="text-4xl font-black italic tracking-tighter uppercase leading-[0.8] mb-12">
+                User <br /> <span className="text-zinc-300">File.</span>
+              </h2>
               <div className="space-y-8">
-                <div className="flex items-center gap-6 p-6 bg-zinc-50 rounded-3xl border border-zinc-100 mb-10">
+                <div className="flex items-center gap-6 p-6 bg-zinc-50 rounded-3xl border border-zinc-100">
                   <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-2xl font-black italic text-zinc-300 border border-zinc-100">
-                    {selectedUser.name?.charAt(0)}
+                    {selectedUser.full_name?.charAt(0)}
                   </div>
                   <div>
-                    <h4 className="font-black italic uppercase text-zinc-900">
-                      {selectedUser.name}
+                    <h4 className="font-black italic uppercase">
+                      {selectedUser.full_name}
                     </h4>
-                    <p className="text-[10px] font-black text-blue-600 uppercase italic tracking-[0.2em]">
+                    <p className="text-[10px] font-black text-blue-600 uppercase italic">
                       {selectedUser.role}
                     </p>
                   </div>
@@ -528,7 +494,7 @@ export default function UserManagement() {
                       setSelectedUser(null);
                       openModal(selectedUser);
                     }}
-                    className="py-4 rounded-2xl bg-black text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-blue-600 transition-all italic"
+                    className="py-4 rounded-2xl bg-black text-white text-[10px] font-black uppercase hover:bg-blue-600 transition-all italic"
                   >
                     Modify_File
                   </button>
@@ -536,7 +502,7 @@ export default function UserManagement() {
                     onClick={() =>
                       handleUpdateStatus(selectedUser.id, selectedUser.status)
                     }
-                    className="py-4 rounded-2xl bg-zinc-50 text-red-500 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-red-500 hover:text-white transition-all italic"
+                    className="py-4 rounded-2xl bg-zinc-50 text-red-500 text-[10px] font-black uppercase hover:bg-red-500 hover:text-white transition-all italic"
                   >
                     Suspend_Unit
                   </button>
@@ -550,10 +516,9 @@ export default function UserManagement() {
   );
 }
 
-// SUB-COMPONENTS
 function KPICard({ label, value, trend, icon, color }: any) {
   return (
-    <div className="bg-white p-6 rounded-[2.5rem] border border-zinc-100 shadow-sm transition-all hover:shadow-md">
+    <div className="bg-white p-6 rounded-[2.5rem] border border-zinc-100 shadow-sm">
       <div className="flex justify-between items-start mb-4">
         <div className={`p-3 rounded-2xl ${color} bg-opacity-10 text-xl`}>
           {icon}
