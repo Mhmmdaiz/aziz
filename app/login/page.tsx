@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"; // Ganti ke helper agar lebih stabil
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import {
   FiEye,
   FiEyeOff,
@@ -16,7 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 function LoginModule() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = createClientComponentClient(); // Initialize client
+  const supabase = createClientComponentClient();
 
   // --- STATES ---
   const [email, setEmail] = useState("");
@@ -43,26 +43,32 @@ function LoginModule() {
 
       if (data.user) {
         // 2. AMBIL ROLE DARI TABEL PROFILES
+        // Menggunakan .maybeSingle() agar tidak error jika profile belum terbuat
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("role")
           .eq("id", data.user.id)
-          .single();
+          .maybeSingle();
 
         if (profileError) throw profileError;
 
         // 3. LOGIKA REDIRECT BERDASARKAN ROLE
         if (profile?.role === "admin") {
-          router.push("/admin/users"); // Ke Management Console kamu
+          router.push("/admin/users");
         } else {
-          // Jika ada callback pakai itu, jika tidak ke /shop
+          // Redirect ke callback (jika ada) atau ke /shop
           router.push(callback || "/shop");
         }
 
         router.refresh();
       }
     } catch (err: any) {
-      setErrorMessage(err.message || "Access_Denied: Invalid_Credentials");
+      // Mapping error message agar lebih "user-friendly" namun tetap bergaya tech
+      const msg =
+        err.message === "Invalid login credentials"
+          ? "Access_Denied: Invalid_Credentials"
+          : err.message;
+      setErrorMessage(msg);
     } finally {
       setIsLoading(false);
     }
@@ -118,6 +124,7 @@ function LoginModule() {
             onChange={(e) => setEmail(e.target.value)}
             className="w-full p-5 bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white rounded-2xl outline-none transition-all font-bold italic text-sm"
             placeholder="NAME@DOMAIN.COM"
+            autoComplete="email"
           />
         </div>
 
@@ -133,6 +140,7 @@ function LoginModule() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full p-5 bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white rounded-2xl outline-none transition-all font-bold italic text-sm tracking-widest"
               placeholder="••••••••"
+              autoComplete="current-password"
             />
             <button
               type="button"
@@ -145,11 +153,14 @@ function LoginModule() {
         </div>
 
         <button
+          type="submit"
           disabled={isLoading}
           className="relative w-full py-7 bg-black text-white rounded-full font-black uppercase tracking-[0.4em] text-[11px] italic hover:bg-zinc-800 transition-all active:scale-[0.97] disabled:bg-zinc-200 mt-4 group overflow-hidden"
         >
           <div
-            className={`flex items-center justify-center gap-3 transition-transform ${isLoading ? "translate-y-20" : "translate-y-0"}`}
+            className={`flex items-center justify-center gap-3 transition-transform ${
+              isLoading ? "translate-y-20" : "translate-y-0"
+            }`}
           >
             Authorize_Entry <FiLogIn />
           </div>
@@ -164,6 +175,7 @@ function LoginModule() {
       {/* REGISTER REDIRECT */}
       <div className="mt-8 text-center">
         <button
+          type="button"
           onClick={() => router.push("/register")}
           className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black transition-colors py-2 border-b border-transparent hover:border-black"
         >
@@ -179,10 +191,10 @@ function LoginModule() {
             <FiShield /> Encrypted_Connect_V2.06
           </p>
           <div className="flex gap-4">
-            <span className="text-[9px] font-black uppercase text-zinc-400 italic">
+            <span className="text-[9px] font-black uppercase text-zinc-400 italic cursor-help">
               Terms_
             </span>
-            <span className="text-[9px] font-black uppercase text-zinc-400 italic">
+            <span className="text-[9px] font-black uppercase text-zinc-400 italic cursor-help">
               Privacy_
             </span>
           </div>
@@ -220,8 +232,10 @@ export default function LoginPage() {
         <div className="flex-1 px-6 py-12 md:px-20 lg:px-24 flex items-center">
           <Suspense
             fallback={
-              <div className="font-black italic uppercase animate-pulse tracking-[0.5em] text-[10px]">
-                Loading_Archive_Module...
+              <div className="w-full flex justify-center">
+                <div className="font-black italic uppercase animate-pulse tracking-[0.5em] text-[10px]">
+                  Loading_Archive_Module...
+                </div>
               </div>
             }
           >
