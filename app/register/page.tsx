@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import { supabase } from "@/lib/supabaseClient"; // Menggunakan Supabase Client
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiUser,
@@ -56,25 +56,52 @@ export default function RegisterPage() {
     e.preventDefault();
     if (!agreed) return;
     setLoading(true);
+    setErrorMessage("");
+
     try {
-      await axios.post("http://127.0.0.1:8000/api/register", form);
+      // 1. Mendaftarkan User ke Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+        options: {
+          data: {
+            display_name: form.name,
+          },
+        },
+      });
+
+      if (authError) throw authError;
+
+      // 2. (Opsional) Simpan Data Tambahan (Phone, Address, City) ke tabel 'profiles'
+      // Pastikan Anda sudah membuat tabel 'profiles' di Supabase jika ingin menyimpan ini
+      if (authData.user) {
+        const { error: profileError } = await supabase
+          .from("profiles") // Sesuaikan nama tabel di Supabase
+          .insert([
+            {
+              id: authData.user.id,
+              full_name: form.name,
+              phone: form.phone,
+              city: form.city,
+              address: form.address,
+            },
+          ]);
+
+        // Kita abaikan error profile dulu agar user tetap bisa masuk jika auth sukses
+      }
+
       router.push("/login?registered=true");
     } catch (err: any) {
-      setErrorMessage(
-        err.response?.data?.message || "Protocol_Error: Registration Failed",
-      );
+      setErrorMessage(err.message || "Protocol_Error: Registration Failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    // FIX 1: Hapus items-center di level paling atas untuk mencegah 'centering push' yang memotong konten
-    <main className="min-h-screen w-full bg-[#fafafa] overflow-y-auto overflow-x-hidden">
-      {/* FIX 2: Container dengan padding top & bottom yang luas (pt-24 pb-20) 
-          agar konten tidak menempel ke pinggir layar/navbar */}
+    <main className="min-h-screen w-full bg-[#fafafa] overflow-y-auto overflow-x-hidden font-sans">
       <div className="flex justify-center items-start md:items-center min-h-screen p-4 pt-24 pb-20">
-        {/* Background Text (Stay Fixed/Absolute) */}
+        {/* Background Text Decor */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none select-none">
           <div className="absolute top-5 left-[-5%] text-[15vw] font-black italic text-zinc-200/40 uppercase tracking-tighter">
             Archive_
@@ -108,7 +135,7 @@ export default function RegisterPage() {
                   Sign_In_Instead
                 </button>
               </div>
-              <h1 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter leading-none mb-3">
+              <h1 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter leading-none mb-3 text-black">
                 {step === 1 ? "Initialize" : "Finalize"}
                 <br />
                 <span className="text-zinc-300">New_Identity.</span>
@@ -120,8 +147,9 @@ export default function RegisterPage() {
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
-                  className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-600 text-[10px] font-black uppercase italic tracking-widest"
+                  className="mb-6 p-4 bg-black text-white text-[10px] font-black uppercase italic tracking-widest flex items-center gap-3"
                 >
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                   Error: {errorMessage}
                 </motion.div>
               )}
@@ -131,8 +159,9 @@ export default function RegisterPage() {
               {step === 1 ? (
                 <motion.div
                   key="step1"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
                   className="space-y-5"
                 >
                   <div className="space-y-1">
@@ -148,7 +177,7 @@ export default function RegisterPage() {
                         value={form.name}
                         onChange={handleInputChange}
                         placeholder="NAME"
-                        className="w-full p-5 pl-14 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs uppercase"
+                        className="w-full p-5 pl-14 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs uppercase text-black"
                       />
                     </div>
                   </div>
@@ -166,7 +195,7 @@ export default function RegisterPage() {
                         value={form.email}
                         onChange={handleInputChange}
                         placeholder="NAME@DOMAIN.COM"
-                        className="w-full p-5 pl-14 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs uppercase"
+                        className="w-full p-5 pl-14 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs uppercase text-black"
                       />
                     </div>
                   </div>
@@ -183,7 +212,7 @@ export default function RegisterPage() {
                         value={form.password}
                         onChange={handleInputChange}
                         placeholder="••••••••"
-                        className="w-full p-5 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs tracking-widest"
+                        className="w-full p-5 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs tracking-widest text-black"
                       />
                     </div>
                     <div className="space-y-1">
@@ -197,7 +226,7 @@ export default function RegisterPage() {
                         value={form.confirmPassword}
                         onChange={handleInputChange}
                         placeholder="••••••••"
-                        className="w-full p-5 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs tracking-widest"
+                        className="w-full p-5 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs tracking-widest text-black"
                       />
                     </div>
                   </div>
@@ -206,7 +235,7 @@ export default function RegisterPage() {
                     type="button"
                     disabled={!isStep1Valid}
                     onClick={() => setStep(2)}
-                    className="w-full bg-black text-white py-6 rounded-full font-black uppercase text-[10px] tracking-[0.4em] hover:bg-zinc-800 disabled:opacity-10 transition-all flex items-center justify-center gap-4 group mt-4"
+                    className="w-full bg-black text-white py-6 rounded-full font-black uppercase text-[10px] tracking-[0.4em] hover:bg-zinc-800 disabled:bg-zinc-100 disabled:text-zinc-400 transition-all flex items-center justify-center gap-4 group mt-4"
                   >
                     Proceed_to_Logistics{" "}
                     <FiArrowRight className="group-hover:translate-x-2 transition-transform" />
@@ -215,8 +244,9 @@ export default function RegisterPage() {
               ) : (
                 <motion.div
                   key="step2"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
                   className="space-y-5"
                 >
                   <div className="space-y-1">
@@ -232,7 +262,7 @@ export default function RegisterPage() {
                         value={form.phone}
                         onChange={handleInputChange}
                         placeholder="+62"
-                        className="w-full p-5 pl-14 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs"
+                        className="w-full p-5 pl-14 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs text-black"
                       />
                     </div>
                   </div>
@@ -249,7 +279,7 @@ export default function RegisterPage() {
                         value={form.city}
                         onChange={handleInputChange}
                         placeholder="CITY"
-                        className="w-full p-5 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs uppercase"
+                        className="w-full p-5 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs uppercase text-black"
                       />
                     </div>
                     <div className="space-y-1">
@@ -263,7 +293,7 @@ export default function RegisterPage() {
                         value={form.address}
                         onChange={handleInputChange}
                         placeholder="STREET NAME"
-                        className="w-full p-5 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs uppercase"
+                        className="w-full p-5 rounded-2xl bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white outline-none transition-all font-bold italic text-xs uppercase text-black"
                       />
                     </div>
                   </div>
@@ -293,16 +323,16 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setStep(1)}
-                      className="py-6 rounded-full border-2 border-zinc-100 font-black uppercase text-[10px] tracking-widest hover:bg-zinc-50 transition-all flex items-center justify-center gap-3"
+                      className="py-6 rounded-full border-2 border-zinc-100 font-black uppercase text-[10px] tracking-widest hover:bg-zinc-50 transition-all flex items-center justify-center gap-3 text-black"
                     >
                       <FiArrowLeft /> Back
                     </button>
                     <button
                       disabled={loading || !agreed}
-                      className="bg-black text-white py-6 rounded-full font-black uppercase text-[10px] tracking-[0.4em] hover:bg-zinc-800 disabled:opacity-10 transition-all flex items-center justify-center gap-4 relative"
+                      className="bg-black text-white py-6 rounded-full font-black uppercase text-[10px] tracking-[0.4em] hover:bg-zinc-800 disabled:opacity-50 transition-all flex items-center justify-center gap-4 relative"
                     >
                       {loading ? (
-                        <FiLoader className="animate-spin" />
+                        <FiLoader className="animate-spin text-lg" />
                       ) : (
                         "Authorize_ID"
                       )}
