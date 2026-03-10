@@ -132,23 +132,24 @@ export default function ShopPage() {
                     key={item.id}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="min-w-[180px] sm:min-w-[220px] snap-start group"
+                    className="min-w-[200px] max-w-[220px] snap-start group" // Menambah max-width agar tidak melebar
                   >
                     <Link href={`/product/${item.id}`}>
-                      <div className="aspect-[4/5] bg-zinc-100 rounded-xl overflow-hidden relative">
+                      {/* BOX GAMBAR YANG TERKUNCI UKURANNYA */}
+                      <div className="aspect-[4/5] w-full bg-zinc-100 rounded-xl overflow-hidden relative border border-zinc-100">
                         <img
                           src={item.image_url || "/next.svg"}
                           alt={item.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-700"
                         />
                         <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
 
-                      <div className="mt-3 px-1">
-                        <h3 className="text-sm font-bold uppercase truncate">
+                      <div className="mt-4 px-1">
+                        <h3 className="text-[11px] font-black uppercase tracking-tight truncate text-black">
                           {item.name}
                         </h3>
-                        <p className="text-xs text-zinc-400 font-mono">
+                        <p className="text-[10px] text-zinc-400 font-mono mt-0.5">
                           IDR {Number(item.price || 0).toLocaleString()}
                         </p>
                       </div>
@@ -156,7 +157,7 @@ export default function ShopPage() {
                   </motion.div>
                 ))
               ) : (
-                <div className="w-full py-20 text-center text-zinc-400 text-xs uppercase tracking-widest">
+                <div className="w-full py-20 text-center text-zinc-400 text-[10px] font-bold uppercase tracking-widest">
                   No artifacts found in the archive.
                 </div>
               )}
