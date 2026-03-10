@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient"; // Menggunakan client yang kita buat tadi
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"; // Ganti ke helper agar lebih stabil
 import {
   FiEye,
   FiEyeOff,
@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 function LoginModule() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const supabase = createClientComponentClient(); // Initialize client
 
   // --- STATES ---
   const [email, setEmail] = useState("");
@@ -24,7 +25,7 @@ function LoginModule() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const callback = searchParams.get("callback") || "/";
+  const callback = searchParams.get("callback") || "";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +33,7 @@ function LoginModule() {
     setErrorMessage("");
 
     try {
-      // --- LOGIN MENGGUNAKAN SUPABASE AUTH ---
+      // 1. LOGIN KE SUPABASE AUTH
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -40,12 +41,24 @@ function LoginModule() {
 
       if (error) throw error;
 
-      if (data.session) {
-        // Supabase secara otomatis menangani token di cookies/localStorage
-        // Kita bisa mengarahkan user langsung
-        const redirectPath = callback !== "/" ? callback : "/shop";
+      if (data.user) {
+        // 2. AMBIL ROLE DARI TABEL PROFILES
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", data.user.id)
+          .single();
 
-        router.push(redirectPath);
+        if (profileError) throw profileError;
+
+        // 3. LOGIKA REDIRECT BERDASARKAN ROLE
+        if (profile?.role === "admin") {
+          router.push("/admin/users"); // Ke Management Console kamu
+        } else {
+          // Jika ada callback pakai itu, jika tidak ke /shop
+          router.push(callback || "/shop");
+        }
+
         router.refresh();
       }
     } catch (err: any) {
