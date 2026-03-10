@@ -74,7 +74,7 @@ function LoginModule() {
         if (profile.role === "admin") {
           console.log("Redirecting to Admin Dashboard...");
           // Menggunakan window.location.href lebih aman untuk redirect antar folder /admin
-          window.location.href = "/admin/users";
+          window.location.href = "/admin/dashboard";
         } else {
           window.location.href = callback || "/admin/dashboard";
         }
