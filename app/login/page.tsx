@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import axios from "axios";
+import { supabase } from "@/lib/supabaseClient"; // Menggunakan client yang kita buat tadi
 import {
   FiEye,
   FiEyeOff,
@@ -32,30 +32,24 @@ function LoginModule() {
     setErrorMessage("");
 
     try {
-      const res = await axios.post("http://127.0.0.1:8000/api/login", {
+      // --- LOGIN MENGGUNAKAN SUPABASE AUTH ---
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      const { token, user } = res.data;
 
-      if (token) {
-        localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(user));
+      if (error) throw error;
 
-        // Redirect logic berdasarkan role atau callback
-        const redirectPath =
-          callback !== "/"
-            ? callback
-            : user.role === "admin"
-              ? "/admin/dashboard"
-              : "/";
+      if (data.session) {
+        // Supabase secara otomatis menangani token di cookies/localStorage
+        // Kita bisa mengarahkan user langsung
+        const redirectPath = callback !== "/" ? callback : "/shop";
+
         router.push(redirectPath);
         router.refresh();
       }
     } catch (err: any) {
-      setErrorMessage(
-        err.response?.data?.message || "Invalid_Credentials_Access_Denied",
-      );
+      setErrorMessage(err.message || "Access_Denied: Invalid_Credentials");
     } finally {
       setIsLoading(false);
     }
@@ -115,11 +109,9 @@ function LoginModule() {
         </div>
 
         <div className="space-y-1.5">
-          <div className="flex justify-between items-end">
-            <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-1">
-              Access_Key
-            </label>
-          </div>
+          <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-1">
+            Access_Key
+          </label>
           <div className="relative">
             <input
               required
@@ -174,12 +166,12 @@ function LoginModule() {
             <FiShield /> Encrypted_Connect_V2.06
           </p>
           <div className="flex gap-4">
-            <button className="text-[9px] font-black uppercase text-zinc-400 hover:text-black italic">
+            <span className="text-[9px] font-black uppercase text-zinc-400 italic">
               Terms_
-            </button>
-            <button className="text-[9px] font-black uppercase text-zinc-400 hover:text-black italic">
+            </span>
+            <span className="text-[9px] font-black uppercase text-zinc-400 italic">
               Privacy_
-            </button>
+            </span>
           </div>
         </div>
       </div>
