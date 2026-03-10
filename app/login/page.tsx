@@ -33,7 +33,7 @@ function LoginModule() {
     setErrorMessage("");
 
     try {
-      // 1. AUTHENTICATION
+      // AUTH LOGIN
       const { data, error: authError } = await supabase.auth.signInWithPassword(
         {
           email,
@@ -44,40 +44,46 @@ function LoginModule() {
       if (authError) {
         if (authError.message === "Invalid login credentials") {
           throw new Error("Access_Denied: Invalid_Credentials");
-        } else if (authError.message.includes("Email not confirmed")) {
+        }
+
+        if (authError.message.includes("Email not confirmed")) {
           throw new Error(
             "Verification_Required: Check your email or contact admin.",
           );
         }
+
         throw authError;
       }
 
-      if (data?.user) {
-        // 2. FETCH PROFILE & ROLE
-        // Kita ambil data dari tabel 'profiles' berdasarkan ID user yang baru login
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", data.user.id)
-          .single();
+      if (!data?.user) {
+        throw new Error("System_Error: User_Not_Found");
+      }
 
-        console.log("Auth Success. User ID:", data.user.id);
-        console.log("Profile Found:", profile);
+      // GET PROFILE ROLE
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
 
-        // 3. SECURE REDIRECT LOGIC
-        if (profileError || !profile) {
-          console.warn("Profile not found, defaulting to shop.");
-          window.location.href = "/shop";
-          return;
-        }
+      console.log("Auth Success. User ID:", data.user.id);
+      console.log("Profile Found:", profile);
 
-        if (profile.role === "admin") {
-          console.log("Redirecting to Admin Dashboard...");
-          // Menggunakan window.location.href lebih aman untuk redirect antar folder /admin
-          window.location.href = "/admin/dashboard";
-        } else {
-          window.location.href = callback || "/admin/dashboard";
-        }
+      if (profileError || !profile) {
+        console.warn("Profile not found, redirecting to shop.");
+        window.location.href = "/shop";
+        return;
+      }
+
+      const role = profile.role?.toLowerCase();
+
+      // ROLE BASED REDIRECT
+      if (role === "admin") {
+        console.log("Redirecting to Admin Dashboard...");
+        window.location.href = "/admin/dashboard";
+      } else {
+        console.log("Redirecting to Shop...");
+        window.location.href = callback || "/shop";
       }
     } catch (err: any) {
       setErrorMessage(err.message || "System_Error: Connection_Failed");
@@ -88,7 +94,6 @@ function LoginModule() {
 
   return (
     <div className="w-full max-w-[400px] mx-auto flex flex-col min-h-full py-6">
-      {/* HEADER */}
       <div className="mb-10">
         <button
           onClick={() => (window.location.href = "/")}
@@ -96,11 +101,13 @@ function LoginModule() {
         >
           <FiArrowLeft /> Return_Home
         </button>
+
         <h1 className="text-6xl md:text-7xl font-black italic uppercase tracking-tighter leading-[0.8] mb-4">
           Access<span className="text-zinc-200">_</span>
           <br />
           Portal
         </h1>
+
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 italic leading-relaxed">
           Authorized Personnel Only
           <br />
@@ -108,7 +115,6 @@ function LoginModule() {
         </p>
       </div>
 
-      {/* ERROR FEEDBACK */}
       <AnimatePresence mode="wait">
         {errorMessage && (
           <motion.div
@@ -128,6 +134,7 @@ function LoginModule() {
           <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-1">
             Identity_Email
           </label>
+
           <input
             required
             type="email"
@@ -142,6 +149,7 @@ function LoginModule() {
           <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-1">
             Access_Key
           </label>
+
           <div className="relative">
             <input
               required
@@ -151,6 +159,7 @@ function LoginModule() {
               className="w-full p-5 bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white rounded-2xl outline-none transition-all font-bold italic text-sm tracking-widest text-black"
               placeholder="••••••••"
             />
+
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
@@ -173,6 +182,7 @@ function LoginModule() {
           >
             Authorize_Entry <FiLogIn />
           </div>
+
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center">
               <FiLoader className="animate-spin text-lg" />
@@ -193,14 +203,17 @@ function LoginModule() {
 
       <div className="mt-auto pt-16 flex flex-col gap-6">
         <div className="h-px bg-zinc-100 w-full" />
+
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest italic flex items-center gap-2">
             <FiShield /> Encrypted_Connect_V2.06
           </p>
+
           <div className="flex gap-4">
             <span className="text-[9px] font-black uppercase text-zinc-400 italic cursor-help">
               Terms_
             </span>
+
             <span className="text-[9px] font-black uppercase text-zinc-400 italic cursor-help">
               Privacy_
             </span>
@@ -216,17 +229,20 @@ export default function LoginPage() {
     <main className="min-h-screen w-full bg-[#fafafa] flex flex-col lg:flex-row overflow-x-hidden text-black">
       <section className="hidden lg:flex lg:w-5/12 bg-black p-16 flex-col justify-between relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-50" />
+
         <div className="relative z-10 text-white text-[10vw] font-black italic uppercase leading-[0.75] tracking-tighter opacity-10 select-none">
           Archive
           <br />
           System
         </div>
+
         <div className="relative z-10">
           <h2 className="text-white text-5xl font-black italic uppercase leading-none tracking-tighter">
             Security
             <br />
             <span className="text-zinc-700">Protocol.</span>
           </h2>
+
           <p className="text-zinc-500 text-[9px] font-bold uppercase tracking-[0.5em] mt-8">
             Internal_Use_Only
           </p>
