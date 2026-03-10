@@ -2,7 +2,6 @@
 
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-// Update: Menggunakan client util buatan sendiri
 import { createClient } from "@/utils/supabase/client";
 import {
   FiEye,
@@ -11,13 +10,13 @@ import {
   FiShield,
   FiLoader,
   FiLogIn,
+  FiAlertCircle,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 
 function LoginModule() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // Update: Inisialisasi client baru
   const supabase = createClient();
 
   const [email, setEmail] = useState("");
@@ -34,25 +33,42 @@ function LoginModule() {
     setErrorMessage("");
 
     try {
-      // 1. LOGIN KE SUPABASE AUTH
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      // 1. AUTHENTICATION
+      const { data, error: authError } = await supabase.auth.signInWithPassword(
+        {
+          email,
+          password,
+        },
+      );
 
-      if (error) throw error;
+      if (authError) {
+        // Mapping error Supabase ke pesan yang lebih user-friendly
+        if (authError.message === "Invalid login credentials") {
+          throw new Error("Access_Denied: Invalid_Credentials");
+        } else if (authError.message.includes("Email not confirmed")) {
+          throw new Error(
+            "Verification_Required: Please contact admin or check your email.",
+          );
+        }
+        throw authError;
+      }
 
-      if (data.user) {
-        // 2. AMBIL ROLE DARI TABEL PROFILES
+      if (data?.user) {
+        // 2. FETCH PROFILE & ROLE
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("role")
           .eq("id", data.user.id)
-          .maybeSingle();
+          .single(); // Pakai .single() karena 1 user = 1 profile
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error("Profile Error:", profileError);
+          // Jika profile belum ada, default ke shop
+          router.push("/shop");
+          return;
+        }
 
-        // 3. LOGIKA REDIRECT
+        // 3. SECURE REDIRECT
         if (profile?.role === "admin") {
           router.push("/admin/users");
         } else {
@@ -62,11 +78,7 @@ function LoginModule() {
         router.refresh();
       }
     } catch (err: any) {
-      const msg =
-        err.message === "Invalid login credentials"
-          ? "Access_Denied: Invalid_Credentials"
-          : err.message;
-      setErrorMessage(msg);
+      setErrorMessage(err.message || "System_Error: Connection_Failed");
     } finally {
       setIsLoading(false);
     }
@@ -101,9 +113,9 @@ function LoginModule() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="mb-6 p-4 bg-black text-white text-[10px] font-black uppercase italic tracking-widest flex items-center gap-3"
+            className="mb-6 p-4 bg-red-600 text-white text-[10px] font-black uppercase italic tracking-widest flex items-center gap-3 rounded-xl shadow-lg shadow-red-500/20"
           >
-            <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+            <FiAlertCircle className="text-sm" />
             Error: {errorMessage}
           </motion.div>
         )}
@@ -121,7 +133,6 @@ function LoginModule() {
             onChange={(e) => setEmail(e.target.value)}
             className="w-full p-5 bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white rounded-2xl outline-none transition-all font-bold italic text-sm"
             placeholder="NAME@DOMAIN.COM"
-            autoComplete="email"
           />
         </div>
 
@@ -137,7 +148,6 @@ function LoginModule() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full p-5 bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white rounded-2xl outline-none transition-all font-bold italic text-sm tracking-widest"
               placeholder="••••••••"
-              autoComplete="current-password"
             />
             <button
               type="button"
@@ -155,9 +165,7 @@ function LoginModule() {
           className="relative w-full py-7 bg-black text-white rounded-full font-black uppercase tracking-[0.4em] text-[11px] italic hover:bg-zinc-800 transition-all active:scale-[0.97] disabled:bg-zinc-200 mt-4 group overflow-hidden"
         >
           <div
-            className={`flex items-center justify-center gap-3 transition-transform ${
-              isLoading ? "translate-y-20" : "translate-y-0"
-            }`}
+            className={`flex items-center justify-center gap-3 transition-transform ${isLoading ? "translate-y-20" : "translate-y-0"}`}
           >
             Authorize_Entry <FiLogIn />
           </div>
@@ -225,10 +233,8 @@ export default function LoginPage() {
         <div className="flex-1 px-6 py-12 md:px-20 lg:px-24 flex items-center">
           <Suspense
             fallback={
-              <div className="w-full flex justify-center">
-                <div className="font-black italic uppercase animate-pulse tracking-[0.5em] text-[10px]">
-                  Loading_Archive_Module...
-                </div>
+              <div className="w-full flex justify-center font-black italic uppercase animate-pulse tracking-[0.5em] text-[10px]">
+                Loading_Archive_Module...
               </div>
             }
           >
