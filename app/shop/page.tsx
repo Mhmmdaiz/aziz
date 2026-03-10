@@ -51,9 +51,9 @@ export default function ShopPage() {
       // const matchesCat = activeCategory === "All" || p.category === activeCategory;
       const matchesCat = true;
 
-      return matchesSearch && matchesCat;
-    });
-  }, [products, searchQuery, activeCategory]);
+      <p className="text-xs text-zinc-400 font-mono">
+  IDR {Number(item.price || 0).toLocaleString()}
+</p>//0 jika price null atau undefined
 
   return (
     <main className="min-h-screen bg-[#fafafa] text-zinc-900 selection:bg-blue-100">
