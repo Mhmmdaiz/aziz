@@ -42,12 +42,11 @@ function LoginModule() {
       );
 
       if (authError) {
-        // Mapping error Supabase ke pesan yang lebih user-friendly
         if (authError.message === "Invalid login credentials") {
           throw new Error("Access_Denied: Invalid_Credentials");
         } else if (authError.message.includes("Email not confirmed")) {
           throw new Error(
-            "Verification_Required: Please contact admin or check your email.",
+            "Verification_Required: Check your email or contact admin.",
           );
         }
         throw authError;
@@ -55,27 +54,30 @@ function LoginModule() {
 
       if (data?.user) {
         // 2. FETCH PROFILE & ROLE
+        // Kita ambil data dari tabel 'profiles' berdasarkan ID user yang baru login
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("role")
           .eq("id", data.user.id)
-          .single(); // Pakai .single() karena 1 user = 1 profile
+          .single();
 
-        if (profileError) {
-          console.error("Profile Error:", profileError);
-          // Jika profile belum ada, default ke shop
-          router.push("/shop");
+        console.log("Auth Success. User ID:", data.user.id);
+        console.log("Profile Found:", profile);
+
+        // 3. SECURE REDIRECT LOGIC
+        if (profileError || !profile) {
+          console.warn("Profile not found, defaulting to shop.");
+          window.location.href = "/shop";
           return;
         }
 
-        // 3. SECURE REDIRECT
-        if (profile?.role === "admin") {
-          router.push("/admin/users");
+        if (profile.role === "admin") {
+          console.log("Redirecting to Admin Dashboard...");
+          // Menggunakan window.location.href lebih aman untuk redirect antar folder /admin
+          window.location.href = "/admin/users";
         } else {
-          router.push(callback || "/shop");
+          window.location.href = callback || "/shop";
         }
-
-        router.refresh();
       }
     } catch (err: any) {
       setErrorMessage(err.message || "System_Error: Connection_Failed");
@@ -89,7 +91,7 @@ function LoginModule() {
       {/* HEADER */}
       <div className="mb-10">
         <button
-          onClick={() => router.push("/")}
+          onClick={() => (window.location.href = "/")}
           className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 hover:text-black transition-all mb-12"
         >
           <FiArrowLeft /> Return_Home
@@ -131,7 +133,7 @@ function LoginModule() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-5 bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white rounded-2xl outline-none transition-all font-bold italic text-sm"
+            className="w-full p-5 bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white rounded-2xl outline-none transition-all font-bold italic text-sm text-black"
             placeholder="NAME@DOMAIN.COM"
           />
         </div>
@@ -146,7 +148,7 @@ function LoginModule() {
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-5 bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white rounded-2xl outline-none transition-all font-bold italic text-sm tracking-widest"
+              className="w-full p-5 bg-zinc-50 border-2 border-transparent focus:border-black focus:bg-white rounded-2xl outline-none transition-all font-bold italic text-sm tracking-widest text-black"
               placeholder="••••••••"
             />
             <button
@@ -165,7 +167,9 @@ function LoginModule() {
           className="relative w-full py-7 bg-black text-white rounded-full font-black uppercase tracking-[0.4em] text-[11px] italic hover:bg-zinc-800 transition-all active:scale-[0.97] disabled:bg-zinc-200 mt-4 group overflow-hidden"
         >
           <div
-            className={`flex items-center justify-center gap-3 transition-transform ${isLoading ? "translate-y-20" : "translate-y-0"}`}
+            className={`flex items-center justify-center gap-3 transition-transform ${
+              isLoading ? "translate-y-20" : "translate-y-0"
+            }`}
           >
             Authorize_Entry <FiLogIn />
           </div>
@@ -180,7 +184,7 @@ function LoginModule() {
       <div className="mt-8 text-center">
         <button
           type="button"
-          onClick={() => router.push("/register")}
+          onClick={() => (window.location.href = "/register")}
           className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black transition-colors py-2 border-b border-transparent hover:border-black"
         >
           Don't have an ID? Create_New_Archive
@@ -209,7 +213,7 @@ function LoginModule() {
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen w-full bg-[#fafafa] flex flex-col lg:flex-row overflow-x-hidden">
+    <main className="min-h-screen w-full bg-[#fafafa] flex flex-col lg:flex-row overflow-x-hidden text-black">
       <section className="hidden lg:flex lg:w-5/12 bg-black p-16 flex-col justify-between relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-50" />
         <div className="relative z-10 text-white text-[10vw] font-black italic uppercase leading-[0.75] tracking-tighter opacity-10 select-none">
