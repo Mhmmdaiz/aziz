@@ -284,10 +284,9 @@ export default function Navbar() {
               ) : (
                 <Link
                   href="/auth"
-                  className="p-2.5 md:px-6 md:py-3 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-full text-[9px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg flex items-center justify-center"
+                  className="hidden md:flex p-2.5 md:px-6 md:py-3 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-full text-[9px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg items-center justify-center"
                 >
-                  <FiUser size={18} className="md:hidden" />
-                  <span className="hidden md:inline">ACCESS_AUTH</span>
+                  <span className="hidden md:inline">LOGIN</span>
                 </Link>
               )}
 
@@ -322,6 +321,25 @@ export default function Navbar() {
                   {link.label} <FiZap className="text-zinc-200 dark:text-zinc-700" />
                 </Link>
               ))}
+              
+              {!user && (
+                <Link
+                  href="/auth"
+                  onClick={() => setIsOpen(false)}
+                  className="mt-4 text-xl md:text-2xl font-black italic uppercase tracking-tighter border-b border-zinc-50 dark:border-zinc-800 pb-3 md:pb-4 flex justify-between items-center text-indigo-500 transition-colors"
+                >
+                  ACCESS_AUTH <FiUser className="text-zinc-200 dark:text-zinc-700" />
+                </Link>
+              )}
+
+              {user && (
+                <button
+                  onClick={handleLogout}
+                  className="text-xl md:text-2xl font-black italic uppercase tracking-tighter border-b border-zinc-50 dark:border-zinc-800 pb-3 md:pb-4 flex justify-between items-center text-rose-500 transition-colors text-left"
+                >
+                  TERMINATE_SESSION <FiLogOut className="text-zinc-200 dark:text-zinc-700" />
+                </button>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
