@@ -22,7 +22,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="relative p-2.5 md:p-3 rounded-full text-zinc-500 hover:text-blue-500 transition-all bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:text-blue-400 overflow-hidden group"
+      className="relative p-2.5 md:p-3 rounded-full text-zinc-500 hover:text-blue-500 transition-all bg-zinc-100/50 dark:bg-zinc-800/50 dark:text-zinc-400 dark:hover:text-blue-400 overflow-hidden group outline-none"
       title="Toggle Theme"
     >
       <AnimatePresence mode="wait" initial={false}>

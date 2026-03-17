@@ -196,18 +196,18 @@ export default function Navbar() {
       >
         <div className="w-full px-4 md:px-8 lg:px-12">
           <div
-            className={`relative flex items-center justify-between px-2.5 md:px-10 h-16 md:h-20 rounded-[1.25rem] md:rounded-[2.5rem] border transition-all duration-700 glass shadow-2xl overflow-hidden ${
+            className={`relative flex items-center justify-between px-4 md:px-10 h-14 md:h-20 rounded-full border transition-all duration-700 glass shadow-2xl ${
               scrolled || isAdmin || isCartOpen
                 ? "shadow-indigo-500/10 border-indigo-500/20"
                 : "border-white/20 shadow-black/5"
             }`}
           >
             {/* LEFT: LOGO & DESKTOP NAV */}
-            <div className="flex items-center gap-3 md:gap-8 min-w-0">
+            <div className="flex items-center gap-4 md:gap-8 min-w-0">
               <Link href={isAdmin ? "/admin/dashboard" : "/"} className="group shrink-0">
-                <div className="text-[13px] sm:text-lg md:text-xl font-black tracking-tighter uppercase italic text-zinc-900 dark:text-white flex items-center gap-1">
-                  {isAdmin ? "ADMIN" : storeName.split(" ")[0]}
-                  <span className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_10px_rgba(99,102,241,0.8)]" />
+                <div className="text-sm md:text-xl font-black tracking-tighter uppercase italic text-zinc-900 dark:text-white flex items-center gap-1.5">
+                  {isAdmin ? "ADMIN" : storeName}
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_10px_indigo]" />
                 </div>
               </Link>
 
@@ -249,24 +249,23 @@ export default function Navbar() {
               {!isAdmin && (
                 <button
                   onClick={() => setIsCartOpen(true)}
-                  className="relative p-2 md:p-3 rounded-full bg-zinc-100/50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 hover:bg-indigo-500 hover:text-white dark:hover:bg-indigo-500 transition-all group overflow-hidden"
+                  className="relative p-2.5 md:p-3 rounded-full bg-zinc-100/50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black transition-all group"
                 >
-                  <FiShoppingBag size={15} className="md:w-[18px] relative z-10" />
+                  <FiShoppingBag size={18} className="relative z-10" />
                   {cartCount > 0 && (
                     <motion.span
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-zinc-900 z-20"
+                      className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-[8px] font-black rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-zinc-900"
                     >
                       {cartCount}
                     </motion.span>
                   )}
-                  <div className="absolute inset-0 bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity blur-2xl -z-0" />
                 </button>
               )}
 
               {user ? (
-                <div className="flex items-center gap-3 ml-2">
+                <div className="flex items-center gap-3 ml-1 md:ml-2">
                   <div className="hidden md:flex flex-col items-end leading-none">
                     <span className="text-[7px] font-black uppercase tracking-[0.2em] text-blue-600 mb-0.5">
                       {user.role}
@@ -277,27 +276,28 @@ export default function Navbar() {
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="p-2.5 md:p-3 rounded-full text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-all"
+                    className="p-2.5 md:p-3 rounded-full text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-all bg-zinc-100/50 dark:bg-zinc-800/50"
                   >
-                    <FiLogOut size={17} className="md:w-[18px]" />
+                    <FiLogOut size={18} />
                   </button>
                 </div>
               ) : (
                 <Link
                   href="/auth"
-                  className="px-4 md:px-6 py-2.5 bg-black text-white rounded-full text-[8.5px] md:text-[9px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-lg shadow-black/10"
+                  className="p-2.5 md:px-6 md:py-3 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-full text-[9px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg flex items-center justify-center"
                 >
-                  ACCESS_AUTH
+                  <FiUser size={18} className="md:hidden" />
+                  <span className="hidden md:inline">ACCESS_AUTH</span>
                 </Link>
               )}
 
               <ThemeToggle />
 
               <button
-                className="lg:hidden w-9 h-9 flex items-center justify-center bg-zinc-900 dark:bg-zinc-700 text-white rounded-full ml-0.5 transition-colors"
+                className="lg:hidden w-10 h-10 flex items-center justify-center bg-zinc-100/50 dark:bg-zinc-800/50 text-zinc-900 dark:text-white rounded-full transition-all active:scale-90"
                 onClick={() => setIsOpen(!isOpen)}
               >
-                {isOpen ? <FiX size={16} /> : <FiMenu size={16} />}
+                {isOpen ? <FiX size={20} /> : <FiMenu size={20} />}
               </button>
             </div>
           </div>
