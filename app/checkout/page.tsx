@@ -210,8 +210,8 @@ export default function CheckoutPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white dark:bg-black text-zinc-900 dark:text-zinc-100 selection:bg-zinc-900 selection:text-white dark:selection:bg-white dark:selection:text-black transition-colors duration-500">
-      <div className="max-w-7xl mx-auto px-6 pt-32 pb-24">
+    <main className="min-h-screen bg-white dark:bg-black text-zinc-900 dark:text-zinc-100 selection:bg-zinc-900 selection:text-white dark:selection:bg-white dark:selection:text-black transition-colors duration-500 overflow-x-hidden">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 pt-24 md:pt-32 pb-24 w-full">
         
         {/* --- HEADER --- */}
         <div className="mb-20 flex flex-col md:flex-row md:items-end justify-between gap-10">
@@ -227,7 +227,7 @@ export default function CheckoutPage() {
               <FiChevronLeft className="group-hover:-translate-x-1 transition-transform" />
               Return_to_vault
             </button>
-            <h1 className="text-[clamp(3rem,10vw,7rem)] font-black uppercase tracking-tighter leading-[0.85] italic">
+            <h1 className="text-[clamp(2.5rem,10vw,7rem)] font-black uppercase tracking-tighter leading-[0.9] md:leading-[0.85] italic break-words">
               Deploy<span className="text-zinc-200 dark:text-zinc-800">.</span>Checkout
             </h1>
             <p className="text-xs font-bold uppercase tracking-[0.3em] text-zinc-500 max-w-md">
@@ -306,7 +306,7 @@ export default function CheckoutPage() {
                         onChange={handleInputChange}
                         rows={3}
                         placeholder="FULL_STREET_LOCATION"
-                        className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 p-8 rounded-[2.5rem] font-bold italic focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all resize-none placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
+                        className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 p-6 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] font-bold italic focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all resize-none placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
                      />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

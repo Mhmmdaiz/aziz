@@ -65,8 +65,8 @@ export default function ShopPage() {
     <main className="min-h-screen bg-white dark:bg-[#030303] text-zinc-900 dark:text-white selection:bg-indigo-100 dark:selection:bg-indigo-900/30 transition-colors duration-500 mesh-gradient relative">
       <div className="absolute top-0 left-0 w-full h-full bg-grid-pattern opacity-[0.03] pointer-events-none" />
       
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-12 relative z-10">
-        <div className="glass rounded-3xl md:rounded-[4rem] border border-white/20 dark:border-white/5 shadow-2xl overflow-hidden mt-15">
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-12 relative z-10 w-full overflow-x-hidden">
+        <div className="glass rounded-3xl md:rounded-[4rem] border border-white/20 dark:border-white/5 shadow-2xl overflow-hidden mt-15 w-full">
           {/* --- HEADER SECTION --- */}
           <header className="p-6 md:p-10 lg:p-12 border-b border-zinc-50 dark:border-zinc-900">
             <div className="flex flex-wrap md:flex-row items-center justify-between gap-6">
@@ -126,8 +126,8 @@ export default function ShopPage() {
           </section>
 
           {/* --- PRODUCT GRID --- */}
-          <section className="px-6 md:px-10 py-10">
-            <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory">
+          <section className="px-4 md:px-10 py-10 w-full">
+            <div className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide pb-6 px-2 snap-x snap-mandatory">
               {loading ? (
                 [...Array(4)].map((_, i) => <ProductSkeleton key={i} />)
               ) : filteredProducts.length > 0 ? (

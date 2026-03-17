@@ -193,7 +193,7 @@ export default function ProductDetailPage() {
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-100/20 dark:bg-indigo-900/10 blur-[120px] rounded-full -z-10 pointer-events-none" />
       <div className="absolute bottom-1/4 -left-20 w-[500px] h-[500px] bg-rose-500/5 dark:bg-rose-900/5 blur-[120px] rounded-full -z-10 pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 md:px-6">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 w-full overflow-x-hidden">
         
         {/* Navigation Breadcrumb */}
         <div className="flex items-center justify-between mb-8 md:mb-12">

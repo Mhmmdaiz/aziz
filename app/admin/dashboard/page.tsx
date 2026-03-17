@@ -161,7 +161,7 @@ export default function AdminDashboard() {
   if (loading) return <LoadingSkeleton />;
 
   return (
-    <main className="min-h-screen bg-zinc-50 dark:bg-black pt-24 pb-12 px-6 lg:px-12 font-mono text-zinc-900 dark:text-white transition-colors duration-300">
+    <main className="min-h-screen bg-zinc-50 dark:bg-black pt-24 pb-12 px-4 md:px-12 font-mono text-zinc-900 dark:text-white transition-colors duration-300 overflow-x-hidden">
       <div className="max-w-7xl mx-auto space-y-12">
         
         {/* HEADER */}

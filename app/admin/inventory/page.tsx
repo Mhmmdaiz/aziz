@@ -70,7 +70,7 @@ export default function InventoryPage() {
   if (loading) return <div className="p-20 text-center font-black animate-pulse uppercase tracking-[0.5em]">Syncing_Inventory...</div>;
 
   return (
-    <main className="min-h-screen bg-zinc-50 dark:bg-black pt-24 pb-12 px-6 lg:px-12 font-mono transition-colors duration-300">
+    <main className="min-h-screen bg-zinc-50 dark:bg-black pt-24 pb-12 px-4 md:px-12 font-mono transition-colors duration-300 overflow-x-hidden">
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* HEADER */}

@@ -196,7 +196,7 @@ export default function Navbar() {
       >
         <div className="w-full px-4 md:px-8 lg:px-12">
           <div
-            className={`relative flex items-center justify-between px-4 md:px-10 h-16 md:h-20 rounded-[1.5rem] md:rounded-[2.5rem] border transition-all duration-700 glass shadow-2xl ${
+            className={`relative flex items-center justify-between px-3 md:px-10 h-16 md:h-20 rounded-[1.25rem] md:rounded-[2.5rem] border transition-all duration-700 glass shadow-2xl ${
               scrolled || isAdmin || isCartOpen
                 ? "shadow-indigo-500/10 border-indigo-500/20"
                 : "border-white/20 shadow-black/5"

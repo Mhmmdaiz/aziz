@@ -27,7 +27,7 @@ export default function RootLayout({
         />
       </head>
 
-      <body className="antialiased min-h-screen flex flex-col bg-white dark:bg-[#030303] text-[#1D1D1F] dark:text-zinc-100 transition-colors duration-300">
+      <body className="antialiased min-h-screen flex flex-col bg-white dark:bg-[#030303] text-[#1D1D1F] dark:text-zinc-100 transition-colors duration-300 overflow-x-hidden">
         <SettingsProvider>
           <ThemeProvider
             attribute="class"
