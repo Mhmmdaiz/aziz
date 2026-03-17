@@ -112,30 +112,30 @@ export default function EditJournal() {
 
   if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center italic font-black uppercase tracking-widest text-gray-300">
+      <div className="min-h-screen flex items-center justify-center italic font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-700 bg-zinc-50 dark:bg-black transition-colors duration-300">
         Syncing_Database...
       </div>
     );
 
   return (
-    <main className="min-h-screen bg-[#fafafa] pt-24 pb-20 px-4 md:px-12">
+    <main className="min-h-screen bg-zinc-50 dark:bg-black pt-24 pb-20 px-4 md:px-12 transition-colors duration-300">
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-between mb-12">
           <Link
             href="/admin/journal"
-            className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 text-gray-400 hover:text-black transition-colors"
+            className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 text-zinc-400 dark:text-zinc-600 hover:text-black dark:hover:text-white transition-colors"
           >
             <FiChevronLeft /> Back_To_Archives
           </Link>
         </div>
 
-        <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase mb-12 leading-none">
+        <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase mb-12 leading-none text-zinc-900 dark:text-white">
           Edit_Narrative.
         </h1>
 
         <form
           onSubmit={handleUpdate}
-          className="bg-white p-8 md:p-12 rounded-[2.5rem] border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.02)]"
+          className="bg-white dark:bg-zinc-950 p-8 md:p-12 rounded-[2.5rem] border border-gray-100 dark:border-zinc-900 shadow-[0_20px_50px_rgba(0,0,0,0.02)] dark:shadow-none"
         >
           <div className="space-y-10">
             <div className="flex flex-col items-center gap-4">
@@ -144,7 +144,7 @@ export default function EditJournal() {
               </label>
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="relative w-44 h-44 bg-gray-50 rounded-[2.5rem] overflow-hidden cursor-pointer group border-2 border-dashed border-gray-100 hover:border-blue-200 transition-all"
+                className="relative w-44 h-44 bg-gray-50 dark:bg-zinc-900 rounded-[2.5rem] overflow-hidden cursor-pointer group border-2 border-dashed border-gray-100 dark:border-zinc-800 hover:border-blue-200 dark:hover:border-zinc-700 transition-all"
               >
                 {preview ? (
                   <img
@@ -153,7 +153,7 @@ export default function EditJournal() {
                     alt="preview"
                   />
                 ) : (
-                  <div className="flex items-center justify-center h-full text-gray-200">
+                  <div className="flex items-center justify-center h-full text-zinc-300 dark:text-zinc-700">
                     <FiCamera size={30} />
                   </div>
                 )}
@@ -183,7 +183,7 @@ export default function EditJournal() {
                   onChange={(e) =>
                     setFormData({ ...formData, title: e.target.value })
                   }
-                  className="w-full bg-gray-50 border-none rounded-2xl p-5 text-lg font-bold italic uppercase focus:ring-2 focus:ring-blue-100 transition-all"
+                  className="w-full bg-gray-50 dark:bg-zinc-900 border-none rounded-2xl p-5 text-lg font-bold italic uppercase focus:ring-2 focus:ring-blue-100 dark:focus:ring-zinc-800 transition-all text-zinc-900 dark:text-white"
                   required
                 />
               </div>
@@ -199,7 +199,7 @@ export default function EditJournal() {
                     onChange={(e) =>
                       setFormData({ ...formData, category: e.target.value })
                     }
-                    className="w-full bg-gray-50 border-none rounded-2xl p-5 text-sm font-bold uppercase tracking-widest focus:ring-2 focus:ring-blue-100 transition-all"
+                    className="w-full bg-gray-50 dark:bg-zinc-900 border-none rounded-2xl p-5 text-sm font-bold uppercase tracking-widest focus:ring-2 focus:ring-blue-100 dark:focus:ring-zinc-800 transition-all text-zinc-900 dark:text-white"
                     required
                   />
                 </div>
@@ -212,10 +212,10 @@ export default function EditJournal() {
                     onChange={(e) =>
                       setFormData({ ...formData, status: e.target.value })
                     }
-                    className="w-full bg-gray-50 border-none rounded-2xl p-5 text-sm font-bold uppercase tracking-widest focus:ring-2 focus:ring-blue-100 transition-all appearance-none cursor-pointer"
+                    className="w-full bg-gray-50 dark:bg-zinc-900 border-none rounded-2xl p-5 text-sm font-bold uppercase tracking-widest focus:ring-2 focus:ring-blue-100 dark:focus:ring-zinc-800 transition-all appearance-none cursor-pointer text-zinc-900 dark:text-white"
                   >
-                    <option value="draft">DRAFT</option>
-                    <option value="published">PUBLISHED</option>
+                    <option value="draft" className="bg-white dark:bg-zinc-900">DRAFT</option>
+                    <option value="published" className="bg-white dark:bg-zinc-900">PUBLISHED</option>
                   </select>
                 </div>
               </div>
@@ -224,7 +224,7 @@ export default function EditJournal() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full bg-black text-white p-6 rounded-full font-black uppercase tracking-[0.3em] text-[10px] flex justify-center items-center gap-3 hover:bg-blue-600 transition-all shadow-xl shadow-blue-50/50 disabled:bg-gray-200"
+              className="w-full bg-black dark:bg-white text-white dark:text-black p-6 rounded-full font-black uppercase tracking-[0.3em] text-[10px] flex justify-center items-center gap-3 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all shadow-xl shadow-blue-50/50 dark:shadow-none disabled:bg-gray-200 dark:disabled:bg-zinc-800"
             >
               {submitting ? (
                 <FiLoader className="animate-spin" />

@@ -1,373 +1,257 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/utils/supabase/client"; // Pastikan path ini benar
+import { supabase } from "@/utils/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  FiEdit3,
-  FiTrash2,
-  FiPlus,
   FiBox,
   FiActivity,
-  FiSearch,
   FiTrendingUp,
   FiUsers,
   FiDollarSign,
-  FiAlertCircle,
-  FiCheckCircle,
   FiZap,
-  FiLoader,
 } from "react-icons/fi";
-import Link from "next/link";
-import Swal from "sweetalert2";
+
+// Types
+interface ChartData {
+  date: string;
+  total: number;
+}
+
+export interface DashboardOrder {
+  id: string;
+  created_at: string;
+  total_price: number;
+  status: string;
+  profiles?: {
+    full_name: string;
+  };
+}
+
+export interface DashboardProduct {
+  id: string;
+  name: string;
+  stock: number;
+  image_url: string;
+  total_sold?: number;
+  performance?: number;
+}
+
+// Components
+import StatsCard from "./components/StatsCard";
+import SalesChart from "./components/SalesChart";
+import RecentOrders from "./components/RecentOrders";
+import InventoryWidgets from "./components/InventoryWidgets";
+import QuickActions from "./components/QuickActions";
 
 export default function AdminDashboard() {
-  const [products, setProducts] = useState<any[]>([]);
-  const [stats, setStats] = useState<any>({
-    revenue_formatted: "Rp 0",
-    users_count: 0,
-    products_count: 0,
-    system_health: "100%",
-    critical_stock: 0,
-    growth: "+0%",
+  const [data, setData] = useState({
+    stats: {
+      revenue: 0,
+      orders: 0,
+      products: 0,
+      pending: 0,
+    },
+    chartData: [] as ChartData[],
+    recentOrders: [] as DashboardOrder[],
+    lowStock: [] as DashboardProduct[],
+    topProducts: [] as DashboardProduct[],
   });
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
-  const supabase = createClient();
 
-  // 1. Fungsi Fetch Data Langsung dari Supabase
-  const fetchData = useCallback(async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
 
-      // Ambil Produk
-      const { data: productsData, error: prodError } = await supabase
-        .from("products")
-        .select("*")
-        .order("created_at", { ascending: false });
+      // 1. Fetch Basic Totals
+      const [resOrders, resProducts, resPending] = await Promise.all([
+        supabase.from("orders").select("total_price, created_at, status"),
+        supabase.from("products").select("id, name, stock, image_url"),
+        supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "pending")
+      ]);
 
-      // Ambil Stats (Contoh sederhana: Count dari tabel)
-      const { count: userCount } = await supabase
-        .from("profiles")
-        .select("*", { count: "exact", head: true });
-      const { count: productCount } = await supabase
-        .from("products")
-        .select("*", { count: "exact", head: true });
+      // 2. Fetch Recent Orders with Profiles
+      const { data: recentOrders } = await supabase
+        .from("orders")
+        .select("*, profiles(full_name)")
+        .order("created_at", { ascending: false })
+        .limit(5);
 
-      // Ambil Produk stok rendah (< 10)
-      const { count: lowStockCount } = await supabase
-        .from("products")
-        .select("*", { count: "exact", head: true })
-        .lt("stock", 10);
+      if (resOrders.data) {
+        // Calculate Revenue (Paid only)
+        const revenue = resOrders.data
+          .filter(o => o.status === "paid")
+          .reduce((acc, curr) => acc + Number(curr.total_price), 0);
 
-      if (prodError) throw prodError;
+        // Process Chart Data (Last 7 Days)
+        const days = [...Array(7)].map((_, i) => {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          return d.toISOString().split("T")[0];
+        }).reverse();
 
-      setProducts(productsData || []);
-      setStats({
-        revenue_formatted: "Rp 12.500.000", // Placeholder atau ambil dari tabel orders jika ada
-        users_count: userCount || 0,
-        products_count: productCount || 0,
-        system_health: "Stable",
-        critical_stock: lowStockCount || 0,
-        growth: "+12.5%",
-      });
+        const chartData = days.map(date => {
+          const total = resOrders.data
+            .filter(o => o.created_at.startsWith(date) && o.status === "paid")
+            .reduce((acc, curr) => acc + Number(curr.total_price), 0);
+          return { date: date.slice(5), total };
+        });
+
+        // 3. Low Stock Check
+        const lowStock = (resProducts.data || [])
+          .filter(p => p.stock < 5)
+          .slice(0, 3);
+
+        // 4. Mocking Top Products (Idealnya join order_items, tapi kita simulasikan dulu)
+        const topProducts: DashboardProduct[] = (resProducts.data || [])
+          .slice(0, 3)
+          .map(p => ({ 
+            ...p, 
+            total_sold: Math.floor(Math.random() * 50) + 10, 
+            performance: Math.random() * 40 + 60 
+          }));
+
+        setData({
+          stats: {
+            revenue,
+            orders: resOrders.data.length,
+            products: resProducts.data?.length || 0,
+            pending: resPending.count || 0,
+          },
+          chartData,
+          recentOrders: (recentOrders as unknown as DashboardOrder[]) || [],
+          lowStock: lowStock as DashboardProduct[],
+          topProducts
+        });
+      }
     } catch (err) {
-      console.error("Sync Error:", err);
+      console.error("SUPABASE_SYNC_ERROR:", err);
     } finally {
       setLoading(false);
     }
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
-    // Proteksi Halaman: Cek Session
-    const checkUser = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        router.push("/login");
-      } else {
-        fetchData();
+        router.push("/auth");
+        return;
       }
+      fetchDashboardData();
+
+      // REALTIME SUBSCRIPTION
+      const channel = supabase
+        .channel("dashboard-realtime")
+        .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
+          console.log("Realtime Update: Database Triggered");
+          fetchDashboardData();
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     };
-    checkUser();
-  }, [router, fetchData, supabase]);
+    init();
+  }, [router, fetchDashboardData]);
 
-  // 2. Fungsi Hapus Produk (Supabase Delete)
-  const handleDelete = async (id: number) => {
-    const result = await Swal.fire({
-      title: "Hapus Produk?",
-      text: "Data akan hilang permanen dari database Supabase.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#000",
-      cancelButtonColor: "#f4f4f5",
-      confirmButtonText: "Ya, Hapus",
-      cancelButtonText: "Batal",
-    });
-
-    if (result.isConfirmed) {
-      try {
-        const { error } = await supabase.from("products").delete().eq("id", id);
-
-        if (error) throw error;
-
-        setProducts(products.filter((p) => p.id !== id));
-        Swal.fire("Deleted!", "Produk berhasil dihapus.", "success");
-      } catch (err) {
-        Swal.fire("Error!", "Gagal menghapus produk.", "error");
-      }
-    }
-  };
-
-  if (loading) return <LoadingScreen />;
+  if (loading) return <LoadingSkeleton />;
 
   return (
-    <main className="min-h-screen bg-[#FBFBFB] pt-24 pb-12 px-6 lg:px-12 text-black">
-      <div className="max-w-7xl mx-auto">
+    <main className="min-h-screen bg-zinc-50 dark:bg-black pt-24 pb-12 px-6 lg:px-12 font-mono text-zinc-900 dark:text-white transition-colors duration-300">
+      <div className="max-w-7xl mx-auto space-y-12">
+        
         {/* HEADER */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-          <div>
-            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.4em] mb-2 mt-4 italic">
-              Cloud_Node: Supabase-Main
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-16">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.4em] mb-4 italic flex items-center gap-2">
+              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              System_Stream: Active_Node
             </p>
-            <h1 className="text-5xl font-black italic tracking-tighter uppercase leading-none">
-              Operational <br />{" "}
-              <span className="text-zinc-200">Intelligence.</span>
+            <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9] text-zinc-900 dark:text-white">
+              Admin <br /> <span className="text-zinc-300 dark:text-zinc-800 italic">Dashboard.</span>
             </h1>
-          </div>
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className="relative flex-1 md:w-64">
-              <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-300" />
-              <input
-                type="text"
-                placeholder="Search Artifacts..."
-                className="w-full bg-white border border-zinc-100 p-4 pl-12 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-black/5 outline-none transition-all"
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <Link
-              href="/admin/add-product"
-              className="p-4 bg-black text-white rounded-2xl hover:bg-zinc-800 transition-all shadow-xl shadow-black/10"
-            >
-              <FiPlus size={20} />
-            </Link>
+          </motion.div>
+          
+          <div className="w-full md:w-auto">
+            <QuickActions />
           </div>
         </header>
 
-        {/* KPI CARDS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-          <KPICard
-            label="Gross_Revenue"
-            value={stats.revenue_formatted}
-            trend={stats.growth}
-            icon={<FiDollarSign />}
-            color="text-emerald-500"
-            subtext="Real-time transaction value"
+        {/* STATS GRID */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+          <StatsCard 
+            label="Total_Revenue" 
+            value={`Rp ${data.stats.revenue.toLocaleString()}`} 
+            icon={<FiDollarSign />} 
+            trend="+12.5%" 
+            color="text-emerald-500" 
+            delay={0.1}
           />
-          <KPICard
-            label="Total_Personnel"
-            value={stats.users_count}
-            trend="+New"
-            icon={<FiUsers />}
-            color="text-blue-500"
-            subtext="Registered users in auth"
+          <StatsCard 
+            label="Registry_Orders" 
+            value={data.stats.orders} 
+            icon={<FiActivity />} 
+            trend="+8" 
+            color="text-blue-500" 
+            delay={0.2}
           />
-          <KPICard
-            label="Active_Artifacts"
-            value={stats.products_count}
-            icon={<FiBox />}
-            color="text-orange-500"
-            subtext="Live products in catalog"
+          <StatsCard 
+            label="Artifact_Units" 
+            value={data.stats.products} 
+            icon={<FiBox />} 
+            color="text-orange-500" 
+            delay={0.3}
           />
-          <KPICard
-            label="System_Health"
-            value={stats.system_health}
-            icon={<FiZap />}
-            color="text-purple-500"
-            subtext="Supabase Cloud Status"
+          <StatsCard 
+            label="Pending_Auth" 
+            value={data.stats.pending} 
+            icon={<FiZap />} 
+            trend="Needs_Review" 
+            color="text-purple-500" 
+            delay={0.4}
           />
-        </div>
+        </section>
 
-        <div className="grid lg:grid-cols-12 gap-8 mb-12">
-          {/* ANALYTICS PLACEHOLDER */}
-          <div className="lg:col-span-8 bg-white border border-zinc-100 rounded-[2.5rem] p-8 flex flex-col items-center justify-center text-zinc-300 min-h-[400px]">
-            <FiTrendingUp size={48} className="mb-4 opacity-20" />
-            <p className="text-[10px] font-bold uppercase tracking-widest italic text-zinc-400">
-              Supabase Metric Integration Active...
-            </p>
-          </div>
-
-          {/* SIDE ALERTS */}
-          <div className="lg:col-span-4 space-y-6">
-            <div className="bg-black text-white p-8 rounded-[2.5rem] shadow-2xl">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] mb-6 opacity-60">
-                Priority_Alerts
-              </h4>
-              <div className="space-y-4">
-                <AlertItem
-                  icon={<FiAlertCircle />}
-                  text={`Stock Warning: ${stats.critical_stock} Items`}
-                  color={
-                    stats.critical_stock > 0
-                      ? "text-red-400"
-                      : "text-emerald-400"
-                  }
-                />
-                <AlertItem
-                  icon={<FiCheckCircle />}
-                  text="Auth Middleware: Secured"
-                  color="text-blue-400"
-                />
-                <AlertItem
-                  icon={<FiActivity />}
-                  text="Latency: 24ms"
-                  color="text-emerald-400"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* TABLE SECTION */}
-        <section>
-          <div className="flex justify-between items-end mb-8 px-4">
-            <h4 className="text-2xl font-black italic tracking-tighter uppercase">
-              Artifact_Log<span className="text-zinc-200">.</span>
-            </h4>
-          </div>
-
-          <div className="bg-white rounded-[3rem] border border-zinc-100 overflow-hidden shadow-xl shadow-zinc-200/50">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-400 border-b border-zinc-50 bg-zinc-50/30">
-                    <th className="p-8">Artifact_Reference</th>
-                    <th className="p-8">Price_Unit</th>
-                    <th className="p-8">Stock_Level</th>
-                    <th className="p-8 text-right">Action_Matrix</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-50">
-                  {products
-                    .filter((p) =>
-                      p.name.toLowerCase().includes(searchQuery.toLowerCase()),
-                    )
-                    .map((p) => (
-                      <tr
-                        key={p.id}
-                        className="group hover:bg-zinc-50/50 transition-colors"
-                      >
-                        <td className="p-8">
-                          <div className="flex items-center gap-6">
-                            <img
-                              src={p.image_url || "/void.jpg"}
-                              className="w-16 h-16 rounded-2xl object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-                              alt={p.name}
-                            />
-                            <div>
-                              <p className="text-sm font-black italic uppercase text-zinc-900">
-                                {p.name}
-                              </p>
-                              <p className="text-[9px] font-bold text-zinc-300 uppercase mt-1">
-                                REF_{p.id.toString().substring(0, 8)}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-8">
-                          <p className="text-sm font-black italic">
-                            Rp {Number(p.price).toLocaleString("id-ID")}
-                          </p>
-                        </td>
-                        <td className="p-8">
-                          <span
-                            className={`inline-flex items-center px-4 py-1 rounded-full text-[9px] font-black uppercase italic ${p.stock < 10 ? "bg-red-50 text-red-500" : "bg-zinc-100 text-zinc-600"}`}
-                          >
-                            {p.stock} Units
-                          </span>
-                        </td>
-                        <td className="p-8 text-right">
-                          <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all">
-                            <Link
-                              href={`/admin/edit-product/${p.id}`}
-                              className="p-3 bg-zinc-50 hover:bg-black hover:text-white rounded-xl transition-all"
-                            >
-                              <FiEdit3 size={14} />
-                            </Link>
-                            <button
-                              onClick={() => handleDelete(p.id)}
-                              className="p-3 bg-red-50 text-red-400 hover:bg-red-500 hover:text-white rounded-xl transition-all"
-                            >
-                              <FiTrash2 size={14} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
+        {/* ANALYTICS ROW */}
+        <section className="grid lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-12">
+            <SalesChart data={data.chartData} />
           </div>
         </section>
+
+        {/* DATA ROW */}
+        <section className="grid lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-8">
+            <RecentOrders orders={data.recentOrders} />
+          </div>
+          <div className="lg:col-span-4">
+            <InventoryWidgets lowStock={data.lowStock} topProducts={data.topProducts} />
+          </div>
+        </section>
+
+        {/* FOOTER METADATA */}
+        <footer className="pt-20 text-[8px] font-black uppercase tracking-[0.5em] text-zinc-300 dark:text-zinc-800 flex justify-between">
+          <span>Encrypted_Terminal // CHCKT_VAULT_v2.1</span>
+          <span>© 2026 VOID_LABS_INDUSTRIES</span>
+        </footer>
       </div>
     </main>
   );
 }
 
-// SUB-KOMPONEN
-function KPICard({ label, value, trend, icon, color, subtext }: any) {
+function LoadingSkeleton() {
   return (
-    <motion.div
-      whileHover={{ y: -5 }}
-      className="bg-white p-6 rounded-[2rem] border border-zinc-100 shadow-sm transition-all group"
-    >
-      <div className="flex justify-between items-start mb-4">
-        <div
-          className={`p-3 rounded-2xl ${color} bg-opacity-10 text-xl group-hover:bg-opacity-100 group-hover:text-white transition-all`}
-        >
-          {icon}
-        </div>
-        {trend && (
-          <span
-            className={`text-[10px] font-black italic ${trend.includes("+") ? "text-emerald-500" : "text-red-500"}`}
-          >
-            {trend}
-          </span>
-        )}
-      </div>
-      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-1">
-        {label}
-      </p>
-      <h3 className="text-3xl font-black italic tracking-tighter text-zinc-900 leading-none">
-        {value}
-      </h3>
-      <p className="text-[9px] font-bold text-zinc-300 mt-2 uppercase italic">
-        {subtext}
-      </p>
-    </motion.div>
-  );
-}
-
-function AlertItem({ icon, text, color }: any) {
-  return (
-    <div className="flex items-center gap-4 p-3 bg-white/5 rounded-xl border border-white/10">
-      <span className={`${color} text-lg`}>{icon}</span>
-      <p className="text-[10px] font-bold uppercase tracking-widest">{text}</p>
-    </div>
-  );
-}
-
-function LoadingScreen() {
-  return (
-    <div className="h-screen flex items-center justify-center bg-[#FBFBFB]">
-      <div className="flex flex-col items-center gap-4">
-        <FiLoader className="animate-spin text-zinc-300" size={40} />
-        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
-          Syncing_Supabase_Cloud...
-        </p>
+    <div className="h-screen bg-zinc-50 dark:bg-black p-12 flex items-center justify-center">
+      <div className="text-center">
+        <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent animate-spin rounded-full mb-6 mx-auto" />
+        <p className="font-black italic uppercase tracking-[0.5em] text-xs text-zinc-400 animate-pulse">Initializing_Control_Center...</p>
       </div>
     </div>
   );

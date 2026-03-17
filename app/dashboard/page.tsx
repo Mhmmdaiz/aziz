@@ -99,7 +99,7 @@ export default function ProfilePage() {
     );
 
   return (
-    <main className="min-h-screen bg-[#FAFAFA] text-black font-sans pt-32 md:pt-44 pb-20 overflow-x-hidden">
+    <main className="min-h-screen bg-zinc-50 dark:bg-black text-zinc-900 dark:text-white font-sans pt-32 md:pt-44 pb-20 overflow-x-hidden transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* PROFILE HEADER - Anti Overflow */}
         <div className="flex flex-col md:flex-row items-center gap-8 mb-16">
@@ -108,14 +108,14 @@ export default function ProfilePage() {
             animate={{ scale: 1, opacity: 1 }}
             className="relative shrink-0"
           >
-            <div className="w-32 h-32 md:w-40 md:h-40 rounded-[3.5rem] bg-black p-1.5 shadow-2xl overflow-hidden transform hover:rotate-3 transition-transform duration-500">
+            <div className="w-32 h-32 md:w-40 md:h-40 rounded-[3.5rem] bg-black dark:bg-zinc-900 p-1.5 shadow-2xl overflow-hidden transform hover:rotate-3 transition-transform duration-500">
               <img
                 src={`https://ui-avatars.com/api/?name=${user?.name}&background=000&color=fff&bold=true&font-size=0.3`}
                 alt="Avatar"
                 className="w-full h-full object-cover rounded-[3.2rem]"
               />
             </div>
-            <label className="absolute bottom-1 right-1 p-3 bg-white border-4 border-[#FAFAFA] rounded-2xl cursor-pointer hover:scale-110 shadow-xl transition-all">
+            <label className="absolute bottom-1 right-1 p-3 bg-white dark:bg-zinc-800 border-4 border-zinc-50 dark:border-black rounded-2xl cursor-pointer hover:scale-110 shadow-xl transition-all text-zinc-900 dark:text-white">
               <Camera size={18} />
               <input type="file" className="hidden" />
             </label>
@@ -127,10 +127,10 @@ export default function ProfilePage() {
             </span>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-black italic uppercase tracking-tighter leading-none break-words">
               {user?.name}
-              <span className="text-zinc-200">.</span>
+              <span className="text-zinc-200 dark:text-zinc-800">.</span>
             </h1>
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
-              <span className="px-3 py-1 bg-zinc-900 text-white text-[8px] font-black uppercase tracking-widest rounded-full shrink-0">
+              <span className="px-3 py-1 bg-zinc-900 dark:bg-white text-white dark:text-black text-[8px] font-black uppercase tracking-widest rounded-full shrink-0">
                 {user?.role || "Collector"}
               </span>
               <p className="text-zinc-400 font-bold uppercase text-[10px] tracking-[0.2em] truncate max-w-full">
@@ -154,8 +154,8 @@ export default function ProfilePage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex-shrink-0 flex items-center justify-between px-8 py-5 rounded-[2.2rem] font-black transition-all border-2 ${
                   activeTab === tab.id
-                    ? "bg-black text-white border-black shadow-lg scale-[1.02]"
-                    : "bg-white text-zinc-400 border-zinc-50 hover:border-zinc-200"
+                    ? "bg-black dark:bg-white text-white dark:text-black border-black dark:border-white shadow-lg scale-[1.02]"
+                    : "bg-white dark:bg-zinc-950 text-zinc-400 dark:text-zinc-600 border-zinc-50 dark:border-zinc-900 hover:border-zinc-200 dark:hover:border-zinc-700"
                 }`}
               >
                 <div className="flex items-center gap-4">
@@ -171,7 +171,7 @@ export default function ProfilePage() {
             ))}
             <button
               onClick={handleLogout}
-              className="flex-shrink-0 flex items-center gap-4 px-8 py-5 rounded-[2.2rem] font-black text-red-500 bg-red-50/30 border-2 border-transparent hover:bg-red-500 hover:text-white transition-all mt-4 lg:mt-10"
+              className="flex-shrink-0 flex items-center gap-4 px-8 py-5 rounded-[2.2rem] font-black text-red-500 bg-red-50/30 dark:bg-red-950/20 border-2 border-transparent hover:bg-red-500 hover:text-white transition-all mt-4 lg:mt-10"
             >
               <LogOut size={18} />
               <span className="uppercase tracking-[0.2em] text-[10px] italic">
@@ -188,7 +188,7 @@ export default function ProfilePage() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="bg-white border-2 border-zinc-50 rounded-[3rem] md:rounded-[4rem] p-6 md:p-16 shadow-sm overflow-hidden"
+                className="bg-white dark:bg-zinc-950 border-2 border-zinc-50 dark:border-zinc-900 rounded-[3rem] md:rounded-[4rem] p-6 md:p-16 shadow-sm dark:shadow-none overflow-hidden"
               >
                 {activeTab === "overview" && <OverviewTab user={user} />}
                 {activeTab === "edit" && (
@@ -229,9 +229,9 @@ function OverviewTab({ user }: { user: any }) {
       {data.map((item, i) => (
         <div
           key={i}
-          className="p-8 md:p-10 bg-zinc-50 rounded-[3rem] border border-transparent hover:border-zinc-200 transition-all group overflow-hidden"
+          className="p-8 md:p-10 bg-zinc-50 dark:bg-zinc-900 rounded-[3rem] border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800 transition-all group overflow-hidden"
         >
-          <div className="p-4 bg-white rounded-2xl w-fit mb-6 shadow-sm text-zinc-300 group-hover:text-black transition-colors">
+          <div className="p-4 bg-white dark:bg-zinc-950 rounded-2xl w-fit mb-6 shadow-sm text-zinc-300 dark:text-zinc-700 group-hover:text-black dark:group-hover:text-white transition-colors">
             <item.icon size={24} />
           </div>
           <p className="text-[9px] font-black uppercase text-zinc-300 tracking-[0.3em] mb-2">
@@ -315,13 +315,13 @@ function EditProfileTab({ user, refresh }: { user: any; refresh: () => void }) {
         <textarea
           {...register("bio")}
           rows={4}
-          className="w-full px-8 py-6 bg-zinc-50 border-2 border-transparent focus:border-black rounded-[2.5rem] outline-none font-black italic transition-all text-lg resize-none"
+          className="w-full px-8 py-6 bg-zinc-50 dark:bg-zinc-900 border-2 border-transparent focus:border-black dark:focus:border-white rounded-[2.5rem] outline-none font-black italic transition-all text-lg resize-none text-zinc-900 dark:text-white"
         />
       </div>
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full md:w-fit px-14 py-6 bg-black text-white rounded-full font-black uppercase tracking-[0.4em] text-[11px] flex items-center justify-center gap-4 active:scale-95 shadow-2xl transition-all"
+        className="w-full md:w-fit px-14 py-6 bg-black dark:bg-white text-white dark:text-black rounded-full font-black uppercase tracking-[0.4em] text-[11px] flex items-center justify-center gap-4 active:scale-95 shadow-2xl dark:shadow-none transition-all"
       >
         <Save size={18} /> {isSubmitting ? "SYNCING..." : "COMMIT_CHANGES"}
       </button>
@@ -332,7 +332,7 @@ function EditProfileTab({ user, refresh }: { user: any; refresh: () => void }) {
 function SecurityTab() {
   return (
     <div className="space-y-12">
-      <div className="p-10 md:p-12 bg-zinc-950 text-white rounded-[3.5rem] relative overflow-hidden shadow-2xl">
+      <div className="p-10 md:p-12 bg-zinc-950 dark:bg-zinc-900 text-white rounded-[3.5rem] relative overflow-hidden shadow-2xl">
         <Shield
           className="absolute right-[-40px] top-[-40px] opacity-10"
           size={250}
@@ -349,9 +349,9 @@ function SecurityTab() {
           </button>
         </div>
       </div>
-      <div className="p-6 md:p-8 border-2 border-zinc-50 rounded-[3rem] flex flex-col md:flex-row items-center justify-between gap-6 group hover:border-zinc-200 transition-all overflow-hidden">
+      <div className="p-6 md:p-8 border-2 border-zinc-50 dark:border-zinc-900 rounded-[3rem] flex flex-col md:flex-row items-center justify-between gap-6 group hover:border-zinc-200 dark:hover:border-zinc-700 transition-all overflow-hidden bg-white dark:bg-zinc-950">
         <div className="flex items-center gap-6 min-w-0 w-full md:w-auto">
-          <div className="p-4 bg-zinc-50 rounded-2xl text-zinc-400 shrink-0">
+          <div className="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-2xl text-zinc-400 dark:text-zinc-600 shrink-0">
             <Smartphone size={24} />
           </div>
           <div className="min-w-0 flex-1">

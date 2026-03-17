@@ -81,7 +81,7 @@ export default function CartPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#fafafa] text-black pt-24 md:pt-32 pb-20 selection:bg-black selection:text-white">
+    <main className="min-h-screen bg-zinc-50 dark:bg-black text-zinc-900 dark:text-white pt-24 md:pt-32 pb-20 selection:bg-cyan-500 selection:text-white transition-colors duration-300">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* --- DYNAMIC HEADER --- */}
         <header className="mb-12 md:mb-20">
@@ -89,11 +89,11 @@ export default function CartPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="text-[clamp(3.5rem,15vw,10rem)] font-black italic uppercase tracking-tighter leading-[0.85] text-black"
+            className="text-[clamp(3.5rem,15vw,10rem)] font-black italic uppercase tracking-tighter leading-[0.85] text-zinc-900 dark:text-white"
           >
-            Bag<span className="text-zinc-200">.</span>
+            Bag<span className="text-zinc-200 dark:text-zinc-800">.</span>
           </motion.h1>
-          <div className="h-px w-full bg-zinc-200 mt-8 md:mt-12" />
+          <div className="h-px w-full bg-zinc-200 dark:bg-zinc-900 mt-8 md:mt-12" />
         </header>
 
         {/* --- GRID SYSTEM --- */}
@@ -110,10 +110,10 @@ export default function CartPage() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, x: -50 }}
                     transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-                    className={`group relative bg-white p-4 md:p-6 rounded-2xl md:rounded-[2.5rem] border-2 flex flex-row items-center gap-4 md:gap-8 transition-all duration-500 ${
+                    className={`group relative bg-white dark:bg-zinc-950 p-4 md:p-6 rounded-2xl md:rounded-[2.5rem] border-2 flex flex-row items-center gap-4 md:gap-8 transition-all duration-500 ${
                       selectedIds.includes(item.id)
-                        ? "border-black shadow-xl shadow-black/5"
-                        : "border-transparent opacity-50 grayscale hover:opacity-100 hover:grayscale-0"
+                        ? "border-black dark:border-white shadow-xl shadow-black/5 dark:shadow-none"
+                        : "border-transparent opacity-50 grayscale hover:opacity-100 hover:grayscale-0 dark:border-zinc-900"
                     }`}
                   >
                     {/* CUSTOM CHECKBOX */}
@@ -121,17 +121,17 @@ export default function CartPage() {
                       onClick={() => toggleSelect(item.id)}
                       className={`shrink-0 w-6 h-6 md:w-8 md:h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
                         selectedIds.includes(item.id)
-                          ? "bg-black border-black"
-                          : "border-zinc-200 bg-white hover:border-black"
+                          ? "bg-black dark:bg-white border-black dark:border-white"
+                          : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-black dark:hover:border-white"
                       }`}
                     >
                       {selectedIds.includes(item.id) && (
-                        <FiCheck className="text-white" size={14} />
+                        <FiCheck className="text-white dark:text-black" size={14} />
                       )}
                     </button>
 
                     {/* PRODUCT IMAGE */}
-                    <div className="w-20 h-20 md:w-32 md:h-32 shrink-0 bg-zinc-50 rounded-xl md:rounded-[2rem] overflow-hidden border border-zinc-100 relative">
+                    <div className="w-20 h-20 md:w-32 md:h-32 shrink-0 bg-zinc-50 dark:bg-zinc-900 rounded-xl md:rounded-[2rem] overflow-hidden border border-zinc-100 dark:border-zinc-800 relative">
                       <img
                         src={`${API_BASE_URL}/storage/${item.image}`}
                         alt={item.name}
@@ -145,17 +145,17 @@ export default function CartPage() {
                         <h3 className="text-lg md:text-2xl font-black italic uppercase tracking-tighter leading-none truncate pr-4">
                           {item.name}
                         </h3>
-                        <p className="text-sm md:text-lg font-bold italic tracking-tighter text-zinc-400">
+                        <p className="text-sm md:text-lg font-bold italic tracking-tighter text-zinc-400 dark:text-zinc-500">
                           Rp {Number(item.price).toLocaleString()}
                         </p>
                       </div>
 
                       {/* CONTROLS */}
                       <div className="flex items-center gap-3 md:gap-6 self-start md:self-center">
-                        <div className="flex items-center bg-zinc-50 rounded-full border border-zinc-100 p-1">
+                        <div className="flex items-center bg-zinc-50 dark:bg-zinc-900 rounded-full border border-zinc-100 dark:border-zinc-800 p-1">
                           <button
                             onClick={() => updateQuantity(item.id, -1)}
-                            className="w-7 h-7 md:w-9 md:h-9 flex items-center justify-center hover:bg-white rounded-full transition-all"
+                            className="w-7 h-7 md:w-9 md:h-9 flex items-center justify-center hover:bg-white dark:hover:bg-zinc-800 rounded-full transition-all"
                           >
                             <FiMinus size={12} />
                           </button>
@@ -198,19 +198,19 @@ export default function CartPage() {
 
           {/* SUMMARY SIDEBAR (RIGHT) */}
           <div className="lg:col-span-5 xl:col-span-4">
-            <div className="bg-black text-white p-8 md:p-10 rounded-3xl md:rounded-[3rem] lg:sticky lg:top-28 shadow-2xl shadow-black/20">
+            <div className="bg-black dark:bg-white text-white dark:text-black p-8 md:p-10 rounded-3xl md:rounded-[3rem] lg:sticky lg:top-28 shadow-2xl shadow-black/20 dark:shadow-none">
               <div className="space-y-10">
                 <div className="space-y-2">
-                  <p className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-500 italic">
+                  <p className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-500 dark:text-zinc-400 italic">
                     Checkout_Valuation
                   </p>
                   <h2 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter leading-none">
-                    Total<span className="text-zinc-800">.</span>
+                    Total<span className="text-zinc-800 dark:text-zinc-200">.</span>
                   </h2>
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex justify-between items-end border-b border-zinc-800 pb-6">
+                  <div className="flex justify-between items-end border-b border-zinc-800 dark:border-zinc-200 pb-6">
                     <span className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest italic">
                       Subtotal
                     </span>
@@ -235,7 +235,7 @@ export default function CartPage() {
                 <button
                   onClick={handleCheckout}
                   disabled={selectedIds.length === 0}
-                  className="group relative w-full py-5 md:py-6 bg-white text-black rounded-full font-black uppercase tracking-[0.3em] text-[11px] hover:bg-zinc-200 active:scale-[0.98] transition-all disabled:opacity-20 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                  className="group relative w-full py-5 md:py-6 bg-white dark:bg-black text-black dark:text-white rounded-full font-black uppercase tracking-[0.3em] text-[11px] hover:bg-zinc-200 dark:hover:bg-zinc-800 active:scale-[0.98] transition-all disabled:opacity-20 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                 >
                   Execute_Purchase ({selectedIds.length})
                   <FiArrowRight className="group-hover:translate-x-1 transition-transform" />

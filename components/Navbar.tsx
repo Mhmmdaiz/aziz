@@ -8,324 +8,455 @@ import {
 } from "framer-motion";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
-import { createClient } from "@/utils/supabase/client"; // Pastikan path ini benar
+import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
+import { supabase } from "@/utils/supabase/client";
 import {
-  FiShoppingBag,
   FiMenu,
   FiX,
-  FiChevronRight,
   FiLogOut,
-  FiSearch,
   FiZap,
-  FiPlusCircle,
-  FiClipboard,
   FiHome,
   FiGrid,
   FiBookOpen,
-  FiUser,
   FiSettings,
+  FiUser,
+  FiSun,
+  FiMoon,
+  FiShoppingBag,
+  FiTrash2,
+  FiPlus,
+  FiMinus,
+  FiArrowRight,
 } from "react-icons/fi";
+import { ThemeToggle } from "./ThemeToggle";
+import { useSettings } from "@/components/providers/SettingsProvider";
+
+// --- Types ---
+interface CartItem {
+  cartId: string;
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  size: string;
+  quantity: number;
+}
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const supabase = createClient();
 
   const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [hidden, setHidden] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const { theme, setTheme } = useTheme();
+  const { settings } = useSettings();
+  
+  const [storeName, setStoreName] = useState("DAEMONIUM");
+
+  useEffect(() => {
+    if (settings?.store?.store_name) {
+      setStoreName(settings.store.store_name);
+    }
+  }, [settings]);
 
   const { scrollY } = useScroll();
-  const lastScrollY = useRef(0);
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // 1. SCROLL ANIMATION LOGIC
   useMotionValueEvent(scrollY, "change", (latest) => {
-    const previous = lastScrollY.current;
-    if (latest > previous && latest > 150) {
-      setHidden(true);
-      setIsOpen(false);
-    } else if (previous - latest > 20) {
-      setHidden(false);
-    }
     setScrolled(latest > 30);
-    lastScrollY.current = latest;
   });
 
-  // 2. SUPABASE AUTH LOGIC (REALTIME)
+  const fetchUserAndRole = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (session?.user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
+      setUser(profile ? { ...session.user, ...profile } : session.user);
+    } else {
+      setUser(null);
+    }
+  };
+
+  const syncCart = () => {
+    const savedCart = localStorage.getItem("cart");
+    if (savedCart) {
+      try {
+        setCart(JSON.parse(savedCart));
+      } catch (e) {
+        console.error("Cart sync error:", e);
+      }
+    } else {
+      setCart([]);
+    }
+  };
+
   useEffect(() => {
     setMounted(true);
-
-    const fetchUserAndRole = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
-
-        // Gabungkan data auth dan data profile
-        setUser(profile ? { ...session.user, ...profile } : session.user);
-      } else {
-        setUser(null);
-      }
-    };
-
     fetchUserAndRole();
+    syncCart();
 
-    // Listen to changes (Login/Logout)
+    // Listen for storage changes from other components (ProductDetail)
+    window.addEventListener("storage", syncCart);
+
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN") fetchUserAndRole();
-      if (event === "SIGNED_OUT") setUser(null);
+      if (event === "SIGNED_OUT") {
+        setUser(null);
+        router.refresh();
+      }
     });
 
-    return () => subscription.unsubscribe();
-  }, [pathname, supabase]);
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener("storage", syncCart);
+    };
+  }, [router]);
 
   if (!mounted) return null;
 
-  // 3. LOGOUT HANDLER
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setIsOpen(false);
-    router.push("/login");
-    router.refresh();
+    setUser(null);
+    window.location.href = "/auth";
   };
 
-  const isAdmin = user?.role === "admin" || user?.role === "superadmin";
+  const updateQuantity = (cartId: string, delta: number) => {
+    const newCart = cart.map(item => {
+      if (item.cartId === cartId) {
+        return { ...item, quantity: Math.max(1, item.quantity + delta) };
+      }
+      return item;
+    });
+    setCart(newCart);
+    localStorage.setItem("cart", JSON.stringify(newCart));
+    window.dispatchEvent(new Event("storage"));
+  };
 
-  const userLinks = [
-    { href: "/", label: "Home", icon: <FiHome /> },
-    { href: "/shop", label: "Shop", icon: <FiGrid /> },
-    { href: "/journal", label: "Journal", icon: <FiBookOpen /> },
-    { href: "/dashboard", label: "Profil", icon: <FiUser /> },
-  ];
+  const removeItem = (cartId: string) => {
+    const newCart = cart.filter(item => item.cartId !== cartId);
+    setCart(newCart);
+    localStorage.setItem("cart", JSON.stringify(newCart));
+    window.dispatchEvent(new Event("storage"));
+  };
 
-  const adminLinks = [
-    { href: "/admin/dashboard", label: "Dashboard", icon: <FiZap /> },
-    { href: "/admin/orders", label: "Orders", icon: <FiClipboard /> },
-    { href: "/admin/users", label: "Users", icon: <FiUser /> },
-    { href: "/admin/settings", label: "Settings", icon: <FiSettings /> },
-  ];
+  const cartTotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-  const activeLinks = isAdmin ? adminLinks : userLinks;
+  const checkoutMessage = () => {
+    let msg = "*CHCKT_SYST_INVOICE*\n\n";
+    cart.forEach(item => {
+      msg += `• ${item.name} [Size: ${item.size || 'N/A'}] x${item.quantity}\n`;
+    });
+    msg += `\n*TOTAL: IDR ${cartTotal.toLocaleString()}*\n\n_Initiating_Secure_Transfer_`;
+    return msg;
+  };
+
+  const handleCheckout = () => {
+    localStorage.setItem("checkout_items", JSON.stringify(cart));
+    setIsCartOpen(false);
+    router.push("/checkout");
+  };
+
+  const isAdmin =
+    user?.role?.toLowerCase() === "admin" ||
+    user?.role?.toLowerCase() === "superadmin";
+
+  const activeLinks = isAdmin
+    ? [
+        { href: "/admin/dashboard", label: "Dashboard", icon: <FiZap /> },
+        { href: "/admin/journal", label: "Journal", icon: <FiBookOpen /> },
+        { href: "/admin/settings", label: "Settings", icon: <FiSettings /> },
+        { href: "/admin/users", label: "Users", icon: <FiUser /> },
+      ]
+    : [
+        { href: "/", label: "Home", icon: <FiHome /> },
+        { href: "/shop", label: "Shop", icon: <FiGrid /> },
+        { href: "/journal", label: "Journal", icon: <FiBookOpen /> },
+      ];
 
   return (
     <>
-      {/* SEARCH OVERLAY */}
-      <AnimatePresence>
-        {isSearchOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-white/80 backdrop-blur-2xl z-[200] flex flex-col items-center justify-start pt-[15vh] px-6"
-          >
-            <button
-              onClick={() => setIsSearchOpen(false)}
-              className="absolute top-10 right-10 p-4 hover:rotate-90 transition-all"
-            >
-              <FiX size={32} />
-            </button>
-            <div className="w-full max-w-2xl">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  router.push(`/shop?search=${searchQuery}`);
-                  setIsSearchOpen(false);
-                }}
-              >
-                <input
-                  ref={searchInputRef}
-                  autoFocus
-                  type="text"
-                  placeholder="Search Archive..."
-                  className="w-full text-4xl md:text-6xl font-black italic tracking-tighter bg-transparent border-b-4 border-black pb-4 outline-none uppercase"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </form>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <motion.nav
-        variants={{ visible: { y: 0 }, hidden: { y: "-110%" } }}
-        animate={hidden ? "hidden" : "visible"}
-        transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-        className="fixed top-0 left-0 right-0 z-[100] py-3 md:py-6"
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        className="fixed top-0 left-0 right-0 z-[100] py-4 md:py-6"
       >
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className={`relative flex items-center justify-between px-5 md:px-8 h-16 md:h-20 rounded-[1.5rem] md:rounded-[2.5rem] border transition-all duration-500 ${
-              scrolled || isAdmin
-                ? "bg-white/90 backdrop-blur-xl border-zinc-200/50 shadow-xl shadow-black/5"
-                : "bg-white/50 backdrop-blur-md border-white/30 shadow-sm"
+        <div className="w-full px-4 md:px-8 lg:px-12">
+          <div
+            className={`relative flex items-center justify-between px-4 md:px-10 h-16 md:h-20 rounded-[1.5rem] md:rounded-[2.5rem] border transition-all duration-700 glass shadow-2xl ${
+              scrolled || isAdmin || isCartOpen
+                ? "shadow-indigo-500/10 border-indigo-500/20"
+                : "border-white/20 shadow-black/5"
             }`}
           >
-            {/* BRAND */}
-            <div className="flex items-center gap-6 lg:gap-10">
-              <Link
-                href={isAdmin ? "/admin/dashboard" : "/"}
-                className="group shrink-0"
-              >
-                <div className="text-xl font-black tracking-tighter uppercase italic text-zinc-900">
-                  {isAdmin ? "ADMIN" : "CHCKT"}
-                  <span className="text-blue-600">.</span>
+            {/* LEFT: LOGO & DESKTOP NAV */}
+            <div className="flex items-center gap-8">
+              <Link href={isAdmin ? "/admin/dashboard" : "/"} className="group">
+                <div className="text-lg md:text-xl font-black tracking-tighter uppercase italic text-zinc-900 dark:text-white flex items-center gap-1">
+                  {isAdmin ? "ADMIN_CTRL" : storeName.replace(/ /g, "_")}
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_10px_rgba(99,102,241,0.8)]" />
                 </div>
               </Link>
 
-              {/* DESKTOP MENU */}
-              <div className="hidden lg:flex items-center gap-1 p-1 rounded-2xl bg-zinc-950/5">
+              <div className="hidden lg:flex items-center gap-1 p-1 rounded-2xl bg-zinc-500/10 dark:bg-zinc-800/50">
                 {activeLinks.map((link) => (
-                  <NavLink
+                  <Link
                     key={link.href}
                     href={link.href}
-                    active={pathname === link.href}
-                    label={link.label}
-                  />
+                    className="relative px-5 py-2 group"
+                  >
+                    <div
+                      className={`relative z-10 text-[9px] font-black uppercase tracking-widest transition-all ${
+                        pathname === link.href
+                          ? "text-zinc-900 dark:text-white"
+                          : "text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white"
+                      }`}
+                    >
+                      {link.label}
+                    </div>
+                    {pathname === link.href && (
+                      <motion.div
+                        layoutId="nav-pill"
+                        className="absolute inset-0 bg-white/80 dark:bg-zinc-700/80 backdrop-blur-md shadow-lg shadow-indigo-500/10 ring-1 ring-indigo-500/20 rounded-xl z-0"
+                        transition={{
+                          type: "spring",
+                          bounce: 0.15,
+                          duration: 0.5,
+                        }}
+                      />
+                    )}
+                  </Link>
                 ))}
               </div>
             </div>
 
-            {/* ACTIONS */}
-            <div className="flex items-center gap-2 md:gap-4">
+            {/* RIGHT: ACTIONS */}
+            <div className="flex items-center gap-1.5 md:gap-3">
+              {/* Cart Button */}
               {!isAdmin && (
-                <div className="flex items-center border-r border-zinc-200 pr-3 md:pr-4 mr-1">
-                  <Link
-                    href="/cart"
-                    className="relative p-2.5 hover:bg-zinc-100 rounded-full transition-all"
-                  >
-                    <FiShoppingBag size={19} className="text-zinc-900" />
-                  </Link>
-                  <button
-                    onClick={() => setIsSearchOpen(true)}
-                    className="p-2.5 hover:bg-zinc-100 rounded-full text-zinc-900"
-                  >
-                    <FiSearch size={19} />
-                  </button>
-                </div>
+                <button
+                  onClick={() => setIsCartOpen(true)}
+                  className="relative p-2.5 md:p-3 rounded-full bg-zinc-100/50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 hover:bg-indigo-500 hover:text-white dark:hover:bg-indigo-500 transition-all group overflow-hidden"
+                >
+                  <FiShoppingBag size={17} className="md:w-[18px] relative z-10" />
+                  {cartCount > 0 && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-zinc-900 z-20"
+                    >
+                      {cartCount}
+                    </motion.span>
+                  )}
+                  <div className="absolute inset-0 bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity blur-2xl -z-0" />
+                </button>
               )}
 
               {user ? (
-                <div className="flex items-center gap-3">
-                  <div className="hidden md:flex flex-col items-end">
-                    <span className="text-[7px] font-black uppercase tracking-[0.2em] text-blue-600">
-                      {user.role || "member"}
+                <div className="flex items-center gap-3 ml-2">
+                  <div className="hidden md:flex flex-col items-end leading-none">
+                    <span className="text-[7px] font-black uppercase tracking-[0.2em] text-blue-600 mb-0.5">
+                      {user.role}
                     </span>
-                    <span className="text-[10px] font-black uppercase italic text-zinc-900">
-                      {user.full_name || user.email?.split("@")[0]}
+                    <span className="text-[10px] font-black uppercase italic text-zinc-900 dark:text-zinc-100">
+                      {user.full_name || "Auth_User"}
                     </span>
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="p-2.5 rounded-full text-zinc-400 hover:bg-red-50 hover:text-red-500 transition-all"
+                    className="p-2.5 md:p-3 rounded-full text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-all"
                   >
-                    <FiLogOut size={18} />
+                    <FiLogOut size={17} className="md:w-[18px]" />
                   </button>
                 </div>
               ) : (
                 <Link
-                  href="/login"
-                  className="px-6 py-2.5 bg-black text-white rounded-full text-[9px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all"
+                  href="/auth"
+                  className="px-4 md:px-6 py-2.5 bg-black text-white rounded-full text-[8.5px] md:text-[9px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-lg shadow-black/10"
                 >
-                  Access
+                  ACCESS_AUTH
                 </Link>
               )}
 
+              <ThemeToggle />
+
               <button
-                className="lg:hidden w-10 h-10 flex items-center justify-center bg-black text-white rounded-full"
+                className="lg:hidden w-10 h-10 flex items-center justify-center bg-zinc-900 dark:bg-zinc-700 text-white rounded-full ml-1 transition-colors"
                 onClick={() => setIsOpen(!isOpen)}
               >
                 {isOpen ? <FiX size={18} /> : <FiMenu size={18} />}
               </button>
             </div>
-          </motion.div>
+          </div>
         </div>
 
-        {/* MOBILE MENU */}
+        {/* MOBILE MENU OVERLAY */}
         <AnimatePresence>
           {isOpen && (
-            <div className="absolute top-full left-0 right-0 px-4 mt-2 lg:hidden z-[101]">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                className="bg-white border border-zinc-200 rounded-[2rem] p-6 shadow-2xl overflow-y-auto max-h-[80vh]"
-              >
-                <div className="flex flex-col gap-1">
-                  {activeLinks.map((link) => (
-                    <MobileLink
-                      key={link.href}
-                      href={link.href}
-                      label={link.label}
-                      onClick={() => setIsOpen(false)}
-                      icon={link.icon}
-                    />
-                  ))}
-                  <hr className="my-4 border-zinc-50" />
-                  <button
-                    onClick={handleLogout}
-                    className="w-full p-4 bg-red-50 text-red-500 rounded-2xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 italic"
-                  >
-                    <FiLogOut /> Secure_Logout
-                  </button>
-                </div>
-              </motion.div>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute top-24 left-4 right-4 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-8 shadow-2xl border border-zinc-100 dark:border-zinc-800 lg:hidden flex flex-col gap-3 md:gap-4"
+            >
+              {activeLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setIsOpen(false)}
+                  className="text-xl md:text-2xl font-black italic uppercase tracking-tighter border-b border-zinc-50 dark:border-zinc-800 pb-3 md:pb-4 flex justify-between items-center text-zinc-900 dark:text-white transition-colors"
+                >
+                  {link.label} <FiZap className="text-zinc-200 dark:text-zinc-700" />
+                </Link>
+              ))}
+            </motion.div>
           )}
         </AnimatePresence>
       </motion.nav>
+
+      {/* CART DRAWER OVERLAY */}
+      <AnimatePresence>
+        {isCartOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsCartOpen(false)}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[200]"
+            />
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 h-full w-full md:w-[450px] bg-card z-[210] shadow-2xl flex flex-col border-l border-border"
+            >
+              {/* Drawer Header */}
+              <div className="p-6 md:p-8 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                <div>
+                  <h3 className="text-2xl font-black italic uppercase tracking-tighter text-zinc-900 dark:text-white">
+                    Vault_Cart
+                  </h3>
+                  <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-400 mt-1">
+                    {cartCount} Items_Encoded
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsCartOpen(false)}
+                  className="w-12 h-12 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 transition-all"
+                >
+                  <FiX size={20} />
+                </button>
+              </div>
+
+              {/* Drawer Content */}
+              <div className="flex-1 overflow-y-auto p-5 md:p-8 no-scrollbar">
+                {cart.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center">
+                    <div className="w-16 md:w-20 h-16 md:h-20 bg-zinc-50 rounded-full flex items-center justify-center mb-6">
+                      <FiShoppingBag size={28} className="text-zinc-200 md:w-[32px]" />
+                    </div>
+                    <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] md:tracking-[0.5em] text-zinc-300 italic">
+                      Empty_Archive_Vault
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4 md:space-y-6">
+                    {cart.map((item) => (
+                      <div
+                        key={item.cartId}
+                        className="flex gap-4 md:gap-6 p-3 md:p-4 rounded-2xl md:rounded-3xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 group"
+                      >
+                        <div className="w-24 h-24 rounded-2xl overflow-hidden bg-white dark:bg-zinc-800 shrink-0 shadow-sm">
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                          />
+                        </div>
+                        <div className="flex-1 flex flex-col justify-between py-1">
+                          <div>
+                            <div className="flex items-start justify-between gap-2">
+                              <h4 className="text-[13px] font-black italic uppercase tracking-tight text-zinc-900 dark:text-zinc-100 line-clamp-1">
+                                {item.name}
+                              </h4>
+                              <button
+                                onClick={() => removeItem(item.cartId)}
+                                className="text-zinc-300 hover:text-red-500 transition-colors"
+                              >
+                                <FiTrash2 size={14} />
+                              </button>
+                            </div>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mt-1">
+                              Size: {item.size || "Default"}
+                            </p>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4 bg-white dark:bg-zinc-800 px-3 py-1.5 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm">
+                              <button
+                                onClick={() => updateQuantity(item.cartId, -1)}
+                                className="text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                              >
+                                <FiMinus size={12} />
+                              </button>
+                              <span className="text-xs font-black w-4 text-center text-zinc-900 dark:text-zinc-100">
+                                {item.quantity}
+                              </span>
+                              <button
+                                onClick={() => updateQuantity(item.cartId, 1)}
+                                className="text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                              >
+                                <FiPlus size={12} />
+                              </button>
+                            </div>
+                            <span className="text-[12px] font-black text-zinc-900 dark:text-zinc-100">
+                              IDR {(item.price * item.quantity).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Drawer Footer */}
+              {cart.length > 0 && (
+                <div className="p-6 md:p-8 border-t border-border space-y-5 md:space-y-6 bg-card">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-zinc-400">
+                      Total_Valuation
+                    </span>
+                    <span className="text-xl md:text-2xl font-black italic tracking-tighter text-zinc-900 dark:text-zinc-100 leading-none">
+                      IDR {cartTotal.toLocaleString()}
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleCheckout}
+                    className="w-full py-5 md:py-6 bg-zinc-950 text-white rounded-[1.5rem] md:rounded-[2rem] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-[10px] md:text-[11px] shadow-2xl shadow-black/10 hover:bg-zinc-800 transition-all flex items-center justify-center gap-3 md:gap-4 group"
+                  >
+                    Initiate_Deployment <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </>
-  );
-}
-
-// SUB-COMPONENTS
-function NavLink({ href, active, label }: any) {
-  return (
-    <Link href={href} className="relative px-5 py-2 group">
-      <div
-        className={`relative z-10 text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${active ? "text-zinc-900" : "text-zinc-400 group-hover:text-zinc-900"}`}
-      >
-        {label}
-      </div>
-      {active && (
-        <motion.div
-          layoutId="nav-pill"
-          className="absolute inset-0 bg-white shadow-sm ring-1 ring-zinc-200/50 rounded-xl z-0"
-          transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
-        />
-      )}
-    </Link>
-  );
-}
-
-function MobileLink({ href, label, onClick, icon }: any) {
-  return (
-    <Link
-      href={href}
-      onClick={onClick}
-      className="flex items-center justify-between p-4 rounded-2xl hover:bg-zinc-50 transition-colors group"
-    >
-      <div className="flex items-center gap-4">
-        <span className="text-zinc-300 group-hover:text-blue-600">{icon}</span>
-        <span className="text-lg font-black uppercase italic tracking-tighter text-zinc-900">
-          {label}
-        </span>
-      </div>
-      <FiChevronRight className="text-zinc-200" />
-    </Link>
   );
 }

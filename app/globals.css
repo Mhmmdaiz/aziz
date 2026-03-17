@@ -1,19 +1,136 @@
-@import "tailwindcss";
+@import "tailwindcss/index.css";
+
+/* ═══════════════════════════════════════════════════════
+   TAILWIND v4 — Dark Mode via Class Strategy
+   Ini WAJIB ada agar semua class dark: bekerja di seluruh app
+   ═══════════════════════════════════════════════════════ */
+@custom-variant dark (&:where(.dark, .dark *));
+
 
 @theme {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Deep Premium Palette */
+  --bg-main: #FBFBFD;
+  --bg-card: #FFFFFF;
+  --text-primary: #1D1D1F;
+  --text-secondary: #6B7280;
+  --border-main: #E5E7EB;
+
+  /* Accent Colors */
+  --color-primary-accent: #6366F1; /* Indigo-500 */
+  --color-secondary-accent: #F43F5E; /* Rose-500 */
+  --color-vibrant-cyan: #06B6D4; /* Cyan-500 */
+
+  --dark-bg-main: #030303;
+  --dark-bg-card: #0A0A0A;
+  --dark-text-primary: #FAFAFA;
+  --dark-text-secondary: #A1A1AA;
+  --dark-border-main: #1A1A1A;
+
+  --dark-primary-accent: #818CF8; /* Indigo-400 */
+  --dark-secondary-accent: #FB7185; /* Rose-400 */
 }
 
-/* Tambahan biar feel "High-End" nya dapet banget */
+:root {
+  --background: var(--bg-main);
+  --foreground: var(--text-primary);
+  --card: var(--bg-card);
+  --secondary: var(--text-secondary);
+  --border: var(--border-main);
+  --accent: var(--color-primary-accent);
+}
+
+[class~="dark"] {
+  --background: var(--dark-bg-main);
+  --foreground: var(--dark-text-primary);
+  --card: var(--dark-bg-card);
+  --secondary: var(--dark-text-secondary);
+  --border: var(--dark-border-main);
+  --accent: var(--dark-primary-accent);
+}
+
 html {
   scroll-behavior: smooth;
-  /* Bikin warna background default item biar nggak ada 'flash' putih saat loading */
-  background-color: #050505;
+  background-color: var(--background);
+  color: var(--foreground);
+  transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background);
+  color: var(--foreground);
+  transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Premium Selection */
+::selection {
+  background-color: #6366F1;
+  color: #FFFFFF;
+}
+
+[class~="dark"] ::selection {
+  background-color: #818CF8;
+  color: #030303;
+}
+
+/* Scrollbar Premium */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #E5E7EB;
+  border-radius: 10px;
+}
+
+[class~="dark"] ::-webkit-scrollbar-thumb {
+  background: #1A1A1A;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6366F1;
 }
 
 @layer utilities {
-  /* Class yang lu buat tadi buat Journal Slider */
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  [class~="dark"] .glass {
+    background: rgba(10, 10, 10, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .mesh-gradient {
+    background-color: #FBFBFD;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(244, 63, 94, 0.1) 0px, transparent 50%);
+  }
+
+  [class~="dark"] .mesh-gradient {
+    background-color: #030303;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(129, 140, 248, 0.1) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(251, 113, 133, 0.05) 0px, transparent 50%);
+  }
+
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -21,10 +138,14 @@ html {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+}
 
-  /* Bonus: Custom Selection warna biar senada sama brand */
-  ::selection {
-    background-color: white;
-    color: black;
-  }
+/* Animasi marquee */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
 }

@@ -1,220 +1,241 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
+import { supabase } from "@/utils/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiArrowLeft, FiMaximize2, FiLoader } from "react-icons/fi";
-
-const BASE_URL = "http://127.0.0.1:8000";
-
-/**
- * Helper: Normalisasi URL Image dari Laravel Storage
- */
-const getStorageImg = (path: string | null) => {
-  if (!path) return "/placeholder-journal.jpg";
-  if (path.startsWith("http")) return path;
-  const fileName = path.replace(/^(public\/|storage\/|posts\/)/, "");
-  return `${BASE_URL}/storage/posts/${fileName}`;
-};
+import { 
+  ChevronLeft, 
+  Calendar, 
+  Tag, 
+  Clock, 
+  Share2, 
+  User,
+  Zap,
+  ArrowRight
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 export default function JournalDetail() {
-  const params = useParams();
-  const slug = params?.slug;
+  const { slug } = useParams();
   const router = useRouter();
-
   const [post, setPost] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchDetail = async () => {
-      if (!slug) return;
+    const fetchPost = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`${BASE_URL}/api/posts/${slug}`);
-        const data = res.data.data || res.data;
-        setPost(data);
-      } catch (err) {
-        console.error("Narrative not found:", err);
-        router.push("/journal");
+        const { data, error: fetchError } = await supabase
+          .from("journals")
+          .select("*")
+          .eq("slug", slug)
+          .maybeSingle();
+
+        if (fetchError) throw fetchError;
+
+        if (!data) {
+          setError("MANIFEST_NOT_FOUND");
+        } else {
+          setPost(data);
+        }
+      } catch (err: any) {
+        setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-    fetchDetail();
-  }, [slug, router]);
+
+    if (slug) fetchPost();
+  }, [slug]);
 
   if (loading)
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-white text-black">
-        <FiLoader className="animate-spin text-zinc-200 mb-4" size={32} />
-        <span className="text-[10px] font-black uppercase tracking-[0.4em] opacity-40">
-          Synchronizing_Archive...
-        </span>
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-[#FBFBFD] dark:bg-black font-mono">
+        <motion.div 
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="w-10 h-10 border-4 border-zinc-100 dark:border-zinc-900 border-t-zinc-950 dark:border-t-white rounded-full mb-6"
+        />
+        <p className="text-[10px] font-black uppercase tracking-[0.5em] animate-pulse dark:text-white">Registry_Syncing...</p>
       </div>
     );
 
-  if (!post) return null;
+  if (error || !post)
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#FBFBFD] dark:bg-black p-6 text-center font-mono">
+        <div className="w-20 h-20 bg-red-500/10 rounded-[2rem] flex items-center justify-center text-red-500 mb-8">
+          <Zap size={32} />
+        </div>
+        <h1 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter mb-4 dark:text-white">
+          Registry_Failure<span className="text-red-500">.</span>
+        </h1>
+        <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest mb-10">{error || "The artifact you seek is lost in the void."}</p>
+        <Link
+          href="/journal"
+          className="px-10 py-5 bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 rounded-full font-black uppercase tracking-widest text-[10px] hover:shadow-2xl transition-all"
+        >
+          Return_to_Archives
+        </Link>
+      </div>
+    );
+
+  const formattedDate = post.created_at 
+    ? new Date(post.created_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })
+    : "Recently_Recorded";
 
   return (
-    <main className="min-h-screen bg-white selection:bg-black selection:text-white overflow-x-hidden">
-      {/* 1. CINEMATIC HERO SECTION */}
-      <header className="relative min-h-[70vh] md:min-h-[85vh] lg:h-[95vh] w-full bg-zinc-900 overflow-hidden">
-        <motion.div
-          initial={{ scale: 1.1 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 2, ease: "easeOut" }}
-          className="absolute inset-0"
-        >
-          <img
-            src={getStorageImg(post.image)}
-            className="w-full h-full object-cover grayscale opacity-60"
-            alt={post.title}
-          />
-        </motion.div>
+    <main className="min-h-screen bg-[#FBFBFD] dark:bg-black selection:bg-zinc-950 selection:text-white dark:selection:bg-white dark:selection:text-black transition-colors duration-500 font-sans relative overflow-hidden">
+      
+      {/* Ambient Background Glows */}
+      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-zinc-200/20 dark:bg-zinc-800/10 blur-[120px] rounded-full -z-10 pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-zinc-100/30 dark:bg-zinc-900/10 blur-[120px] rounded-full -z-10 pointer-events-none" />
 
-        {/* Navigation Overlay */}
-        <div className="absolute top-0 w-full z-20">
-          <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 h-24 flex items-center">
-            <Link
-              href="/journal"
-              className="text-white mix-blend-difference flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.4em] group"
-            >
-              <FiArrowLeft
-                className="group-hover:-translate-x-2 transition-transform"
-                size={16}
-              />
-              Exit_Archive
-            </Link>
+      {/* NAVIGATION BAR (Floating Style) */}
+      <nav className="fixed top-8 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-3rem)] max-w-7xl">
+        <div className="bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl border border-zinc-100 dark:border-zinc-800/50 p-3 rounded-full flex items-center justify-between shadow-sm">
+          <button 
+            onClick={() => router.back()}
+            className="flex items-center gap-3 pl-4 pr-6 py-3 rounded-full hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all group"
+          >
+            <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 group-hover:text-zinc-950 dark:group-hover:text-white">Back_Archive</span>
+          </button>
+          
+          <div className="hidden md:flex items-center gap-8">
+            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-300">Selinear_Protocols // 0.4.1</span>
+          </div>
+
+          <div className="flex gap-2 pr-2">
+            <button className="p-3 rounded-full hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all text-zinc-400 hover:text-zinc-950 dark:hover:text-white">
+              <Share2 size={16} />
+            </button>
           </div>
         </div>
+      </nav>
 
-        {/* Title Content Overlay */}
-        <div className="absolute inset-0 flex flex-col justify-end pb-12 md:pb-24 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-screen-xl mx-auto w-full">
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.8 }}
-              className="max-w-5xl"
-            >
-              <div className="flex flex-wrap items-center gap-4 md:gap-8 mb-6 md:mb-10">
-                <span className="px-4 py-1.5 bg-white text-black text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-full">
-                  {post.category || "General"}
-                </span>
-                <span className="text-white/50 text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em]">
-                  VOL. {new Date(post.created_at).getFullYear()} — ISSUE_01
-                </span>
-              </div>
-              <h1 className="text-[clamp(2.5rem,9vw,10rem)] font-black italic text-white leading-[0.85] tracking-tighter uppercase break-words">
-                {post.title}
-              </h1>
-            </motion.div>
-          </div>
-        </div>
+      {/* HERO SECTION */}
+      <section className="pt-40 md:pt-56 pb-20 px-6">
+        <div className="max-w-4xl mx-auto">
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-wrap items-center gap-4 mb-8"
+          >
+            <div className="px-4 py-2 bg-zinc-950 dark:bg-white rounded-full flex items-center gap-2">
+              <Tag size={12} className="text-white dark:text-zinc-950" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-white dark:text-zinc-950">
+                {post.category || "General_Artifact"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-zinc-400">
+              <Calendar size={14} />
+              <span className="text-[9px] font-black uppercase tracking-widest">{formattedDate}</span>
+            </div>
+          </motion.div>
 
-        {/* Subtle Gradient Cover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
-      </header>
+          <motion.h1 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="text-[clamp(2.5rem,8vw,6rem)] font-black italic uppercase tracking-tighter leading-[0.85] mb-12 dark:text-white"
+          >
+            {post.title}
+          </motion.h1>
 
-      {/* 2. EDITORIAL GRID LAYOUT */}
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 lg:py-32">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24">
-          {/* Sidebar: Info Chronicle */}
-          <aside className="lg:col-span-4 order-2 lg:order-1">
-            <div className="lg:sticky lg:top-32 space-y-12">
-              <div className="pt-8 border-t-2 border-black">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-300 mb-8">
-                  Chronicle_Metadata
-                </h4>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="relative aspect-[16/8] rounded-[3rem] md:rounded-[5rem] overflow-hidden border border-zinc-100 dark:border-zinc-900 bg-zinc-100 dark:bg-zinc-950 shadow-2xl shadow-zinc-200/50 dark:shadow-none mb-20 group"
+          >
+            <Image 
+              src={post.cover_image || "/placeholder.jpg"} 
+              alt={post.title}
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-[2s] ease-out-expo"
+              priority
+              unoptimized
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
+          </motion.div>
+
+          {/* ARTICLE CONTENT */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+            
+            {/* Sidebar Meta */}
+            <aside className="lg:col-span-3 space-y-12">
+              <div className="p-8 rounded-[2.5rem] bg-white dark:bg-zinc-900/30 border border-zinc-50 dark:border-zinc-800/50 shadow-sm">
                 <div className="space-y-6">
-                  <div className="flex justify-between items-end border-b border-zinc-100 pb-4">
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-                      Architect
-                    </span>
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">
-                      Archive_System
-                    </span>
+                  <div>
+                    <p className="text-[8px] font-black uppercase tracking-widest text-zinc-400 mb-2 italic">Recorded_By</p>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-900 dark:text-white">
+                        <User size={14} />
+                      </div>
+                      <p className="text-[10px] font-black uppercase text-zinc-900 dark:text-white">CHCKT_Admin</p>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-end border-b border-zinc-100 pb-4">
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-                      Released
-                    </span>
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">
-                      {new Date(post.created_at).toLocaleDateString("en-US", {
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </span>
+                  <div>
+                    <p className="text-[8px] font-black uppercase tracking-widest text-zinc-400 mb-2 italic">Read_Duration</p>
+                    <div className="flex items-center gap-3 text-zinc-900 dark:text-white">
+                      <Clock size={14} />
+                      <p className="text-[10px] font-black uppercase">~ 4 MIN_READ</p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="p-8 md:p-10 bg-zinc-50 rounded-[2rem] md:rounded-[3rem] border border-zinc-100">
-                <p className="italic text-sm leading-relaxed text-zinc-500 font-medium">
-                  "This narrative explores the intersection of architectural
-                  precision, material culture, and the evolving identity of
-                  modern garments."
+              <div className="hidden lg:block">
+                <div className="h-px bg-zinc-100 dark:bg-zinc-900 mb-8" />
+                <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-300 leading-relaxed italic">
+                  THIS_ARTIFACT_IS_PART_OF_THE_ARCHIVE_PROTOCOL_SS26. REPRODUCTION_UNAUTHORIZED.
                 </p>
               </div>
-            </div>
-          </aside>
+            </aside>
 
-          {/* Main Article Content */}
-          <article className="lg:col-span-8 order-1 lg:order-2">
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 1 }}
-              className="prose prose-zinc prose-base md:prose-lg lg:prose-xl max-w-none"
-            >
-              {/* Responsive Dropcap & Content */}
-              <div className="text-zinc-900 leading-[1.6] whitespace-pre-line break-words font-medium">
-                <span className="block first-letter:text-7xl md:first-letter:text-8xl lg:first-letter:text-9xl first-letter:font-black first-letter:float-left first-letter:mr-4 first-letter:mt-2 first-letter:leading-none">
-                  {post.content}
-                </span>
-              </div>
-            </motion.div>
+            {/* Main Content */}
+            <article className="lg:col-span-9">
+              <div 
+                className="prose prose-zinc dark:prose-invert prose-2xl max-w-none 
+                  prose-headings:font-black prose-headings:italic prose-headings:uppercase prose-headings:tracking-tighter prose-headings:leading-none
+                  prose-headings:mt-[2.5em] prose-headings:mb-[1em]
+                  prose-p:text-zinc-600 dark:prose-p:text-zinc-400 prose-p:leading-relaxed prose-p:font-medium
+                  prose-p:mb-[1.8em]
+                  prose-strong:text-zinc-950 dark:prose-strong:text-white prose-strong:font-black
+                  prose-img:rounded-[2.5rem] prose-img:border prose-img:border-zinc-100 dark:prose-img:border-zinc-800
+                  prose-blockquote:border-l-4 prose-blockquote:border-zinc-950 dark:prose-blockquote:border-white prose-blockquote:pl-10 prose-blockquote:italic prose-blockquote:text-zinc-500
+                "
+                dangerouslySetInnerHTML={{ __html: post.content }}
+              />
 
-            {/* Pagination / Footer of Narrative */}
-            <div className="mt-20 md:mt-32 pt-12 border-t border-zinc-100 flex flex-col md:flex-row justify-between items-center gap-10">
-              <div className="flex flex-col sm:flex-row gap-8 md:gap-16 w-full md:w-auto">
-                <Link href="#" className="group">
-                  <p className="text-[9px] font-black uppercase text-zinc-300 tracking-[0.3em] mb-2">
-                    Previous_Story
-                  </p>
-                  <p className="font-black italic uppercase text-xs group-hover:text-blue-600 transition-colors tracking-tighter">
-                    The Identity Shift —
-                  </p>
-                </Link>
-                <Link href="#" className="group">
-                  <p className="text-[9px] font-black uppercase text-zinc-300 tracking-[0.3em] mb-2">
-                    Next_Story
-                  </p>
-                  <p className="font-black italic uppercase text-xs group-hover:text-blue-600 transition-colors tracking-tighter">
-                    Digital Fabric —
-                  </p>
+              {/* ENDING PROTOCOL */}
+              <div className="mt-24 pt-16 border-t border-zinc-100 dark:border-zinc-900 flex items-center justify-between">
+                <div className="space-y-2">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Status_Update</p>
+                  <p className="text-sm font-black italic uppercase dark:text-white">EndOf_Submission.</p>
+                </div>
+                <Link 
+                  href="/journal"
+                  className="flex items-center gap-4 text-xs font-black uppercase tracking-widest group dark:text-white"
+                >
+                  Return_Archive
+                  <div className="w-10 h-10 rounded-full border border-zinc-200 dark:border-zinc-800 flex items-center justify-center group-hover:bg-zinc-950 dark:group-hover:bg-white group-hover:text-white dark:group-hover:text-zinc-950 transition-all">
+                    <ArrowRight size={16} />
+                  </div>
                 </Link>
               </div>
-              <button className="h-14 w-14 bg-black text-white rounded-full flex items-center justify-center hover:scale-110 transition-transform shrink-0 shadow-xl">
-                <FiMaximize2 size={20} />
-              </button>
-            </div>
-          </article>
-        </div>
-      </div>
+            </article>
 
-      {/* SUBTLE FOOTER */}
-      <footer className="py-20 border-t border-zinc-50 text-center">
-        <div className="text-xl font-black italic uppercase tracking-tighter mb-4">
-          Archive.
+          </div>
         </div>
-        <p className="text-[9px] font-black uppercase tracking-[0.5em] text-zinc-300 italic">
-          © 2026 Global_Editorial_Collective
-        </p>
-      </footer>
+      </section>
+
+      {/* FOOTER SPACING */}
+      <div className="h-32" />
     </main>
   );
 }

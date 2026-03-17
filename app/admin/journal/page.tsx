@@ -1,281 +1,264 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import axios from "axios";
-import Link from "next/link";
-import Image from "next/image";
-import {
-  FiPlus,
-  FiEdit2,
-  FiTrash2,
-  FiEye,
-  FiLoader,
-  FiHash,
-  FiCreditCard,
-  FiCalendar,
-} from "react-icons/fi";
-import { ReactNode } from "react";
+import { supabase } from "@/utils/supabase/client";
+import { motion, AnimatePresence } from "framer-motion";
 import Swal from "sweetalert2";
 
-// --- 1. DEFINISI INTERFACE (Mencegah Error TypeScript) ---
-interface Post {
-  id: number;
+// Types
+export interface Journal {
+  id: string;
   title: string;
   slug: string;
-  category: string;
-  image: string | null;
+  excerpt: string;
   content: string;
-  status: string;
+  cover_image: string;
+  status: 'draft' | 'published';
+  author_id: string;
   created_at: string;
-  updated_at: string;
+  published_at: string | null;
 }
 
-interface StatCardProps {
-  label: string;
-  value: string | number;
-  unit: string;
-  icon: ReactNode;
-  color?: string;
-}
+// Components
+import JournalHeader from "./components/JournalHeader";
+import JournalSearch from "./components/JournalSearch";
+import JournalTable from "./components/JournalTable";
+import JournalCardMobile from "./components/JournalCardMobile";
+import JournalModal from "./components/JournalModal";
+import JournalForm, { JournalFormData } from "./components/JournalForm";
 
-export default function JournalList() {
-  // Menggunakan tipe Post[] bukan any[] agar lolos build Vercel
-  const [posts, setPosts] = useState<Post[]>([]);
+export default function JournalManagement() {
+  const [journals, setJournals] = useState<Journal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  
+  // Modal states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingJournal, setEditingJournal] = useState<Journal | null>(null);
+  const [modalLoading, setModalLoading] = useState(false);
 
-  const API_URL =
-    process.env.NEXT_PUBLIC_API_URL || "https://chckt-api.railway.app";
-
-  // --- 2. FUNGSI FETCH DATA ---
-  const fetchPosts = useCallback(async () => {
+  const fetchJournals = useCallback(async () => {
     try {
       setLoading(true);
+      const { data, error } = await supabase
+        .from("journals")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
-      const res = await axios.get(`${API_URL}/api/posts`, {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : "",
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        timeout: 10000, // Timeout 10 detik untuk mencegah hang
-      });
-
-      // Mapping data dari struktur Laravel
-      const dataResult = res.data?.data?.data || res.data?.data || res.data;
-      setPosts(Array.isArray(dataResult) ? dataResult : []);
-    } catch (err: unknown) {
-      // Penanganan error tanpa menggunakan 'any'
-      if (axios.isAxiosError(err)) {
-        console.error("Network Error Details:", err.message);
-        if (err.message === "Network Error") {
-          Swal.fire(
-            "Koneksi Gagal",
-            "Periksa koneksi internet atau CORS di Backend.",
-            "error",
-          );
-        }
-      }
+      if (error) throw error;
+      setJournals(data || []);
+    } catch (err: any) {
+      console.error("JOURNAL_FETCH_ERROR:", err.message);
     } finally {
       setLoading(false);
     }
-  }, [API_URL]);
+  }, []);
 
   useEffect(() => {
-    fetchPosts();
-  }, [fetchPosts]);
+    fetchJournals();
 
-  // --- 3. FUNGSI DELETE ---
-  const handleDelete = async (id: number) => {
+    // REALTIME SUBSCRIPTION
+    const channel = supabase
+      .channel("journals-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "journals" }, () => {
+        fetchJournals();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchJournals]);
+
+  const handleCreate = () => {
+    setEditingJournal(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (journal: any) => {
+    setEditingJournal(journal);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id: string, title: string) => {
     const result = await Swal.fire({
-      title: "ARE YOU SURE?",
-      text: "Data yang dihapus tidak dapat dikembalikan.",
+      title: "PURGE_ARTIFACT?",
+      text: `Are you certain about deleting '${title}' from the registry?`,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#000",
-      confirmButtonText: "YA, HAPUS",
-      customClass: { popup: "rounded-[2.5rem]" },
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#zinc-500",
+      confirmButtonText: "YES_PURGE",
+      background: "#fff",
+      color: "#000",
+      customClass: {
+        popup: "rounded-[2rem] border border-zinc-100 font-mono",
+        confirmButton: "rounded-full px-8 py-3 font-black uppercase tracking-widest text-[10px]",
+        cancelButton: "rounded-full px-8 py-3 font-black uppercase tracking-widest text-[10px]",
+      }
     });
 
     if (result.isConfirmed) {
-      try {
-        const token = localStorage.getItem("token");
-        await axios.delete(`${API_URL}/api/posts/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
+      const { error } = await supabase.from("journals").delete().eq("id", id);
+      if (!error) {
+        Swal.fire({
+          title: "PURGED",
+          text: "Registry entry removed successfully.",
+          icon: "success",
+          confirmButtonColor: "#000",
+          customClass: { popup: "rounded-[2rem] font-mono" }
         });
-        fetchPosts();
-        Swal.fire("BERHASIL", "Data telah dihapus.", "success");
-      } catch {
-        Swal.fire("ERROR", "Gagal menghapus data.", "error");
       }
     }
   };
 
+  const handleFormSubmit = async (formData: JournalFormData) => {
+    try {
+      setModalLoading(true);
+      
+      let cover_image = formData.cover_image;
+      
+      // Handle Image Upload if file exists
+      if (formData.imageFile) {
+        const file = formData.imageFile;
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `journal-covers/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("products") // Re-using working 'products' bucket
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from("products")
+          .getPublicUrl(filePath);
+          
+        cover_image = publicUrl;
+      }
+
+      const payload = {
+        title: formData.title,
+        slug: formData.slug,
+        excerpt: formData.excerpt,
+        content: formData.content,
+        cover_image,
+        status: formData.status,
+        author_id: (await supabase.auth.getUser()).data.user?.id,
+        published_at: formData.status === "published" ? new Date().toISOString() : (editingJournal?.published_at || null),
+      };
+
+      if (editingJournal) {
+        const { error } = await supabase
+          .from("journals")
+          .update(payload)
+          .eq("id", editingJournal.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("journals")
+          .insert([payload]);
+        if (error) throw error;
+      }
+
+      setIsModalOpen(false);
+      Swal.fire({
+        title: "SYNCED",
+        text: "Journal registry updated successfully.",
+        icon: "success",
+        confirmButtonColor: "#000",
+        customClass: { popup: "rounded-[2rem] font-mono" }
+      });
+    } catch (err: any) {
+      console.error("JOURNAL_SUBMIT_ERROR_DETAIL:", err);
+      const errorMsg = err.message || err.error_description || "Undefined execution error.";
+      Swal.fire("Registry_Failure", errorMsg, "error");
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const filteredJournals = journals.filter(j => {
+    const matchesSearch = j.title.toLowerCase().includes(search.toLowerCase()) || 
+                         j.slug.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = statusFilter === "all" || j.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
   return (
-    <main className="min-h-screen bg-[#fafafa] pt-24 md:pt-32 pb-20 px-4 md:px-12">
+    <main className="min-h-screen bg-[#FBFBFD] dark:bg-black pt-24 pb-20 px-6 lg:px-12 font-mono transition-colors duration-500">
       <div className="max-w-7xl mx-auto">
-        {/* HEADER */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-          <div>
-            <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter text-black uppercase leading-tight">
-              Archives_
-            </h1>
-            <p className="text-[9px] uppercase tracking-[0.4em] text-gray-400 mt-2 font-bold">
-              Database Journal v1.0
-            </p>
+        
+        <JournalHeader onNew={handleCreate} />
+        
+        <JournalSearch 
+          search={search} 
+          setSearch={setSearch} 
+          status={statusFilter} 
+          setStatus={setStatusFilter} 
+        />
+
+        {loading ? (
+          <div className="py-40 flex flex-col items-center justify-center opacity-20 dark:opacity-40 animate-pulse">
+            <div className="w-12 h-12 border-4 border-black dark:border-white border-t-transparent rounded-full animate-spin mb-6" />
+            <p className="font-black uppercase tracking-[0.5em] text-xs font-mono text-zinc-900 dark:text-white">Registry_Syncing...</p>
           </div>
-          <Link
-            href="/admin/journal/add"
-            className="w-full md:w-auto bg-black text-white px-10 py-5 rounded-full text-[10px] font-black uppercase tracking-widest flex justify-center items-center gap-3 hover:bg-blue-600 transition-all shadow-xl"
-          >
-            Create_New <FiPlus className="text-lg" />
-          </Link>
-        </div>
+        ) : (
+          <>
+            <JournalTable 
+              journals={filteredJournals} 
+              onEdit={handleEdit} 
+              onDelete={handleDelete} 
+            />
+            <JournalCardMobile 
+              journals={filteredJournals} 
+              onEdit={handleEdit} 
+              onDelete={handleDelete} 
+            />
+            
+            {filteredJournals.length === 0 && !loading && search === "" && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="py-32 bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 rounded-[3rem] text-center"
+              >
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-zinc-50 dark:bg-zinc-900 rounded-[2rem] text-zinc-300 mb-8">
+                  <div className="w-8 h-8 border-4 border-zinc-200 dark:border-zinc-800 rounded-lg flex items-center justify-center">
+                    <div className="w-3 h-1 bg-zinc-200 dark:border-zinc-800" />
+                  </div>
+                </div>
+                <h2 className="text-xl font-black italic uppercase tracking-tighter dark:text-white">Registry_Empty</h2>
+                <p className="text-zinc-400 text-xs font-bold uppercase tracking-widest mt-2 px-10">No artifacts detected in the current stream.</p>
+                <button 
+                  onClick={handleCreate}
+                  className="mt-10 px-10 py-5 bg-cyan-600 text-white rounded-full font-black uppercase tracking-widest text-[9px] hover:shadow-xl hover:shadow-cyan-500/20 active:scale-95 transition-all"
+                >
+                  Create_Initial_Entry
+                </button>
+              </motion.div>
+            )}
+          </>
+        )}
 
-        {/* STATS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <StatCard
-            label="01 / Total"
-            value={posts.length}
-            unit="Entries"
-            icon={<FiHash />}
+        <JournalModal 
+          isOpen={isModalOpen} 
+          onClose={() => setIsModalOpen(false)}
+          title={editingJournal ? "Modify_Manifest" : "Initiate_New_Artifact"}
+        >
+          <JournalForm 
+            initialData={editingJournal} 
+            loading={modalLoading} 
+            onSubmit={handleFormSubmit} 
           />
-          <StatCard
-            label="02 / Server"
-            value="Stable"
-            unit="Sync"
-            color="text-blue-600"
-            icon={<FiCreditCard />}
-          />
-          <StatCard
-            label="03 / Year"
-            value="2026"
-            unit="Active"
-            icon={<FiCalendar />}
-          />
-        </div>
+        </JournalModal>
 
-        {/* TABLE */}
-        <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
-          {loading ? (
-            <div className="py-32 text-center flex flex-col items-center gap-4">
-              <FiLoader className="animate-spin text-3xl text-blue-600" />
-              <span className="text-[10px] font-black uppercase tracking-[1em] text-gray-300">
-                Syncing_Vault...
-              </span>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b border-gray-50 text-[8px] uppercase tracking-[0.4em] text-gray-400">
-                    <th className="text-left px-12 py-10 font-black">Image</th>
-                    <th className="text-left px-6 py-10 font-black">Title</th>
-                    <th className="text-left px-6 py-10 font-black hidden md:table-cell">
-                      Status
-                    </th>
-                    <th className="text-right px-12 py-10 font-black">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {posts.map((post) => (
-                    <tr
-                      key={post.id}
-                      className="group hover:bg-gray-50/50 transition-all duration-500"
-                    >
-                      <td className="px-12 py-6">
-                        <div className="w-16 h-16 bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 relative">
-                          <Image
-                            src={
-                              post.image
-                                ? `${API_URL}/storage/posts/${post.image}`
-                                : "/placeholder.jpg"
-                            }
-                            alt="thumb"
-                            fill
-                            className="object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
-                            unoptimized // Penting untuk domain Railway agar tidak error build
-                          />
-                        </div>
-                      </td>
-                      <td className="px-6 py-6">
-                        <span className="text-[7px] font-black text-blue-600 uppercase mb-1 block tracking-widest">
-                          {post.category || "General"}
-                        </span>
-                        <h3 className="text-sm md:text-lg font-black uppercase italic tracking-tighter leading-none group-hover:text-blue-600">
-                          {post.title}
-                        </h3>
-                      </td>
-                      <td className="px-6 py-6 hidden md:table-cell">
-                        <span className="text-[9px] font-black uppercase tracking-widest px-4 py-1.5 bg-gray-50 rounded-full border border-gray-100">
-                          {post.status || "PUBLISHED"}
-                        </span>
-                      </td>
-                      <td className="px-12 py-6 text-right">
-                        <div className="flex justify-end gap-2">
-                          <Link
-                            href={`/journal/${post.slug}`}
-                            className="p-3 bg-white border border-gray-100 rounded-xl hover:bg-black hover:text-white transition-all"
-                          >
-                            <FiEye size={14} />
-                          </Link>
-                          <Link
-                            href={`/admin/journal/edit/${post.id}`}
-                            className="p-3 bg-white border border-gray-100 rounded-xl hover:bg-black hover:text-white transition-all"
-                          >
-                            <FiEdit2 size={14} />
-                          </Link>
-                          <button
-                            onClick={() => handleDelete(post.id)}
-                            className="p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all"
-                          >
-                            <FiTrash2 size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        <footer className="mt-20 pt-10 border-t border-zinc-100 dark:border-zinc-900 flex justify-between text-[8px] font-black uppercase tracking-[0.5em] text-zinc-300 dark:text-zinc-800">
+          <span>Void_Labs_Journal_Engine // v4.1</span>
+          <span>Timestamp: {new Date().getFullYear()} Registry</span>
+        </footer>
       </div>
     </main>
-  );
-}
-
-// --- SUB-COMPONENT ---
-function StatCard({
-  label,
-  value,
-  unit,
-  icon,
-  color = "text-black",
-}: StatCardProps) {
-  return (
-    <div className="bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm relative overflow-hidden group hover:shadow-xl transition-all duration-700">
-      <div className="absolute top-8 right-8 text-gray-100 group-hover:text-blue-100 text-3xl transition-colors">
-        {icon}
-      </div>
-      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">
-        {label}
-      </p>
-      <div className="flex items-baseline gap-3">
-        <h2
-          className={`text-5xl font-black italic uppercase tracking-tighter ${color} leading-none`}
-        >
-          {value}
-        </h2>
-        <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest">
-          {unit}
-        </span>
-      </div>
-      <div className="absolute bottom-0 left-0 w-0 h-1 bg-blue-600 group-hover:w-full transition-all duration-1000"></div>
-    </div>
   );
 }

@@ -1,0 +1,10 @@
+{
+  "gateways": {
+    "midtrans": {
+      "enabled": true,
+      "client_key": "Mid-client-iql6rvE-5KscQJ43",
+      "server_key": "Mid-server-wrdh6zWREskosO0UGzvVqGveL"
+    }
+  },
+  "manual_banks": []
+}

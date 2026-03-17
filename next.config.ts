@@ -10,11 +10,15 @@ const nextConfig: NextConfig = {
       },
       { protocol: "http", hostname: "127.0.0.1", pathname: "/storage/**" },
       { protocol: "http", hostname: "localhost", pathname: "/storage/**" },
+      {
+        protocol: "https",
+        hostname: "qpzvflzmlkeynunatwoz.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
     ],
   },
   // Tambahkan dua baris ini:
   typescript: { ignoreBuildErrors: true },
-  eslint: { ignoreDuringBuilds: true },
 };
 
 export default nextConfig;

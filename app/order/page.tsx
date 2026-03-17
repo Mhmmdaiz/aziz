@@ -66,9 +66,9 @@ function OrderContent() {
 
   if (fetching) {
     return (
-      <div className="bg-white rounded-[3rem] p-20 shadow-sm border border-gray-100 flex flex-col items-center justify-center notranslate">
-        <div className="w-10 h-10 border-4 border-black border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+      <div className="bg-white dark:bg-zinc-950 rounded-[3rem] p-20 shadow-sm border border-gray-100 dark:border-zinc-900 flex flex-col items-center justify-center notranslate transition-colors duration-300">
+        <div className="w-10 h-10 border-4 border-black dark:border-white border-t-transparent dark:border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-zinc-600">
           Syncing_Data...
         </p>
       </div>
@@ -79,28 +79,28 @@ function OrderContent() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-[3rem] p-10 md:p-16 shadow-sm border border-gray-100"
+      className="bg-white dark:bg-zinc-950 rounded-[3rem] p-10 md:p-16 shadow-sm border border-gray-100 dark:border-zinc-900 transition-colors duration-300"
     >
-      <header className="mb-12 border-b border-gray-50 pb-10">
-        <h1 className="text-5xl font-black italic uppercase tracking-tighter mb-4 notranslate">
+      <header className="mb-12 border-b border-gray-50 dark:border-zinc-900 pb-10">
+        <h1 className="text-5xl font-black italic uppercase tracking-tighter mb-4 notranslate text-zinc-900 dark:text-white">
           Review_Order
         </h1>
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.4em] notranslate">
+        <p className="text-[10px] font-bold text-gray-400 dark:text-zinc-600 uppercase tracking-[0.4em] notranslate">
           Transaction ID: #TRX-{trxId}
         </p>
       </header>
 
       <div className="flex flex-col gap-8 mb-16">
-        <div className="flex justify-between items-end bg-gray-50 p-8 rounded-[2rem]">
+        <div className="flex justify-between items-end bg-gray-50 dark:bg-zinc-900 p-8 rounded-[2rem]">
           <div className="notranslate">
-            <p className="text-[9px] font-black uppercase tracking-widest text-blue-600 mb-2">
+            <p className="text-[9px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-2">
               Service_Selected
             </p>
-            <h3 className="text-2xl font-black italic uppercase">
+            <h3 className="text-2xl font-black italic uppercase text-zinc-900 dark:text-white">
               {item ? item.title : `Artifact #${serviceId}`}
             </h3>
           </div>
-          <p className="text-xl font-black italic text-black">
+          <p className="text-xl font-black italic text-zinc-900 dark:text-white">
             {item ? `Rp ${item.price.toLocaleString("id-ID")}` : "Rp 0"}
           </p>
         </div>
@@ -109,7 +109,7 @@ function OrderContent() {
       <button
         onClick={handleProceed}
         disabled={loading || !item}
-        className="w-full bg-black text-white p-8 rounded-[2.5rem] font-black uppercase text-xs hover:bg-blue-600 transition-all flex items-center justify-center gap-4 disabled:bg-gray-400"
+        className="w-full bg-black dark:bg-white text-white dark:text-black p-8 rounded-[2.5rem] font-black uppercase text-xs hover:bg-blue-600 dark:hover:bg-blue-400 transition-all flex items-center justify-center gap-4 disabled:bg-gray-400 dark:disabled:bg-zinc-800 shadow-xl dark:shadow-none"
       >
         {loading ? "CHECKING_AUTH..." : "Validate & Proceed"}
       </button>
@@ -119,7 +119,7 @@ function OrderContent() {
 
 export default function OrderPage() {
   return (
-    <main className="min-h-screen pt-40 pb-20 px-6 md:px-12 bg-[#FBFBFD]">
+    <main className="min-h-screen pt-40 pb-20 px-6 md:px-12 bg-zinc-50 dark:bg-black transition-colors duration-300">
       <div className="max-w-3xl mx-auto">
         <Suspense
           fallback={

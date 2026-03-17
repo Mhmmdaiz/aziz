@@ -120,7 +120,7 @@ export default function AddJournal() {
   if (!mounted) return null;
 
   return (
-    <main className="min-h-screen bg-[#FBFBFB] pt-32 pb-20 px-6">
+    <main className="min-h-screen bg-zinc-50 dark:bg-black pt-32 pb-20 px-6 transition-colors duration-300">
       <div className="max-w-5xl mx-auto">
         {/* BREADCRUMB / BACK */}
         <Link
@@ -136,9 +136,9 @@ export default function AddJournal() {
           <p className="text-[10px] font-black uppercase tracking-[0.5em] text-blue-600 mb-4">
             Editorial_Console / v1.0
           </p>
-          <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter text-zinc-900 uppercase leading-[0.85]">
+          <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter text-zinc-900 dark:text-white uppercase leading-[0.85]">
             New{" "}
-            <span className="text-zinc-300 text-4xl md:text-6xl block md:inline">
+            <span className="text-zinc-300 dark:text-zinc-700 text-4xl md:text-6xl block md:inline">
               Narrative.
             </span>
           </h1>
@@ -154,7 +154,7 @@ export default function AddJournal() {
               01_Visual_Artifact
             </label>
 
-            <div className="relative aspect-square md:aspect-[4/5] rounded-[2.5rem] bg-white border border-zinc-100 shadow-xl shadow-zinc-200/50 overflow-hidden group">
+            <div className="relative aspect-square md:aspect-[4/5] rounded-[2.5rem] bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 shadow-xl shadow-zinc-200/50 dark:shadow-none overflow-hidden group">
               {preview ? (
                 <>
                   <img
@@ -178,13 +178,13 @@ export default function AddJournal() {
                     onChange={handleImageChange}
                     className="absolute inset-0 opacity-0 cursor-pointer z-10"
                   />
-                  <div className="w-20 h-20 bg-zinc-50 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-blue-50 transition-all duration-500">
+                  <div className="w-20 h-20 bg-zinc-50 dark:bg-zinc-900 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-blue-50 dark:group-hover:bg-zinc-800 transition-all duration-500">
                     <FiUploadCloud
                       size={32}
                       className="text-zinc-300 group-hover:text-blue-500"
                     />
                   </div>
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-900 mb-2">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-900 dark:text-white mb-2">
                     Select Cover Image
                   </h4>
                   <p className="text-[9px] text-zinc-400 uppercase tracking-tighter leading-relaxed">
@@ -208,7 +208,7 @@ export default function AddJournal() {
                 value={formData.title}
                 onChange={handleChange}
                 placeholder="Title of the narrative..."
-                className="w-full text-3xl font-black italic tracking-tighter uppercase border-b-2 border-zinc-100 pb-4 focus:border-blue-600 outline-none transition-all placeholder:text-zinc-200 bg-transparent text-zinc-900"
+                className="w-full text-3xl font-black italic tracking-tighter uppercase border-b-2 border-zinc-100 dark:border-zinc-800 pb-4 focus:border-blue-600 outline-none transition-all placeholder:text-zinc-200 dark:placeholder:text-zinc-800 bg-transparent text-zinc-900 dark:text-white"
               />
             </div>
 
@@ -222,10 +222,10 @@ export default function AddJournal() {
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
-                  className="w-full font-bold text-xs uppercase tracking-widest border-b-2 border-zinc-100 pb-4 outline-none focus:border-blue-600 bg-transparent text-zinc-900 cursor-pointer"
+                  className="w-full font-bold text-xs uppercase tracking-widest border-b-2 border-zinc-100 dark:border-zinc-800 pb-4 outline-none focus:border-blue-600 dark:focus:border-white bg-transparent text-zinc-900 dark:text-zinc-100 cursor-pointer transition-all"
                 >
                   {["Branding", "Product", "Event", "Culture"].map((cat) => (
-                    <option key={cat} value={cat}>
+                    <option key={cat} value={cat} className="bg-white dark:bg-zinc-900">
                       {cat}
                     </option>
                   ))}
@@ -240,10 +240,10 @@ export default function AddJournal() {
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  className="w-full font-bold text-xs uppercase tracking-widest border-b-2 border-zinc-100 pb-4 outline-none focus:border-blue-600 bg-transparent text-zinc-900 cursor-pointer"
+                  className="w-full font-bold text-xs uppercase tracking-widest border-b-2 border-zinc-100 dark:border-zinc-800 pb-4 outline-none focus:border-blue-600 dark:focus:border-white bg-transparent text-zinc-900 dark:text-zinc-100 cursor-pointer transition-all"
                 >
-                  <option value="published">Ready to Publish</option>
-                  <option value="draft">Save as Draft</option>
+                  <option value="published" className="bg-white dark:bg-zinc-900">Ready to Publish</option>
+                  <option value="draft" className="bg-white dark:bg-zinc-900">Save as Draft</option>
                 </select>
               </div>
             </div>
@@ -260,7 +260,7 @@ export default function AddJournal() {
                 onChange={handleChange}
                 rows={8}
                 placeholder="Start weaving the story here..."
-                className="w-full text-base leading-relaxed border border-zinc-100 bg-white rounded-[2rem] p-8 shadow-inner shadow-zinc-50 focus:border-blue-600 outline-none transition-all text-zinc-700 font-medium"
+                className="w-full text-base leading-relaxed border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-[2rem] p-8 shadow-inner shadow-zinc-50 dark:shadow-none focus:border-blue-600 outline-none transition-all text-zinc-700 dark:text-zinc-300 font-medium"
               ></textarea>
             </div>
 
@@ -268,7 +268,7 @@ export default function AddJournal() {
             <button
               type="submit"
               disabled={loading}
-              className="group relative overflow-hidden bg-zinc-900 text-white w-full py-6 rounded-full font-black uppercase tracking-[0.4em] text-[11px] flex items-center justify-center gap-3 hover:bg-blue-600 transition-all shadow-2xl shadow-blue-200/20 disabled:bg-zinc-200 disabled:shadow-none disabled:cursor-not-allowed"
+              className="group relative overflow-hidden bg-zinc-900 dark:bg-white text-white dark:text-black w-full py-6 rounded-full font-black uppercase tracking-[0.4em] text-[11px] flex items-center justify-center gap-3 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all shadow-2xl shadow-blue-200/20 dark:shadow-none disabled:bg-zinc-200 dark:disabled:bg-zinc-800"
             >
               {loading ? (
                 <>

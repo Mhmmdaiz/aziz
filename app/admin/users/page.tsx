@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 // Update: Menggunakan client utilitas terbaru
-import { createClient } from "@/utils/supabase/client";
+import { supabase } from "@/utils/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiUsers,
@@ -25,8 +25,6 @@ import Link from "next/link";
 import Swal from "sweetalert2";
 
 export default function UserManagement() {
-  // Inisialisasi client baru
-  const supabase = createClient();
 
   const [users, setUsers] = useState<any[]>([]);
   const [stats, setStats] = useState({
@@ -201,7 +199,7 @@ export default function UserManagement() {
   };
 
   return (
-    <main className="min-h-screen bg-[#FBFBFB] pt-32 pb-20 px-6 relative overflow-x-hidden text-zinc-900">
+    <main className="min-h-screen bg-zinc-50 dark:bg-black pt-32 pb-20 px-6 relative overflow-x-hidden text-zinc-900 dark:text-white transition-colors duration-300">
       <div className="max-w-7xl mx-auto">
         <header className="flex flex-col md:flex-row justify-between items-end gap-8 mb-16">
           <div>
@@ -210,7 +208,7 @@ export default function UserManagement() {
               <span className="text-blue-600">Personnel_Registry</span>
             </nav>
             <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase leading-[0.9] md:leading-[0.85]">
-              Management <br /> <span className="text-zinc-200">Console.</span>
+              Management <br /> <span className="text-zinc-300 dark:text-zinc-700">Console.</span>
             </h1>
           </div>
 
@@ -220,13 +218,13 @@ export default function UserManagement() {
               <input
                 type="text"
                 placeholder="Search Identity..."
-                className="w-full bg-white border border-zinc-100 p-4 pl-14 rounded-2xl text-[11px] font-bold outline-none focus:border-black transition-all"
+                className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 pl-14 rounded-2xl text-[11px] font-bold outline-none focus:border-zinc-500 transition-all dark:text-white"
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
             <button
               onClick={() => openModal()}
-              className="bg-black text-white p-4 rounded-2xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-blue-100"
+              className="bg-black dark:bg-white text-white dark:text-black p-4 rounded-2xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all shadow-xl shadow-blue-100 dark:shadow-none"
             >
               <FiPlus size={18} /> New_User
             </button>
@@ -257,22 +255,22 @@ export default function UserManagement() {
             label="Security"
             value="Active"
             icon={<FiShield />}
-            color="text-zinc-900"
+            color="text-zinc-900 dark:text-zinc-400"
           />
         </div>
 
-        <div className="bg-white rounded-[3rem] border border-zinc-100 shadow-xl shadow-zinc-200/40 overflow-hidden">
+        <div className="bg-white dark:bg-zinc-950 rounded-[3rem] border border-zinc-100 dark:border-zinc-900 shadow-xl shadow-zinc-200/40 dark:shadow-none overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-300 bg-zinc-50/50">
+                <tr className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-600 bg-zinc-50/50 dark:bg-zinc-900/50">
                   <th className="p-8 italic">Identification</th>
                   <th className="p-8 italic">Status</th>
                   <th className="p-8 italic">Contact_Data</th>
                   <th className="p-8 text-right italic">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-50">
+              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-900">
                 {loading ? (
                   <tr>
                     <td colSpan={4} className="p-20 text-center">
@@ -287,11 +285,11 @@ export default function UserManagement() {
                     <tr
                       key={u.id}
                       onClick={() => setSelectedUser(u)}
-                      className="group hover:bg-zinc-50/50 transition-colors cursor-pointer"
+                      className="group hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50 transition-colors cursor-pointer"
                     >
                       <td className="p-8">
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-zinc-100 flex items-center justify-center font-black text-zinc-400 italic border border-zinc-200/50 uppercase">
+                          <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center font-black text-zinc-400 italic border border-zinc-200/50 dark:border-zinc-800 uppercase">
                             {(u.full_name || u.email)?.charAt(0) || "?"}
                           </div>
                           <div>
@@ -306,7 +304,7 @@ export default function UserManagement() {
                       </td>
                       <td className="p-8">
                         <span
-                          className={`px-4 py-1 rounded-full text-[9px] font-black uppercase italic ${u.status === "suspended" ? "bg-red-50 text-red-500" : "bg-emerald-50 text-emerald-500"}`}
+                          className={`px-4 py-1 rounded-full text-[9px] font-black uppercase italic ${u.status === "suspended" ? "bg-red-50 dark:bg-red-950/20 text-red-500" : "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-500"}`}
                         >
                           ● {u.status || "active"}
                         </span>
@@ -326,7 +324,7 @@ export default function UserManagement() {
                               e.stopPropagation();
                               openModal(u);
                             }}
-                            className="p-3 bg-zinc-100 hover:bg-black hover:text-white rounded-xl text-zinc-400 transition-all"
+                            className="p-3 bg-zinc-100 dark:bg-zinc-900 hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black rounded-xl text-zinc-400 transition-all"
                           >
                             <FiEdit3 size={14} />
                           </button>
@@ -365,7 +363,7 @@ export default function UserManagement() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative bg-white w-full max-w-lg rounded-[3rem] p-12 shadow-2xl overflow-hidden"
+              className="relative bg-white dark:bg-zinc-950 w-full max-w-lg rounded-[3rem] p-12 shadow-2xl border border-zinc-100 dark:border-zinc-900 overflow-hidden"
             >
               <h2 className="text-4xl font-black italic uppercase tracking-tighter leading-none mb-8">
                 {formData.id ? "Modify" : "Create"} <br />{" "}
@@ -384,7 +382,7 @@ export default function UserManagement() {
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
-                      className="w-full bg-zinc-50 border-none p-4 rounded-2xl outline-none focus:ring-2 ring-black"
+                      className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-4 rounded-2xl outline-none focus:ring-2 ring-black dark:ring-white transition-all dark:text-white"
                     />
                   </div>
                   <div className="space-y-2">
@@ -396,7 +394,7 @@ export default function UserManagement() {
                       onChange={(e) =>
                         setFormData({ ...formData, email: e.target.value })
                       }
-                      className="w-full bg-zinc-50 border-none p-4 rounded-2xl outline-none focus:ring-2 ring-black"
+                      className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-4 rounded-2xl outline-none focus:ring-2 ring-black dark:ring-white transition-all dark:text-white"
                     />
                   </div>
                 </div>
@@ -407,7 +405,7 @@ export default function UserManagement() {
                     onChange={(e) =>
                       setFormData({ ...formData, phone: e.target.value })
                     }
-                    className="w-full bg-zinc-50 border-none p-4 rounded-2xl outline-none focus:ring-2 ring-black"
+                    className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-4 rounded-2xl outline-none focus:ring-2 ring-black dark:ring-white transition-all dark:text-white"
                   />
                 </div>
                 <div className="space-y-2">
@@ -417,13 +415,13 @@ export default function UserManagement() {
                     onChange={(e) =>
                       setFormData({ ...formData, address: e.target.value })
                     }
-                    className="w-full bg-zinc-50 border-none p-4 rounded-2xl outline-none focus:ring-2 ring-black h-24"
+                    className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-4 rounded-2xl outline-none focus:ring-2 ring-black dark:ring-white h-24 transition-all dark:text-white"
                   />
                 </div>
-                <button
-                  type="submit"
-                  className="w-full bg-black text-white p-5 rounded-2xl flex items-center justify-center gap-3 mt-4 hover:bg-blue-600 transition-all font-black italic tracking-widest uppercase"
-                >
+                  <button
+                    type="submit"
+                    className="w-full bg-black dark:bg-white text-white dark:text-black p-5 rounded-2xl flex items-center justify-center gap-3 mt-4 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all font-black italic tracking-widest uppercase shadow-xl"
+                  >
                   <FiSave size={18} />{" "}
                   {formData.id ? "Sync_Update" : "Register_System"}
                 </button>
@@ -448,7 +446,7 @@ export default function UserManagement() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 30 }}
-              className="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-[70] p-12 overflow-y-auto"
+              className="fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-zinc-950 shadow-2xl z-[70] p-12 overflow-y-auto border-l border-zinc-100 dark:border-zinc-900 transition-colors duration-300"
             >
               <button
                 onClick={() => setSelectedUser(null)}
@@ -460,8 +458,8 @@ export default function UserManagement() {
                 User <br /> <span className="text-zinc-300">File.</span>
               </h2>
               <div className="space-y-8">
-                <div className="flex items-center gap-6 p-6 bg-zinc-50 rounded-3xl border border-zinc-100">
-                  <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-2xl font-black italic text-zinc-300 border border-zinc-100">
+                <div className="flex items-center gap-6 p-6 bg-zinc-50 dark:bg-zinc-900 rounded-3xl border border-zinc-100 dark:border-zinc-800">
+                  <div className="w-16 h-16 bg-white dark:bg-zinc-950 rounded-2xl flex items-center justify-center text-2xl font-black italic text-zinc-300 border border-zinc-100 dark:border-zinc-900">
                     {selectedUser.full_name?.charAt(0)}
                   </div>
                   <div>
@@ -494,7 +492,7 @@ export default function UserManagement() {
                       setSelectedUser(null);
                       openModal(selectedUser);
                     }}
-                    className="py-4 rounded-2xl bg-black text-white text-[10px] font-black uppercase hover:bg-blue-600 transition-all italic"
+                    className="py-4 rounded-2xl bg-black dark:bg-white text-white dark:text-black text-[10px] font-black uppercase hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all italic shadow-lg"
                   >
                     Modify_File
                   </button>
@@ -502,7 +500,7 @@ export default function UserManagement() {
                     onClick={() =>
                       handleUpdateStatus(selectedUser.id, selectedUser.status)
                     }
-                    className="py-4 rounded-2xl bg-zinc-50 text-red-500 text-[10px] font-black uppercase hover:bg-red-500 hover:text-white transition-all italic"
+                    className="py-4 rounded-2xl bg-zinc-100 dark:bg-zinc-900 text-red-500 text-[10px] font-black uppercase hover:bg-red-500 hover:text-white transition-all italic"
                   >
                     Suspend_Unit
                   </button>
@@ -518,9 +516,9 @@ export default function UserManagement() {
 
 function KPICard({ label, value, trend, icon, color }: any) {
   return (
-    <div className="bg-white p-6 rounded-[2.5rem] border border-zinc-100 shadow-sm">
+    <div className="bg-white dark:bg-zinc-900 p-6 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-800 shadow-sm transition-colors duration-300">
       <div className="flex justify-between items-start mb-4">
-        <div className={`p-3 rounded-2xl ${color} bg-opacity-10 text-xl`}>
+        <div className={`p-3 rounded-2xl ${color} bg-opacity-10 dark:bg-opacity-20 text-xl`}>
           {icon}
         </div>
         {trend && (
@@ -532,7 +530,7 @@ function KPICard({ label, value, trend, icon, color }: any) {
       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-1">
         {label}
       </p>
-      <h3 className="text-3xl font-black italic tracking-tighter text-zinc-900">
+      <h3 className="text-3xl font-black italic tracking-tighter text-zinc-900 dark:text-white">
         {value}
       </h3>
     </div>
@@ -541,11 +539,11 @@ function KPICard({ label, value, trend, icon, color }: any) {
 
 function DetailRow({ icon, label, value }: any) {
   return (
-    <div className="border-b border-zinc-50 pb-4">
-      <div className="flex items-center gap-2 text-[9px] font-black text-zinc-300 uppercase italic tracking-widest mb-1">
+    <div className="border-b border-zinc-100 dark:border-zinc-800 pb-4">
+      <div className="flex items-center gap-2 text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase italic tracking-widest mb-1">
         {icon} {label}
       </div>
-      <p className="text-sm font-bold text-zinc-900">{value}</p>
+      <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100 transition-colors">{value}</p>
     </div>
   );
 }

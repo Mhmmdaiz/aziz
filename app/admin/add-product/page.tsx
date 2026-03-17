@@ -1,243 +1,512 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import {
-  FiArrowLeft,
-  FiPlus,
-  FiX,
-  FiSave,
-  FiImage,
-  FiRefreshCw,
-} from "react-icons/fi";
+import { supabase } from "@/utils/supabase/client";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Package, 
+  Upload, 
+  X, 
+  Save, 
+  Image as ImageIcon, 
+  ChevronLeft, 
+  FileText,
+  DollarSign,
+  Layers,
+  Zap,
+  Tag,
+  Ruler,
+  Plus
+} from "lucide-react";
+import Image from "next/image";
 import Swal from "sweetalert2";
 
 export default function AddProduct() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+  
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     price: "",
     stock: "",
+    category: "UNCASTEGORY",
+    sizes: [] as string[],
+    specifications: [{ key: "", value: "" }] as { key: string; value: string }[],
   });
+  
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (user.role !== "admin") {
-      router.push("/");
-    }
+    const checkAdmin = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          router.push("/auth");
+          return;
+        }
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+
+        if (profile?.role !== "admin") {
+          router.push("/");
+          return;
+        }
+        setAuthLoading(false);
+      } catch (error) {
+        console.error("Auth check failed:", error);
+        router.push("/");
+      }
+    };
+    checkAdmin();
   }, [router]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const selected = Array.from(e.target.files);
-      if (images.length + selected.length > 7) {
-        return Swal.fire("LIMIT", "Maksimal 7 foto!", "warning");
+      const selectedFiles = Array.from(e.target.files);
+      if (images.length + selectedFiles.length > 5) {
+        return Swal.fire({
+          title: "LIMIT_EXCEEDED",
+          text: "Maximum 5 visual assets allowed per registry.",
+          icon: "warning",
+          confirmButtonColor: "#000",
+          customClass: { popup: "rounded-[2rem] font-mono" }
+        });
       }
-      setImages((prev) => [...prev, ...selected]);
-      const newPreviews = selected.map((file) => URL.createObjectURL(file));
-      setPreviews((prev) => [...prev, ...newPreviews]);
+      
+      setImages(prev => [...prev, ...selectedFiles]);
+      const newPreviews = selectedFiles.map(file => URL.createObjectURL(file));
+      setPreviews(prev => [...prev, ...newPreviews]);
     }
   };
 
   const removeImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index));
+    setImages(prev => prev.filter((_, i) => i !== index));
     URL.revokeObjectURL(previews[index]);
-    setPreviews(previews.filter((_, i) => i !== index));
+    setPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const addSpecification = () => {
+    setFormData(prev => ({
+      ...prev,
+      specifications: [...prev.specifications, { key: "", value: "" }]
+    }));
+  };
+
+  const removeSpecification = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      specifications: prev.specifications.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleSpecChange = (index: number, field: 'key' | 'value', value: string) => {
+    const newSpecs = [...formData.specifications];
+    newSpecs[index][field] = value;
+    setFormData(prev => ({ ...prev, specifications: newSpecs }));
+  };
+
+  const toggleSize = (size: string) => {
+    setFormData(prev => ({
+      ...prev,
+      sizes: prev.sizes.includes(size) 
+        ? prev.sizes.filter(s => s !== size)
+        : [...prev.sizes, size]
+    }));
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (images.length === 0)
-      return Swal.fire("ERROR", "Visual asset required!", "error");
+    if (images.length === 0) {
+      return Swal.fire({
+        title: "MISSING_ASSETS",
+        text: "At least one visual artifact is required for registration.",
+        icon: "error",
+        confirmButtonColor: "#000",
+        customClass: { popup: "rounded-[2rem] font-mono" }
+      });
+    }
 
     setLoading(true);
-    const token = localStorage.getItem("token");
-    const data = new FormData();
-    data.append("name", formData.name);
-    data.append("description", formData.description);
-    data.append("price", formData.price);
-    data.append("stock", formData.stock);
-    images.forEach((file) => {
-      data.append("images[]", file);
-    });
-
     try {
-      // Endpoint sesuai instruksi tersimpan
-      await axios.post("http://127.0.0.1:8000/api/products", data, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const uploadedUrls: string[] = [];
+
+      // 1. Upload Images to Storage
+      for (const file of images) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `products/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("products")
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from("products")
+          .getPublicUrl(filePath);
+        
+        uploadedUrls.push(publicUrl);
+      }
+
+      // 2. Insert Product to Database
+      // image_url tetap diisi (foto utama), image_urls diisi array lengkap
+      const { error: insertError } = await supabase
+        .from("products")
+        .insert({
+          name: formData.name,
+          description: formData.description,
+          price: parseFloat(formData.price),
+          stock: parseInt(formData.stock),
+          image_url: uploadedUrls[0],
+          image_urls: uploadedUrls,
+          category: formData.category,
+          sizes: formData.sizes,
+          specifications: formData.specifications.filter(s => s.key && s.value),
+        });
+
+      if (insertError) throw insertError;
 
       await Swal.fire({
-        title: "SUCCESS",
-        text: "Artifact stored in vault.",
+        title: "REGISTRY_COMPLETE",
+        text: "Product artifact successfully synchronized to vault.",
         icon: "success",
         confirmButtonColor: "#000",
+        customClass: { popup: "rounded-[2rem] font-mono" }
       });
+
       router.push("/admin/dashboard");
-    } catch (err: any) {
-      Swal.fire("FAILED", "Sync error.", "error");
+    } catch (error: any) {
+      console.error("Full Submission Error Object:", JSON.stringify(error, null, 2));
+      console.error("Detailed Error Message:", error.message);
+      console.error("Error Code/Status:", error.code || error.status || error.statusCode);
+      
+      let errorMessage = error.message || "Failed to commit changes to the registry.";
+      let errorTitle = "SYNC_FAILURE";
+
+      if (error.message?.includes("Bucket not found") || error.statusCode === "404" || error.code === "404") {
+        errorTitle = "STORAGE_CONFIG_REQUIRED";
+        errorMessage = "The 'products' storage bucket was not found. Please create a public bucket named 'products' in your Supabase Dashboard.";
+      } else if (error.message?.includes("row-level security") || error.code === "42501") {
+        errorTitle = "PERMISSION_DENIED";
+        errorMessage = "Authentication or RLS policy failure. Ensure the 'products' bucket has public upload permissions or appropriate policies.";
+      }
+
+      Swal.fire({
+        title: errorTitle,
+        text: errorMessage,
+        icon: "error",
+        confirmButtonColor: "#000",
+        customClass: { popup: "rounded-[2rem] font-mono" }
+      });
     } finally {
       setLoading(false);
     }
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#FBFBFD] dark:bg-black flex items-center justify-center font-mono">
+        <motion.div 
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="w-8 h-8 border-4 border-zinc-200 dark:border-zinc-800 border-t-zinc-950 dark:border-t-white rounded-full"
+        />
+      </div>
+    );
+  }
+
+  const inputClass = "w-full bg-white dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 rounded-2xl px-6 py-4 text-xs font-bold text-zinc-900 dark:text-white placeholder:text-zinc-300 dark:placeholder:text-zinc-700 outline-none focus:border-cyan-500/50 transition-all shadow-sm";
+  const labelClass = "block text-[9px] font-black uppercase tracking-[0.3em] text-zinc-400 mb-2 italic";
+
   return (
-    // PT-20 agar konten tidak mepet ke status bar/top browser
-    <main className="min-h-screen bg-[#f8f9fa] pt-20 pb-20 px-4 md:px-8 font-sans">
-      <div className="max-w-4xl mx-auto bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-100 overflow-visible">
-        {/* HEADER - Dibuat lebih plong agar teks tidak terpotong */}
-        <div className="px-8 py-10 md:px-12 md:py-14 flex flex-col items-center gap-6 relative">
-          <div className="text-center">
-            <h1 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter text-black leading-tight">
-              New Product<span className="text-blue-600">.</span>
+    <main className="min-h-screen bg-[#FBFBFD] dark:bg-black pt-24 pb-20 px-4 md:px-8 font-mono">
+      <div className="max-w-5xl mx-auto">
+        
+        {/* HEADER SECTION */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+          >
+            <button 
+              onClick={() => router.back()}
+              className="flex items-center gap-2 text-zinc-400 hover:text-zinc-950 dark:hover:text-white transition-colors mb-4 group"
+            >
+              <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+              <span className="text-[9px] font-black uppercase tracking-widest">Back_To_Registry</span>
+            </button>
+            <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-zinc-950 dark:text-white mb-2 italic">
+              New_Artifact<span className="text-cyan-500">.</span>
             </h1>
-            <p className="text-[10px] tracking-[0.4em] text-gray-400 font-bold uppercase mt-2">
-              Secure_Archive_Unit
+            <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-[0.2em]">
+              Injecting_New_Product_Into_Vault
             </p>
-          </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex items-center gap-4 bg-white dark:bg-zinc-900 p-2 rounded-full border border-zinc-100 dark:border-zinc-800 shadow-sm"
+          >
+            <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-600">
+              <Zap size={18} />
+            </div>
+            <div className="pr-6">
+              <p className="text-[8px] font-black uppercase text-zinc-400 leading-none mb-1">Status_Protocol</p>
+              <p className="text-[10px] font-black text-zinc-900 dark:text-white uppercase leading-none italic">Active_Injection</p>
+            </div>
+          </motion.div>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-8 pb-12 md:px-16 md:pb-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* GALLERY - Grid lebih rapi */}
-            <div className="space-y-6">
-              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block px-1">
-                Visual_Assets ({images.length}/7)
-              </label>
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          {/* LEFT: Visual Assets */}
+          <div className="lg:col-span-5 space-y-8">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white dark:bg-zinc-950 p-8 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-900 shadow-sm"
+            >
+              <div className="flex items-center justify-between mb-8">
+                <label className={labelClass}>Visual_Artifacts_({images.length}/5)</label>
+                <ImageIcon className="text-zinc-200" size={16} />
+              </div>
 
-              <div className="grid grid-cols-4 gap-3">
-                {previews.map((src, i) => (
-                  <div
-                    key={i}
-                    className="aspect-square rounded-2xl overflow-hidden relative border border-gray-100 bg-gray-50 group"
-                  >
-                    <img
-                      src={src}
-                      className="w-full h-full object-cover"
-                      alt="preview"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(i)}
-                      className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <AnimatePresence>
+                  {previews.map((src, i) => (
+                    <motion.div
+                      key={src}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className="aspect-square rounded-3xl overflow-hidden relative border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 group"
                     >
-                      <FiX className="text-white" size={20} />
-                    </button>
-                  </div>
-                ))}
+                      <Image 
+                        src={src} 
+                        fill 
+                        className="object-cover group-hover:scale-110 transition-transform duration-700" 
+                        alt="Artifact preview"
+                        unoptimized
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(i)}
+                        className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                      >
+                        <X className="text-white" size={24} />
+                      </button>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
 
-                {images.length < 7 && (
-                  <label className="aspect-square rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:border-black transition-all group">
-                    <input
-                      type="file"
-                      multiple
-                      onChange={handleImageChange}
-                      className="hidden"
-                      accept="image/*"
-                    />
-                    <FiPlus
-                      size={24}
-                      className="text-gray-300 group-hover:text-black transition-transform group-hover:scale-110"
-                    />
+                {images.length < 5 && (
+                  <label 
+                    className="aspect-square rounded-3xl bg-zinc-50/50 dark:bg-zinc-900/50 border-2 border-dashed border-zinc-100 dark:border-zinc-800 flex flex-col items-center justify-center cursor-pointer hover:border-cyan-500/50 hover:bg-white dark:hover:bg-zinc-900 transition-all group overflow-hidden"
+                  >
+                    <input type="file" multiple onChange={handleImageChange} className="hidden" accept="image/*" />
+                    <Upload size={24} className="text-zinc-300 group-hover:text-cyan-500 transition-all group-hover:-translate-y-1" />
+                    <span className="text-[8px] font-black uppercase text-zinc-400 mt-2 tracking-widest group-hover:text-zinc-600 transition-colors">Attach_Media</span>
                   </label>
                 )}
               </div>
 
               {images.length === 0 && (
-                <div className="h-40 rounded-3xl bg-gray-50 border-2 border-dashed border-gray-100 flex flex-col items-center justify-center text-gray-300">
-                  <FiImage size={32} strokeWidth={1} />
-                  <span className="text-[9px] font-black uppercase mt-2">
-                    No Media Attached
-                  </span>
+                <div className="h-40 rounded-[2rem] bg-zinc-50/30 dark:bg-zinc-900/10 border-2 border-dashed border-zinc-100 dark:border-zinc-900 flex flex-col items-center justify-center text-zinc-300">
+                  <ImageIcon size={32} strokeWidth={1} />
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] mt-3">Void_Storage</span>
                 </div>
               )}
-            </div>
+            </motion.div>
 
-            {/* INPUTS - Dibuat lebih clean */}
-            <div className="space-y-8">
-              <div className="relative border-b-2 border-gray-100 focus-within:border-black transition-colors py-2">
-                <label className="text-[9px] font-black uppercase text-gray-400 block tracking-widest mb-1">
-                  Model_Name
-                </label>
-                <input
-                  required
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  className="w-full text-xl md:text-2xl font-black outline-none bg-transparent placeholder:text-gray-200 uppercase italic"
-                  placeholder="EX: CORE_UNIT_01"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[9px] font-black uppercase text-gray-400 block tracking-widest">
-                  Description
-                </label>
-                <textarea
-                  required
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  rows={3}
-                  className="w-full p-5 bg-gray-50 rounded-2xl outline-none focus:ring-1 focus:ring-black text-sm transition-all"
-                  placeholder="Specs & details..."
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-gray-50 rounded-2xl">
-                  <label className="text-[9px] font-black uppercase text-gray-400 block mb-1">
-                    Valuation
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    onChange={(e) =>
-                      setFormData({ ...formData, price: e.target.value })
-                    }
-                    className="w-full bg-transparent font-black text-lg outline-none"
-                    placeholder="0"
-                  />
-                </div>
-                <div className="p-4 bg-gray-50 rounded-2xl">
-                  <label className="text-[9px] font-black uppercase text-gray-400 block mb-1">
-                    Vault_Stock
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    onChange={(e) =>
-                      setFormData({ ...formData, stock: e.target.value })
-                    }
-                    className="w-full bg-transparent font-black text-lg outline-none"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-black text-white py-6 rounded-2xl font-black uppercase tracking-[0.4em] text-[11px] flex items-center justify-center gap-3 hover:bg-blue-600 transition-all shadow-xl active:scale-95 disabled:bg-gray-300"
-              >
-                {loading ? (
-                  <FiRefreshCw className="animate-spin" />
-                ) : (
-                  "SYNCHRONIZE"
-                )}
-                <FiSave size={16} />
-              </button>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-cyan-500/5 p-8 rounded-[2.5rem] border border-cyan-500/10"
+            >
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-cyan-600 mb-2 italic">Security_Notice</h4>
+              <p className="text-[9px] font-bold text-zinc-500 leading-relaxed uppercase">
+                All visual assets will be processed and encrypted within the vault storage. Ensure high definition artifacts for optimal display.
+              </p>
+            </motion.div>
           </div>
+
+          {/* RIGHT: Product Data */}
+          <div className="lg:col-span-7 space-y-8">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-white dark:bg-zinc-950 p-10 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-900 shadow-sm"
+            >
+              <div className="space-y-8">
+                <div>
+                  <label className={labelClass}>Artifact_Identifier</label>
+                  <div className="relative">
+                    <Package className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-300" size={16} />
+                    <input 
+                      name="name"
+                      required
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      className={`${inputClass} pl-14`}
+                      placeholder="ENTER_PRODUCT_DESIGNATION"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className={labelClass}>Market_Valuation</label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-300" size={16} />
+                      <input 
+                        name="price"
+                        type="number"
+                        required
+                        value={formData.price}
+                        onChange={handleInputChange}
+                        className={`${inputClass} pl-14`}
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Inventory_Count</label>
+                    <div className="relative">
+                      <Layers className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-300" size={16} />
+                      <input 
+                        name="stock"
+                        type="number"
+                        required
+                        value={formData.stock}
+                        onChange={handleInputChange}
+                        className={`${inputClass} pl-14`}
+                        placeholder="UNITS"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className={labelClass}>Artifact_Classification</label>
+                  <div className="relative">
+                    <Tag className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-300" size={16} />
+                    <select 
+                      name="category"
+                      value={formData.category}
+                      onChange={handleInputChange}
+                      className={`${inputClass} pl-14 appearance-none cursor-pointer`}
+                    >
+                      <option value="APPAREL">APPAREL</option>
+                      <option value="ACCESSORIES">ACCESSORIES</option>
+                      <option value="FOOTWEAR">FOOTWEAR</option>
+                      <option value="LIFESTYLE">LIFESTYLE</option>
+                      <option value="UNCASTEGORY">UNCASTEGORY</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className={labelClass}>Available_Dimensions</label>
+                  <div className="flex flex-wrap gap-3">
+                    {["XS", "S", "M", "L", "XL", "XXL"].map((size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => toggleSize(size)}
+                        className={`min-w-[50px] h-12 rounded-xl text-[10px] font-black transition-all border-2 ${
+                          formData.sizes.includes(size)
+                            ? "bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 border-zinc-950 dark:border-white shadow-lg"
+                            : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 text-zinc-400 hover:border-zinc-300"
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className={labelClass}>Technical_Specifications</label>
+                  <div className="space-y-4 mb-6">
+                    {formData.specifications.map((spec, index) => (
+                      <div key={index} className="flex gap-4 items-center">
+                        <input 
+                          value={spec.key}
+                          onChange={(e) => handleSpecChange(index, 'key', e.target.value)}
+                          placeholder="LABEL (e.g. Material)"
+                          className={`${inputClass} !py-3`}
+                        />
+                        <input 
+                          value={spec.value}
+                          onChange={(e) => handleSpecChange(index, 'value', e.target.value)}
+                          placeholder="VALUE (e.g. 100% Cotton)"
+                          className={`${inputClass} !py-3`}
+                        />
+                        <button 
+                          type="button"
+                          onClick={() => removeSpecification(index)}
+                          className="p-3 text-zinc-300 hover:text-red-500 transition-colors"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ))}
+                    <button 
+                      type="button"
+                      onClick={addSpecification}
+                      className="text-[9px] font-black uppercase tracking-widest text-cyan-500 flex items-center gap-2 hover:gap-3 transition-all"
+                    >
+                      <Plus size={14} /> Add_Specification_Entry
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className={labelClass}>Abstract_Briefing</label>
+                  <div className="relative">
+                    <FileText className="absolute left-6 top-8 text-zinc-300" size={16} />
+                    <textarea 
+                      name="description"
+                      required
+                      value={formData.description}
+                      onChange={handleInputChange}
+                      rows={5}
+                      className={`${inputClass} pl-14 resize-none`}
+                      placeholder="PROVIDE_TECHNICAL_SPECIFICATIONS_AND_GENERAL_CONTEXT..."
+                    />
+                  </div>
+                </div>
+
+                <button 
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-6 bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 rounded-full font-black uppercase tracking-[0.4em] text-[11px] hover:shadow-2xl hover:shadow-black/20 dark:hover:shadow-white/10 transition-all flex items-center justify-center gap-4 disabled:opacity-50 active:scale-[0.98] group"
+                >
+                  <Save size={18} className="group-hover:-translate-y-1 transition-transform" />
+                  {loading ? "INITIALIZING_SYNC..." : "COMMIT_TO_REGISTRY"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+
         </form>
       </div>
     </main>

@@ -2,25 +2,29 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
 import Swal from "sweetalert2";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  FiMapPin,
   FiShield,
   FiChevronLeft,
   FiSmartphone,
   FiHome,
   FiCheckCircle,
+  FiArrowRight,
   FiLock,
   FiPackage,
-  FiArrowRight,
+  FiCreditCard,
+  FiExternalLink,
 } from "react-icons/fi";
+import { supabase } from "@/utils/supabase/client";
+import { useSettings } from "@/components/providers/SettingsProvider";
+import Script from "next/script";
 
-const BASE_URL = "http://127.0.0.1:8000";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const { settings } = useSettings();
 
   // --- STATES ---
   const [fetchingUser, setFetchingUser] = useState(true);
@@ -28,6 +32,7 @@ export default function CheckoutPage() {
   const [checkoutItems, setCheckoutItems] = useState<any[]>([]);
   const [selectedPayment, setSelectedPayment] = useState("midtrans");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -41,43 +46,45 @@ export default function CheckoutPage() {
 
   // --- INITIALIZATION ---
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const savedItems = JSON.parse(
-      localStorage.getItem("checkout_items") || "[]",
-    );
+    const initCheckout = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const savedItems = JSON.parse(
+        localStorage.getItem("checkout_items") || "[]",
+      );
 
-    if (savedItems.length === 0) {
-      router.push("/cart");
-      return;
-    }
+      if (savedItems.length === 0) {
+        router.push("/shop");
+        return;
+      }
 
-    setCheckoutItems(savedItems);
+      setCheckoutItems(savedItems);
 
-    if (!token) {
-      router.push("/login");
-    } else {
-      fetchUserProfile(token);
-    }
-  }, [router]);
-
-  const fetchUserProfile = async (token: string) => {
-    try {
-      const { data } = await axios.get(`${BASE_URL}/api/user`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setFormData((prev) => ({
-        ...prev,
-        name: data.name || "",
-        email: data.email || "",
-        phone: data.phone || "",
-        address: data.address || "",
-      }));
-    } catch (err) {
-      console.error("Identity_Fetch_Failed");
-    } finally {
+      if (!session) {
+        router.push("/auth?redirect=/checkout");
+      } else {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", session.user.id)
+          .single();
+        
+        if (profile) {
+          setUser(profile);
+          setFormData((prev) => ({
+            ...prev,
+            name: profile.name || "",
+            email: session.user.email || "",
+            phone: profile.phone || "",
+            address: profile.address || "",
+          }));
+        }
+      }
       setFetchingUser(false);
-    }
-  };
+    };
+
+    initCheckout();
+  }, [router]);
 
   // --- CALCULATIONS ---
   const subtotal = useMemo(() => {
@@ -87,7 +94,7 @@ export default function CheckoutPage() {
     );
   }, [checkoutItems]);
 
-  const grandTotal = subtotal; // Bisa ditambahkan logic shipping fee di sini
+  const grandTotal = subtotal;
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -97,344 +104,378 @@ export default function CheckoutPage() {
 
   const handleFinalCheckout = async () => {
     if (!agreedToTerms) {
-      Swal.fire(
-        "Protocol_Error",
-        "Please accept the Terms & Conditions",
-        "warning",
-      );
+      Swal.fire({
+        title: "PROTOCOL_ERROR",
+        text: "Please accept the terms and conditions protocol.",
+        icon: "warning",
+        confirmButtonColor: "#000",
+        customClass: { popup: "rounded-[2rem] font-mono border border-zinc-800" }
+      });
       return;
     }
 
     setIsSubmitting(true);
-    const token = localStorage.getItem("token");
-
+    
     Swal.fire({
-      title: "Executing_Protocol",
-      text: "Securing transaction path...",
+      title: "INITIALIZING_BRIDGE",
+      text: "Securing transaction tunnel...",
       allowOutsideClick: false,
+      background: "#000",
+      color: "#fff",
       didOpen: () => Swal.showLoading(),
+      customClass: { popup: "rounded-[2rem] font-mono border border-zinc-800" }
     });
 
     try {
-      const { data } = await axios.post(
-        `${BASE_URL}/api/checkout`,
-        {
-          items: checkoutItems.map((item) => ({
-            id: item.id,
-            qty: item.quantity || 1,
-          })),
-          payment_type: selectedPayment,
-          customer_details: formData,
+      const { data: { session } } = await supabase.auth.getSession();
+
+      const response = await fetch("/api/checkout/midtrans", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session?.access_token}`
         },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+        credentials: "include",
+        body: JSON.stringify({
+          items: checkoutItems,
+          customer_details: formData,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || "Deployment failed.");
 
       Swal.close();
-      if (data.snap_token) {
-        // @ts-ignore
-        window.snap.pay(data.snap_token, {
-          onSuccess: () => {
-            localStorage.removeItem("cart");
-            localStorage.removeItem("checkout_items");
-            router.push("/orders/success");
-          },
-          onPending: () => router.push("/orders/pending"),
-          onError: () => Swal.fire("Error", "Transaction Refused", "error"),
-        });
-      }
-    } catch (err) {
-      Swal.fire("Error", "Transaction Refused", "error");
-    } finally {
+
+      // Open Midtrans Snap
+      // @ts-ignore
+      window.snap.pay(data.token, {
+        onSuccess: (result: any) => {
+          localStorage.removeItem("cart");
+          localStorage.removeItem("checkout_items");
+          Swal.fire({
+            title: "DEPLOY_SUCCESS",
+            text: "Payment verified. Initializing item logistics.",
+            icon: "success",
+            background: "#000",
+            color: "#fff",
+            confirmButtonColor: "#fff",
+            confirmButtonText: "CONTINUE_TO_ORDERS",
+            customClass: { 
+              popup: "rounded-[2rem] font-mono border border-zinc-800",
+              confirmButton: "text-black font-black"
+            }
+          }).then(() => router.push(`/admin/orders?order_id=${data.orderId}`));
+        },
+        onPending: (result: any) => {
+          localStorage.removeItem("cart");
+          localStorage.removeItem("checkout_items");
+          router.push(`/admin/orders?order_id=${data.orderId}`);
+        },
+        onError: (result: any) => {
+          Swal.fire({
+              title: "GATEWAY_REFUSED", 
+              text: result.status_message || "Payment failed or was denied.", 
+              icon: "error",
+              background: "#000",
+              color: "#fff",
+              customClass: { popup: "rounded-[2rem] font-mono border border-zinc-800" }
+          });
+        },
+        onClose: () => {
+          setIsSubmitting(false);
+        }
+      });
+      
+    } catch (err: any) {
+      Swal.fire({
+          title: "FATAL_DEPLOY_ERROR",
+          text: err.message || "Unknown error in payment bridge.",
+          icon: "error",
+          background: "#000",
+          color: "#fff",
+          customClass: { popup: "rounded-[2rem] font-mono border border-zinc-800" }
+      });
       setIsSubmitting(false);
     }
   };
 
+  if (fetchingUser) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center font-mono">
+        <div className="text-white text-xs tracking-[0.5em] animate-pulse">SYNCHRONIZING_CORE...</div>
+      </div>
+    );
+  }
+
   return (
-    <main className="min-h-screen bg-[#fafafa] text-black selection:bg-black selection:text-white pb-24">
-      {/* PENTING: pt-24 di mobile dan pt-40 di desktop untuk memastikan 
-          konten tidak tertutup Navbar Fixed 
-      */}
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 md:pt-32 lg:pt-40">
+    <main className="min-h-screen bg-white dark:bg-black text-zinc-900 dark:text-zinc-100 selection:bg-zinc-900 selection:text-white dark:selection:bg-white dark:selection:text-black transition-colors duration-500">
+      <div className="max-w-7xl mx-auto px-6 pt-32 pb-24">
+        
         {/* --- HEADER --- */}
-        <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-6"
+        <div className="mb-20 flex flex-col md:flex-row md:items-end justify-between gap-10">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4"
           >
             <button
-              onClick={() => router.back()}
-              className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 hover:text-black transition-all"
+               onClick={() => router.back()}
+               className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 hover:text-black dark:hover:text-white transition-all mb-4"
             >
               <FiChevronLeft className="group-hover:-translate-x-1 transition-transform" />
-              Return_to_Bag
+              Return_to_vault
             </button>
-            <h1 className="text-[clamp(3.5rem,12vw,8rem)] font-black italic uppercase tracking-tighter leading-[0.8] mb-0">
-              Review<span className="text-zinc-200">.</span>
+            <h1 className="text-[clamp(3rem,10vw,7rem)] font-black uppercase tracking-tighter leading-[0.85] italic">
+              Deploy<span className="text-zinc-200 dark:text-zinc-800">.</span>Checkout
             </h1>
+            <p className="text-xs font-bold uppercase tracking-[0.3em] text-zinc-500 max-w-md">
+              Secure_transaction_tunnel_v2.0 // Port_8080_Active
+            </p>
           </motion.div>
 
-          <div className="hidden md:block text-right pb-2">
-            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-300 italic mb-1">
-              Status_Check
-            </p>
-            <p className="text-sm font-bold italic uppercase tracking-tighter">
-              Secure_Tunnel_Active
-            </p>
+          <div className="hidden lg:flex items-center gap-12 border-l border-zinc-100 dark:border-zinc-900 pl-12">
+             <div className="space-y-1">
+                <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Security_Level</p>
+                <div className="flex items-center gap-2 text-xs font-bold italic">
+                   <FiLock className="text-emerald-500" />
+                   E2E_ENCRYPTED
+                </div>
+             </div>
+             <div className="space-y-1">
+                <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Node_Location</p>
+                <div className="flex items-center gap-2 text-xs font-bold italic">
+                   <FiExternalLink className="text-blue-500" />
+                   SECURE_GATEWAY
+                </div>
+             </div>
           </div>
-        </header>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
-          {/* --- LEFT: FORM DATA --- */}
-          <div className="lg:col-span-7 space-y-20">
-            {/* SECTION 1: IDENTITY */}
-            <section className="space-y-8">
-              <div className="flex items-center gap-4">
-                <span className="flex-none w-10 h-10 bg-black text-white rounded-full flex items-center justify-center text-[10px] font-black italic">
-                  01
-                </span>
-                <h3 className="font-black uppercase tracking-[0.3em] text-[10px] italic text-zinc-400">
-                  Identity_Auth
-                </h3>
-                <div className="h-px bg-zinc-200 flex-grow" />
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+          {/* --- LEFT: INFRASTRUCTURE --- */}
+          <div className="lg:col-span-7 space-y-24">
+            
+            {/* 01. IDENTITY */}
+            <section className="space-y-10">
+               <div className="flex items-center gap-4">
+                  <span className="text-3xl font-black italic opacity-10">01</span>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400">Identity_Verification</h3>
+                  <div className="h-px flex-1 bg-zinc-100 dark:bg-zinc-900" />
+               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-2">
-                    Legal_Name
-                  </label>
-                  <input
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full p-5 bg-white border border-zinc-100 rounded-2xl focus:border-black outline-none transition-all font-bold italic"
-                    placeholder="ENTER_NAME"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-2">
-                    Communication_Email
-                  </label>
-                  <input
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full p-5 bg-white border border-zinc-100 rounded-2xl focus:border-black outline-none transition-all font-bold italic"
-                    placeholder="EMAIL_ADDRESS"
-                  />
-                </div>
-              </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="group space-y-3">
+                     <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-4">Full_Identity_Name</label>
+                     <input 
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        placeholder="ENTER_NAME"
+                        className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 p-6 rounded-[2rem] font-bold italic focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
+                     />
+                  </div>
+                  <div className="group space-y-3">
+                     <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-4">Communication_Protocol</label>
+                     <input 
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        placeholder="EMAIL_HOST_ADDRESS"
+                        className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 p-6 rounded-[2rem] font-bold italic focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
+                     />
+                  </div>
+               </div>
             </section>
 
-            {/* SECTION 2: DELIVERY */}
-            <section className="space-y-8">
-              <div className="flex items-center gap-4">
-                <span className="flex-none w-10 h-10 bg-black text-white rounded-full flex items-center justify-center text-[10px] font-black italic">
-                  02
-                </span>
-                <h3 className="font-black uppercase tracking-[0.3em] text-[10px] italic text-zinc-400">
-                  Distribution_Point
-                </h3>
-                <div className="h-px bg-zinc-200 flex-grow" />
-              </div>
+            {/* 02. LOGISTICS */}
+            <section className="space-y-10">
+               <div className="flex items-center gap-4">
+                  <span className="text-3xl font-black italic opacity-10">02</span>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400">Logistics_Coordination</h3>
+                  <div className="h-px flex-1 bg-zinc-100 dark:bg-zinc-900" />
+               </div>
 
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 ml-2">
-                    Physical_Address
-                  </label>
-                  <textarea
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    rows={3}
-                    className="w-full p-6 bg-white border border-zinc-100 rounded-[2.5rem] focus:border-black outline-none transition-all font-bold italic resize-none"
-                    placeholder="COORDINATES_STREET_NUMBER"
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <input
-                    name="city"
-                    placeholder="CITY_LOCATION"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    className="w-full p-5 bg-white border border-zinc-100 rounded-2xl focus:border-black outline-none transition-all font-bold italic uppercase"
-                  />
-                  <input
-                    name="postalCode"
-                    placeholder="POST_CODE"
-                    value={formData.postalCode}
-                    onChange={handleInputChange}
-                    className="w-full p-5 bg-white border border-zinc-100 rounded-2xl focus:border-black outline-none transition-all font-bold italic uppercase"
-                  />
-                </div>
-              </div>
+               <div className="space-y-8">
+                  <div className="space-y-3">
+                     <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-4">Drop_Zone_Address</label>
+                     <textarea 
+                        name="address"
+                        value={formData.address}
+                        onChange={handleInputChange}
+                        rows={3}
+                        placeholder="FULL_STREET_LOCATION"
+                        className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 p-8 rounded-[2.5rem] font-bold italic focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all resize-none placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
+                     />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                     <input 
+                        name="city"
+                        value={formData.city}
+                        onChange={handleInputChange}
+                        placeholder="CITY_ID"
+                        className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 p-6 rounded-[2rem] font-bold italic focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all"
+                     />
+                     <input 
+                        name="postalCode"
+                        value={formData.postalCode}
+                        onChange={handleInputChange}
+                        placeholder="ZIP_PROTOCOL"
+                        className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 p-6 rounded-[2rem] font-bold italic focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all"
+                     />
+                  </div>
+               </div>
             </section>
 
-            {/* SECTION 3: PAYMENT */}
-            <section className="space-y-8">
-              <div className="flex items-center gap-4">
-                <span className="flex-none w-10 h-10 bg-black text-white rounded-full flex items-center justify-center text-[10px] font-black italic">
-                  03
-                </span>
-                <h3 className="font-black uppercase tracking-[0.3em] text-[10px] italic text-zinc-400">
-                  Gateway_Protocol
-                </h3>
-                <div className="h-px bg-zinc-200 flex-grow" />
-              </div>
+            {/* 03. GATEWAY */}
+            <section className="space-y-10">
+               <div className="flex items-center gap-4">
+                  <span className="text-3xl font-black italic opacity-10">03</span>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400">Payment_Tunnel</h3>
+                  <div className="h-px flex-1 bg-zinc-100 dark:bg-zinc-900" />
+               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[
-                  {
-                    id: "midtrans",
-                    name: "SNAP_VA",
-                    icon: <FiShield />,
-                    desc: "Secured_Auth",
-                  },
-                  {
-                    id: "e-wallet",
-                    name: "DIGITAL_PAY",
-                    icon: <FiSmartphone />,
-                    desc: "Instant_Sync",
-                  },
-                  {
-                    id: "bank",
-                    name: "BANK_TRANSFER",
-                    icon: <FiHome />,
-                    desc: "Manual_Verify",
-                  },
-                ].map((method) => (
-                  <button
-                    key={method.id}
-                    onClick={() => setSelectedPayment(method.id)}
-                    className={`p-6 rounded-[2.5rem] border-2 text-left transition-all relative ${
-                      selectedPayment === method.id
-                        ? "border-black bg-white shadow-xl"
-                        : "border-transparent bg-white opacity-40 grayscale"
-                    }`}
-                  >
-                    <div
-                      className={`mb-4 w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${selectedPayment === method.id ? "bg-black text-white" : "bg-zinc-100 text-zinc-300"}`}
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {[
+                    { id: 'midtrans', name: 'SECURE_GATEWAY', desc: 'Auto_Verification', icon: <FiShield size={20} /> },
+                    { id: 'bank', name: 'DIRECT_DEPOSIT', desc: 'Manual_Audit', icon: <FiHome size={20} /> }
+                  ].map((method) => (
+                    <button
+                      key={method.id}
+                      onClick={() => setSelectedPayment(method.id)}
+                      className={`relative p-8 rounded-[2.5rem] border-2 text-left transition-all duration-300 overflow-hidden ${
+                        selectedPayment === method.id 
+                        ? 'border-black dark:border-white bg-black dark:bg-white text-white dark:text-black shadow-2xl' 
+                        : 'border-zinc-100 dark:border-zinc-900 bg-white dark:bg-black/40 text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700'
+                      }`}
                     >
-                      {method.icon}
-                    </div>
-                    <p className="text-[10px] font-black uppercase italic leading-none mb-1 tracking-tighter">
-                      {method.name}
-                    </p>
-                    <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">
-                      {method.desc}
-                    </p>
-                    {selectedPayment === method.id && (
-                      <FiCheckCircle
-                        className="absolute top-6 right-6 text-black"
-                        size={16}
-                      />
-                    )}
-                  </button>
-                ))}
-              </div>
+                      <div className="flex justify-between items-start mb-6">
+                         <div className={`p-3 rounded-2xl ${selectedPayment === method.id ? 'bg-white/10 dark:bg-black/10' : 'bg-zinc-100 dark:bg-zinc-900'}`}>
+                            {method.icon}
+                         </div>
+                         {selectedPayment === method.id && <FiCheckCircle size={18} />}
+                      </div>
+                      <p className="text-[11px] font-black uppercase tracking-widest italic leading-none mb-1">{method.name}</p>
+                      <p className={`text-[9px] font-bold uppercase tracking-widest opacity-60 ${selectedPayment === method.id ? 'text-zinc-400 dark:text-zinc-600' : 'text-zinc-400'}`}>
+                        {method.desc}
+                      </p>
+                      {selectedPayment === method.id && (
+                        <motion.div 
+                          layoutId="activeGlow"
+                          className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" 
+                        />
+                      )}
+                    </button>
+                  ))}
+               </div>
             </section>
+
           </div>
 
-          {/* --- RIGHT: SUMMARY --- */}
+          {/* --- RIGHT: MANIFEST --- */}
           <aside className="lg:col-span-5">
-            <div className="bg-black text-white p-8 md:p-12 rounded-[3.5rem] lg:sticky lg:top-32 shadow-2xl">
-              <div className="space-y-10">
-                <header>
-                  <p className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-700 italic mb-2">
-                    Manifest_Archive
-                  </p>
-                  <h2 className="text-5xl font-black italic uppercase tracking-tighter leading-none">
-                    Checkout<span className="text-zinc-800">.</span>
-                  </h2>
-                </header>
+             <div className="lg:sticky lg:top-32 space-y-8">
+                <div className="bg-black dark:bg-zinc-900 text-white rounded-[3rem] p-10 md:p-12 shadow-2xl space-y-12 border border-zinc-800">
+                   <header className="space-y-2">
+                      <p className="text-[9px] font-black uppercase tracking-[0.6em] text-zinc-500 italic">Order_Manifest</p>
+                      <h2 className="text-4xl font-black italic uppercase tracking-tighter">Summary<span className="text-zinc-700">.</span></h2>
+                   </header>
 
-                {/* ITEM LIST */}
-                <div className="space-y-4 max-h-[250px] overflow-y-auto pr-4 custom-scrollbar border-b border-zinc-900 pb-8">
-                  {checkoutItems.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-4">
-                      <div className="w-14 h-14 shrink-0 bg-white rounded-xl overflow-hidden p-0.5">
-                        <img
-                          src={`${BASE_URL}/storage/${item.image}`}
-                          className="w-full h-full object-cover grayscale"
-                          alt={item.name}
-                        />
+                   <div className="space-y-6 max-h-[300px] overflow-y-auto pr-4 custom-scrollbar">
+                      {checkoutItems.map((item, idx) => (
+                        <div key={idx} className="flex gap-6 group">
+                            <div className="w-16 h-16 shrink-0 bg-zinc-800 rounded-2xl overflow-hidden p-1 border border-zinc-700 group-hover:border-zinc-500 transition-colors">
+                               <img 
+                                  src={item.image?.startsWith('http') ? item.image : `${supabaseUrl}/storage/v1/object/public/products/${item.image}`}
+                                  className="w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-500"
+                                  alt={item.name}
+                               />
+                            </div>
+                            <div className="flex-1 min-w-0 space-y-1 pt-1">
+                               <h4 className="font-black italic uppercase text-[10px] tracking-tight truncate group-hover:text-emerald-400 transition-colors">
+                                 {item.name}
+                               </h4>
+                               <div className="flex items-center gap-3 text-[9px] font-bold text-zinc-500 uppercase tracking-widest">
+                                  <span>QTY: {item.quantity}</span>
+                                  <span className="w-1 h-1 bg-zinc-700 rounded-full" />
+                                  <span>IDR {Number(item.price).toLocaleString()}</span>
+                               </div>
+                            </div>
+                        </div>
+                      ))}
+                   </div>
+
+                   <div className="pt-10 border-t border-zinc-800 space-y-8">
+                      <div className="space-y-4">
+                         <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                            <span>Subtotal_Amount</span>
+                            <span className="text-white">Rp {subtotal.toLocaleString()}</span>
+                         </div>
+                         <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                            <span>Delivery_Fee</span>
+                            <span className="text-emerald-500 italic tracking-tighter">FREE_LOGISTICS</span>
+                         </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-black italic uppercase text-[10px] truncate">
-                          {item.name}
-                        </h4>
-                        <p className="text-[9px] font-bold text-zinc-500 italic">
-                          QTY: {item.quantity} // IDR{" "}
-                          {Number(item.price).toLocaleString()}
-                        </p>
+
+                      <div className="space-y-2">
+                         <p className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-600 italic">Final_Valuation</p>
+                         <p className="text-6xl font-black italic tracking-tighter flex items-start">
+                            <span className="text-xs opacity-20 mr-2 pt-2">IDR</span>
+                            {grandTotal.toLocaleString()}
+                         </p>
                       </div>
-                    </div>
-                  ))}
+
+                      <div className="space-y-6">
+                        <label className="flex items-center gap-4 cursor-pointer group bg-white/5 p-4 rounded-[1.5rem] border border-zinc-800 hover:border-zinc-700 transition-all">
+                          <div className="relative flex items-center justify-center">
+                            <input
+                              type="checkbox"
+                              checked={agreedToTerms}
+                              onChange={(e) => setAgreedToTerms(e.target.checked)}
+                              className="peer appearance-none w-6 h-6 border-2 border-zinc-700 rounded-lg checked:bg-white checked:border-white transition-all"
+                            />
+                            <FiCheckCircle className="absolute text-black opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" size={14} />
+                          </div>
+                          <span className="text-[9px] font-bold text-zinc-500 group-hover:text-zinc-300 uppercase tracking-widest leading-tight transition-colors">
+                            I_AGREE_TO_PROTOCOLS_AND_SYSTEM_PRIVACY
+                          </span>
+                        </label>
+
+                        <button
+                          onClick={handleFinalCheckout}
+                          disabled={fetchingUser || checkoutItems.length === 0 || isSubmitting}
+                          className="group relative w-full py-8 bg-white text-black rounded-full font-black uppercase tracking-[0.5em] text-xs hover:bg-zinc-200 transition-all active:scale-[0.98] disabled:opacity-10 disabled:grayscale flex items-center justify-center gap-3 overflow-hidden"
+                        >
+                          <span className="relative z-10 flex items-center gap-3">
+                             {isSubmitting ? "SYNCING_DATA..." : "EXECUTE_PURCHASE"}
+                             <FiArrowRight className="group-hover:translate-x-2 transition-transform duration-500" />
+                          </span>
+                          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/10 to-emerald-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                        </button>
+                      </div>
+                   </div>
                 </div>
 
-                {/* PRICING TABLE */}
-                <div className="space-y-4 pt-4">
-                  <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-zinc-600">
-                    <span>Subtotal_Valuation</span>
-                    <span className="text-white">
-                      Rp {subtotal.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-zinc-600">
-                    <span>Shipping_Cost</span>
-                    <span className="text-green-500 italic">
-                      FREE_DISTRIBUTION
-                    </span>
-                  </div>
-
-                  <div className="pt-8 border-t border-zinc-900">
-                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-600 italic mb-3">
-                      Grand_Total_Due
-                    </p>
-                    <p className="text-6xl font-black italic tracking-tighter leading-none">
-                      <span className="text-[10px] align-top mr-2 opacity-30 italic">
-                        IDR
-                      </span>
-                      {grandTotal.toLocaleString()}
-                    </p>
-                  </div>
+                <div className="bg-zinc-50 dark:bg-zinc-900/40 p-8 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-900 flex items-center gap-6">
+                   <div className="w-12 h-12 bg-zinc-200 dark:bg-zinc-800 rounded-2xl flex items-center justify-center">
+                      <FiShield className="text-zinc-500" />
+                   </div>
+                   <div className="space-y-1">
+                      <p className="text-[10px] font-black uppercase italic tracking-widest">Encrypted_Bridge</p>
+                      <p className="text-[9px] font-bold text-zinc-400 leading-tight">Your data is secured using military-grade encryption protocols.</p>
+                   </div>
                 </div>
-
-                {/* ACTIONS */}
-                <div className="space-y-6">
-                  <label className="flex items-start gap-3 cursor-pointer group">
-                    <div className="relative flex items-center mt-1">
-                      <input
-                        type="checkbox"
-                        checked={agreedToTerms}
-                        onChange={(e) => setAgreedToTerms(e.target.checked)}
-                        className="peer appearance-none w-4 h-4 border border-zinc-800 rounded checked:bg-white transition-all cursor-pointer"
-                      />
-                      <FiCheckCircle className="absolute text-black opacity-0 peer-checked:opacity-100 pointer-events-none p-0.5" />
-                    </div>
-                    <span className="text-[9px] font-bold text-zinc-500 uppercase leading-relaxed group-hover:text-zinc-300 transition-colors">
-                      Accepting_Terms_and_Privacy_Archive_Protocols
-                    </span>
-                  </label>
-
-                  <button
-                    onClick={handleFinalCheckout}
-                    disabled={
-                      fetchingUser || checkoutItems.length === 0 || isSubmitting
-                    }
-                    className="group w-full py-8 bg-white text-black rounded-full font-black uppercase tracking-[0.4em] text-[11px] hover:bg-zinc-200 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-20 shadow-xl shadow-white/5"
-                  >
-                    {isSubmitting ? "Processing..." : "Execute_Purchase"}
-                    <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
-                  </button>
-                </div>
-              </div>
-            </div>
+             </div>
           </aside>
         </div>
       </div>
+
+      {/* SNAP SDK SCRIPT */}
+      <Script
+        src={process.env.NEXT_PUBLIC_MIDTRANS_SNAP_URL || "https://app.sandbox.midtrans.com/snap/snap.js"}
+        data-client-key={settings?.payment?.gateways?.midtrans?.client_key || process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+      />
     </main>
   );
 }
