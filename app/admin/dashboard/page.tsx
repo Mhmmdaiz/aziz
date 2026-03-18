@@ -69,7 +69,10 @@ export default function AdminDashboard() {
       const [resOrders, resProducts, resPending] = await Promise.all([
         supabase.from("orders").select("total_price, created_at, status"),
         supabase.from("products").select("id, name, stock, image_url"),
-        supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "pending")
+        supabase
+          .from("orders")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "pending"),
       ]);
 
       // 2. Fetch Recent Orders with Profiles
@@ -82,35 +85,37 @@ export default function AdminDashboard() {
       if (resOrders.data) {
         // Calculate Revenue (Paid only)
         const revenue = resOrders.data
-          .filter(o => o.status === "paid")
+          .filter((o) => o.status === "paid")
           .reduce((acc, curr) => acc + Number(curr.total_price), 0);
 
         // Process Chart Data (Last 7 Days)
-        const days = [...Array(7)].map((_, i) => {
-          const d = new Date();
-          d.setDate(d.getDate() - i);
-          return d.toISOString().split("T")[0];
-        }).reverse();
+        const days = [...Array(7)]
+          .map((_, i) => {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            return d.toISOString().split("T")[0];
+          })
+          .reverse();
 
-        const chartData = days.map(date => {
+        const chartData = days.map((date) => {
           const total = resOrders.data
-            .filter(o => o.created_at.startsWith(date) && o.status === "paid")
+            .filter((o) => o.created_at.startsWith(date) && o.status === "paid")
             .reduce((acc, curr) => acc + Number(curr.total_price), 0);
           return { date: date.slice(5), total };
         });
 
         // 3. Low Stock Check
         const lowStock = (resProducts.data || [])
-          .filter(p => p.stock < 5)
+          .filter((p) => p.stock < 5)
           .slice(0, 3);
 
         // 4. Mocking Top Products (Idealnya join order_items, tapi kita simulasikan dulu)
         const topProducts: DashboardProduct[] = (resProducts.data || [])
           .slice(0, 3)
-          .map(p => ({ 
-            ...p, 
-            total_sold: Math.floor(Math.random() * 50) + 10, 
-            performance: Math.random() * 40 + 60 
+          .map((p) => ({
+            ...p,
+            total_sold: Math.floor(Math.random() * 50) + 10,
+            performance: Math.random() * 40 + 60,
           }));
 
         setData({
@@ -123,7 +128,7 @@ export default function AdminDashboard() {
           chartData,
           recentOrders: (recentOrders as unknown as DashboardOrder[]) || [],
           lowStock: lowStock as DashboardProduct[],
-          topProducts
+          topProducts,
         });
       }
     } catch (err) {
@@ -135,7 +140,9 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         router.push("/auth");
         return;
@@ -145,10 +152,14 @@ export default function AdminDashboard() {
       // REALTIME SUBSCRIPTION
       const channel = supabase
         .channel("dashboard-realtime")
-        .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
-          console.log("Realtime Update: Database Triggered");
-          fetchDashboardData();
-        })
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "orders" },
+          () => {
+            console.log("Realtime Update: Database Triggered");
+            fetchDashboardData();
+          },
+        )
         .subscribe();
 
       return () => {
@@ -161,60 +172,58 @@ export default function AdminDashboard() {
   if (loading) return <LoadingSkeleton />;
 
   return (
-    <main className="min-h-screen bg-zinc-50 dark:bg-black pt-24 pb-12 px-4 md:px-12 font-mono text-zinc-900 dark:text-white transition-colors duration-300 overflow-x-hidden">
+    <main className="min-h-screen bg-zinc-50 dark:bg-black pt-30 pb-12 px-4 md:px-12 font-mono text-zinc-900 dark:text-white transition-colors duration-300 overflow-x-hidden">
       <div className="max-w-7xl mx-auto space-y-12">
-        
         {/* HEADER */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-16">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.4em] mb-4 italic flex items-center gap-2">
-              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              System_Stream: Active_Node
-            </p>
             <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9] text-zinc-900 dark:text-white">
-              Admin <br /> <span className="text-zinc-300 dark:text-zinc-800 italic">Dashboard.</span>
+              Admin <br />{" "}
+              <span className="text-zinc-300 dark:text-zinc-800 italic">
+                Dashboard.
+              </span>
             </h1>
           </motion.div>
-          
+
           <div className="w-full md:w-auto">
             <QuickActions />
           </div>
         </header>
 
         {/* STATS GRID */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-          <StatsCard 
-            label="Total_Revenue" 
-            value={`Rp ${data.stats.revenue.toLocaleString()}`} 
-            icon={<FiDollarSign />} 
-            trend="+12.5%" 
-            color="text-emerald-500" 
+        <section className="grid grid-cols-1 sm:grid-cols-4 xl:grid-cols-4 gap-6">
+          <StatsCard
+            label="Pendapatan"
+            value={`Rp ${data.stats.revenue.toLocaleString()}`}
+            icon={<FiDollarSign />}
+            trend="+12.5%"
+            color="text-emerald-500"
             delay={0.1}
           />
-          <StatsCard 
-            label="Registry_Orders" 
-            value={data.stats.orders} 
-            icon={<FiActivity />} 
-            trend="+8" 
-            color="text-blue-500" 
+          <StatsCard
+            label="Pesanan"
+            value={data.stats.orders}
+            icon={<FiActivity />}
+            trend="+8"
+            color="text-blue-500"
             delay={0.2}
           />
-          <StatsCard 
-            label="Artifact_Units" 
-            value={data.stats.products} 
-            icon={<FiBox />} 
-            color="text-orange-500" 
+          <StatsCard
+            label="Jumlah Unit"
+            value={data.stats.products}
+            icon={<FiBox />}
+            color="text-orange-500"
             delay={0.3}
           />
-          <StatsCard 
-            label="Pending_Auth" 
-            value={data.stats.pending} 
-            icon={<FiZap />} 
-            trend="Needs_Review" 
-            color="text-purple-500" 
+          <StatsCard
+            label="Anggota"
+            value={data.stats.pending}
+            icon={<FiZap />}
+            trend="Needs_Review"
+            color="text-purple-500"
             delay={0.4}
           />
         </section>
@@ -232,14 +241,17 @@ export default function AdminDashboard() {
             <RecentOrders orders={data.recentOrders} />
           </div>
           <div className="lg:col-span-4">
-            <InventoryWidgets lowStock={data.lowStock} topProducts={data.topProducts} />
+            <InventoryWidgets
+              lowStock={data.lowStock}
+              topProducts={data.topProducts}
+            />
           </div>
         </section>
 
         {/* FOOTER METADATA */}
         <footer className="pt-20 text-[8px] font-black uppercase tracking-[0.5em] text-zinc-300 dark:text-zinc-800 flex justify-between">
-          <span>Encrypted_Terminal // CHCKT_VAULT_v2.1</span>
-          <span>© 2026 VOID_LABS_INDUSTRIES</span>
+          <span>Encrypted_Terminal // DMNM v2.1</span>
+          <span>© 2026 AZZ</span>
         </footer>
       </div>
     </main>
@@ -251,7 +263,9 @@ function LoadingSkeleton() {
     <div className="h-screen bg-zinc-50 dark:bg-black p-12 flex items-center justify-center">
       <div className="text-center">
         <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent animate-spin rounded-full mb-6 mx-auto" />
-        <p className="font-black italic uppercase tracking-[0.5em] text-xs text-zinc-400 animate-pulse">Initializing_Control_Center...</p>
+        <p className="font-black italic uppercase tracking-[0.5em] text-xs text-zinc-400 animate-pulse">
+          Initializing_Control_Center...
+        </p>
       </div>
     </div>
   );

@@ -46,7 +46,7 @@ export default function SalesChart({ data }: SalesChartProps) {
       <header className="flex justify-between items-center mb-10">
         <div>
           <h3 className="text-xl font-black italic uppercase tracking-tighter text-zinc-900 dark:text-white">
-            Daily_Revenue_Flow
+            Arus Pendapatan Harian
           </h3>
           <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-zinc-400 mt-1">
             Data_Stream // 07_Days_Window
@@ -54,44 +54,73 @@ export default function SalesChart({ data }: SalesChartProps) {
         </div>
         <div className="flex gap-2 items-center">
           <div className="w-3 h-3 bg-zinc-900 dark:bg-white border border-zinc-300 dark:border-zinc-700" />
-          <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 dark:text-zinc-300">Revenue</span>
+          <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 dark:text-zinc-300">
+            Revenue
+          </span>
         </div>
       </header>
 
       <div className="h-[300px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
-            <XAxis 
-              dataKey="date" 
+          <LineChart
+            data={data}
+            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+          >
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              stroke={gridColor}
+            />
+            <XAxis
+              dataKey="date"
               axisLine={false}
               tickLine={false}
               tick={{ fontSize: 9, fontWeight: 900, fill: tickColor }}
               dy={10}
             />
-            <YAxis 
+            <YAxis
               axisLine={false}
               tickLine={false}
               tick={{ fontSize: 9, fontWeight: 900, fill: tickColor }}
               tickFormatter={(value) => `Rp${value / 1000}k`}
             />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: tooltipBg, 
-                border: `1px solid ${tooltipBorder}`, 
+            <Tooltip
+              contentStyle={{
+                backgroundColor: tooltipBg,
+                border: `1px solid ${tooltipBorder}`,
                 borderRadius: "12px",
-                padding: "12px"
+                padding: "12px",
               }}
-              labelStyle={{ color: tooltipLabelColor, fontWeight: 900, fontSize: "10px", marginBottom: "4px" }}
-              itemStyle={{ color: tooltipItemColor, fontWeight: 900, fontSize: "12px", fontStyle: "italic" }}
+              labelStyle={{
+                color: tooltipLabelColor,
+                fontWeight: 900,
+                fontSize: "10px",
+                marginBottom: "4px",
+              }}
+              itemStyle={{
+                color: tooltipItemColor,
+                fontWeight: 900,
+                fontSize: "12px",
+                fontStyle: "italic",
+              }}
             />
             <Line
               type="monotone"
               dataKey="total"
               stroke="#2563eb"
               strokeWidth={4}
-              dot={{ r: 4, fill: "#2563eb", stroke: isDark ? "#09090b" : "#fff", strokeWidth: 2 }}
-              activeDot={{ r: 8, fill: "#2563eb", stroke: isDark ? "#09090b" : "#fff", strokeWidth: 4 }}
+              dot={{
+                r: 4,
+                fill: "#2563eb",
+                stroke: isDark ? "#09090b" : "#fff",
+                strokeWidth: 2,
+              }}
+              activeDot={{
+                r: 8,
+                fill: "#2563eb",
+                stroke: isDark ? "#09090b" : "#fff",
+                strokeWidth: 4,
+              }}
               animationDuration={2000}
             />
           </LineChart>

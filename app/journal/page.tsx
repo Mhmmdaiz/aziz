@@ -1,146 +1,187 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import Link from "next/link";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/utils/supabase/client";
-import { FiArrowUpRight, FiClock } from "react-icons/fi";
+import JournalHero from "@/components/journal/JournalHero";
+import ArticleCard from "@/components/journal/ArticleCard";
+import CategoryFilter from "@/components/journal/CategoryFilter";
+import { Toaster } from "react-hot-toast";
 
-// --- SKELETON LOADING ---
-const JournalSkeleton = () => (
-  <div className="space-y-6 animate-pulse">
-    <div className="aspect-video bg-zinc-100 dark:bg-zinc-900 rounded-3xl" />
-    <div className="space-y-3">
-      <div className="h-4 bg-zinc-100 dark:bg-zinc-900 rounded w-1/4" />
-      <div className="h-8 bg-zinc-100 dark:bg-zinc-900 rounded w-full" />
-    </div>
-  </div>
-);
+const CATEGORIES = [
+  "All",
+  "Style",
+  "Culture",
+  "Horror Inspiration",
+  "Behind The Design",
+];
+
+// Fallback data if table is empty or while developing
+const MOCK_ARTICLES = [
+  {
+    id: "1",
+    title: "Shadows in the Threads: The Brutalist Aesthetic",
+    excerpt:
+      "Exploring the intersection of raw architecture and streetwear silhouettes in our latest dark drop.",
+    image_url:
+      "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop",
+    category: "Style",
+    read_time: "5 min read",
+    slug: "shadows-threads-brutalist",
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "2",
+    title: "Visions of Nihilism: Street Culture 2026",
+    excerpt:
+      "The shift from neon brightness to archival darkness in the modern city center.",
+    image_url:
+      "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop",
+    category: "Culture",
+    read_time: "8 min read",
+    slug: "visions-nihilism-2026",
+    created_at: new Date(Date.now() - 86400000).toISOString(),
+  },
+  {
+    id: "3",
+    title: "Unseen Horror: Influences Behind Daemonium",
+    excerpt:
+      "How classic gothic literature shaped the typographic choices of our 'Phantom' series.",
+    image_url:
+      "https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=2076&auto=format&fit=crop",
+    category: "Horror Inspiration",
+    read_time: "4 min read",
+    slug: "unseen-horror-influences",
+    created_at: new Date(Date.now() - 172800000).toISOString(),
+  },
+];
 
 export default function JournalPage() {
-  const [journals, setJournals] = useState<any[]>([]);
+  const [articles, setArticles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [visibleCount, setVisibleCount] = useState(6);
 
   useEffect(() => {
-    const fetchJournals = async () => {
-      try {
-        setLoading(true);
-        setError(false);
+    fetchArticles();
 
-        // --- FETCH DARI SUPABASE ---
-        const { data, error: supabaseError } = await supabase
-          .from("journals")
-          .select("*")
-          .eq("status", "published")
-          .order("created_at", { ascending: false });
+    // Subscribe to journal updates
+    const channel = supabase
+      .channel("journal_changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "articles" },
+        () => fetchArticles(),
+      )
+      .subscribe();
 
-        if (supabaseError) throw supabaseError;
-        setJournals(data || []);
-      } catch (e: any) {
-        console.error("JOURNAL_FETCH_ERROR:", e);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
+    return () => {
+      supabase.removeChannel(channel);
     };
-
-    fetchJournals();
   }, []);
 
-  return (
-    <main className="min-h-screen bg-zinc-50 dark:bg-black text-zinc-900 dark:text-white selection:bg-blue-100 dark:selection:bg-blue-900 pb-20 transition-colors duration-300">
-      <div className="max-w-screen-xl mx-auto px-6 md:px-12 pt-32 md:pt-44">
-        {/* HEADER SECTION */}
-        <header className="mb-20 space-y-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-3"
-          >
-            <span className="w-2 h-2 bg-blue-600 rounded-full animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 dark:text-zinc-600">
-              The_Archive_Journal
-            </span>
-          </motion.div>
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-6xl md:text-8xl font-black italic uppercase tracking-tighter leading-[0.8]"
-          >
-            Editorial<span className="text-blue-600 dark:text-blue-400">.</span>
-          </motion.h1>
-        </header>
+  const fetchArticles = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("articles")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-        {/* CONTENT GRID */}
-        {loading ? (
-          <div className="grid md:grid-cols-2 gap-12">
-            {[...Array(4)].map((_, i) => (
-              <JournalSkeleton key={i} />
-            ))}
-          </div>
-        ) : error ? (
-          <div className="py-20 text-center border-2 border-dashed border-zinc-100 dark:border-zinc-900 rounded-[3rem]">
-            <p className="text-[10px] font-black uppercase tracking-widest text-red-500 dark:text-red-400">
-              Failed_to_retrieve_editorial_archive
+    if (error || !data || data.length === 0) {
+      console.log("Using mock articles for development");
+      setArticles(MOCK_ARTICLES);
+    } else {
+      setArticles(data);
+    }
+    setLoading(false);
+  };
+
+  const filteredArticles =
+    activeCategory === "All"
+      ? articles
+      : articles.filter((a) => a.category === activeCategory);
+
+  const featured = articles[0] || MOCK_ARTICLES[0];
+  const gridArticles = filteredArticles
+    .filter((a) => a.id !== featured.id)
+    .slice(0, visibleCount);
+
+  return (
+    <main className="min-h-screen bg-[#0B0B0B] pb-32">
+      <Toaster position="bottom-right" />
+
+      {/* Editorial Hero */}
+      <JournalHero featuredArticle={featured} />
+
+      <div className="container mx-auto px-6 mt-20">
+        {/* Filter Section */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-12 mb-20">
+          <div className="space-y-4">
+            <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white">
+              Archive Registry<span className="text-red-600">.</span>
+            </h2>
+            <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.4em]">
+              Selected artifacts from the void
             </p>
           </div>
-        ) : (
-          <div className="grid md:grid-cols-2 gap-x-12 gap-y-24">
-            {journals.map((post, idx) => (
-              <motion.article
-                key={post.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                className="group cursor-pointer"
-              >
-                <Link href={`/journal/${post.slug}`}>
-                  <div className="relative aspect-[16/10] overflow-hidden rounded-[2.5rem] bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
-                    <img
-                      src={post.cover_image || "/next.svg"}
-                      alt={post.title}
-                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105"
-                    />
-                    <div className="absolute top-6 right-6 p-4 bg-white/50 dark:bg-black/50 backdrop-blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-all text-zinc-900 dark:text-white">
-                      <FiArrowUpRight size={20} />
-                    </div>
-                  </div>
 
-                  <div className="mt-8 space-y-4">
-                    <div className="flex items-center gap-6 text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-600">
-                      <span>{post.category || "General"}</span>
-                      <div className="flex items-center gap-2">
-                        <FiClock />
-                        <span>
-                          {post.created_at ? new Date(post.created_at).toLocaleDateString(
-                            "id-ID",
-                            { month: "short", day: "numeric", year: "numeric" },
-                          ) : "Recently"}
-                        </span>
-                      </div>
-                    </div>
+          <div className="lg:w-1/2">
+            <CategoryFilter
+              categories={CATEGORIES}
+              activeCategory={activeCategory}
+              setActiveCategory={setActiveCategory}
+            />
+          </div>
+        </div>
 
-                    <h2 className="text-3xl md:text-4xl font-black italic uppercase tracking-tighter leading-none group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                      {post.title}
-                    </h2>
-
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400 line-clamp-2 font-medium max-w-md">
-                      {post.excerpt || post.content?.replace(/<[^>]*>?/gm, "").slice(0, 150) + "..."}
-                    </p>
-                  </div>
-                </Link>
-              </motion.article>
+        {/* Article Grid */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 md:gap-20">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="space-y-6 animate-pulse">
+                <div className="aspect-[16/10] bg-zinc-900 rounded-[2rem]" />
+                <div className="h-4 bg-zinc-900 rounded-full w-2/3" />
+                <div className="h-3 bg-zinc-900 rounded-full w-1/2" />
+              </div>
             ))}
+          </div>
+        ) : gridArticles.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 md:gap-20">
+            <AnimatePresence mode="popLayout">
+              {gridArticles.map((article, idx) => (
+                <ArticleCard key={article.id} article={article} index={idx} />
+              ))}
+            </AnimatePresence>
+          </div>
+        ) : (
+          <div className="py-40 text-center space-y-8">
+            <div className="text-9xl font-black italic opacity-5 uppercase tracking-tighter text-white">
+              Null Data
+            </div>
+            <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.5em]">
+              No stories found in this timeline.
+            </p>
+            <button
+              onClick={() => setActiveCategory("All")}
+              className="px-12 py-5 bg-white text-black rounded-full font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-xl"
+            >
+              Reset Timeline
+            </button>
           </div>
         )}
 
-        {/* EMPTY STATE */}
-        {!loading && journals.length === 0 && (
-          <div className="py-40 text-center italic font-black text-zinc-200 dark:text-zinc-800 uppercase tracking-[1em]">
-            Archive_Empty
+        {/* Load More */}
+        {filteredArticles.length > gridArticles.length + 1 && (
+          <div className="mt-32 flex justify-center">
+            <button
+              onClick={() => setVisibleCount((prev) => prev + 3)}
+              className="group relative px-16 py-6 border-2 border-zinc-800 rounded-full overflow-hidden transition-all hover:border-white"
+            >
+              <span className="relative z-10 text-[10px] font-black uppercase tracking-[0.5em] group-hover:text-black transition-colors duration-500">
+                Load More Registry
+              </span>
+              <div className="absolute inset-0 bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+            </button>
           </div>
         )}
       </div>

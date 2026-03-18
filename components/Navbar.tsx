@@ -28,20 +28,11 @@ import {
   FiPlus,
   FiMinus,
   FiArrowRight,
+  FiEdit,
 } from "react-icons/fi";
 import { ThemeToggle } from "./ThemeToggle";
 import { useSettings } from "@/components/providers/SettingsProvider";
-
-// --- Types ---
-interface CartItem {
-  cartId: string;
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  size: string;
-  quantity: number;
-}
+import { useCart } from "@/components/providers/CartProvider";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -49,13 +40,21 @@ export default function Navbar() {
 
   const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [cart, setCart] = useState<CartItem[]>([]);
+
+  const {
+    cart,
+    cartCount,
+    cartTotal,
+    isCartOpen,
+    setIsCartOpen,
+    updateQuantity,
+    removeItem,
+  } = useCart();
   const { theme, setTheme } = useTheme();
   const { settings } = useSettings();
-  
+
   const [storeName, setStoreName] = useState("DAEMONIUM");
 
   useEffect(() => {
@@ -87,26 +86,9 @@ export default function Navbar() {
     }
   };
 
-  const syncCart = () => {
-    const savedCart = localStorage.getItem("cart");
-    if (savedCart) {
-      try {
-        setCart(JSON.parse(savedCart));
-      } catch (e) {
-        console.error("Cart sync error:", e);
-      }
-    } else {
-      setCart([]);
-    }
-  };
-
   useEffect(() => {
     setMounted(true);
     fetchUserAndRole();
-    syncCart();
-
-    // Listen for storage changes from other components (ProductDetail)
-    window.addEventListener("storage", syncCart);
 
     const {
       data: { subscription },
@@ -120,7 +102,6 @@ export default function Navbar() {
 
     return () => {
       subscription.unsubscribe();
-      window.removeEventListener("storage", syncCart);
     };
   }, [router]);
 
@@ -131,37 +112,6 @@ export default function Navbar() {
     setIsOpen(false);
     setUser(null);
     window.location.href = "/auth";
-  };
-
-  const updateQuantity = (cartId: string, delta: number) => {
-    const newCart = cart.map(item => {
-      if (item.cartId === cartId) {
-        return { ...item, quantity: Math.max(1, item.quantity + delta) };
-      }
-      return item;
-    });
-    setCart(newCart);
-    localStorage.setItem("cart", JSON.stringify(newCart));
-    window.dispatchEvent(new Event("storage"));
-  };
-
-  const removeItem = (cartId: string) => {
-    const newCart = cart.filter(item => item.cartId !== cartId);
-    setCart(newCart);
-    localStorage.setItem("cart", JSON.stringify(newCart));
-    window.dispatchEvent(new Event("storage"));
-  };
-
-  const cartTotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
-
-  const checkoutMessage = () => {
-    let msg = "*CHCKT_SYST_INVOICE*\n\n";
-    cart.forEach(item => {
-      msg += `• ${item.name} [Size: ${item.size || 'N/A'}] x${item.quantity}\n`;
-    });
-    msg += `\n*TOTAL: IDR ${cartTotal.toLocaleString()}*\n\n_Initiating_Secure_Transfer_`;
-    return msg;
   };
 
   const handleCheckout = () => {
@@ -177,9 +127,8 @@ export default function Navbar() {
   const activeLinks = isAdmin
     ? [
         { href: "/admin/dashboard", label: "Dashboard", icon: <FiZap /> },
-        { href: "/admin/journal", label: "Journal", icon: <FiBookOpen /> },
         { href: "/admin/settings", label: "Settings", icon: <FiSettings /> },
-        { href: "/admin/users", label: "Users", icon: <FiUser /> },
+        { href: "/admin/landing", label: "Landing", icon: <FiEdit /> },
       ]
     : [
         { href: "/", label: "Home", icon: <FiHome /> },
@@ -204,7 +153,10 @@ export default function Navbar() {
           >
             {/* LEFT: LOGO & DESKTOP NAV */}
             <div className="flex items-center gap-4 md:gap-8 min-w-0">
-              <Link href={isAdmin ? "/admin/dashboard" : "/"} className="group shrink-0">
+              <Link
+                href={isAdmin ? "/admin/dashboard" : "/"}
+                className="group shrink-0"
+              >
                 <div className="text-sm md:text-xl font-black tracking-tighter uppercase italic text-zinc-900 dark:text-white flex items-center gap-1.5">
                   {isAdmin ? "ADMIN" : storeName}
                   <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_10px_indigo]" />
@@ -318,17 +270,18 @@ export default function Navbar() {
                   onClick={() => setIsOpen(false)}
                   className="text-xl md:text-2xl font-black italic uppercase tracking-tighter border-b border-zinc-50 dark:border-zinc-800 pb-3 md:pb-4 flex justify-between items-center text-zinc-900 dark:text-white transition-colors"
                 >
-                  {link.label} <FiZap className="text-zinc-200 dark:text-zinc-700" />
+                  {link.label}{" "}
+                  <FiZap className="text-zinc-200 dark:text-zinc-700" />
                 </Link>
               ))}
-              
+
               {!user && (
                 <Link
                   href="/auth"
                   onClick={() => setIsOpen(false)}
                   className="mt-4 text-xl md:text-2xl font-black italic uppercase tracking-tighter border-b border-zinc-50 dark:border-zinc-800 pb-3 md:pb-4 flex justify-between items-center text-indigo-500 transition-colors"
                 >
-                  ACCESS_AUTH <FiUser className="text-zinc-200 dark:text-zinc-700" />
+                  LOGIN <FiUser className="text-zinc-200 dark:text-zinc-700" />
                 </Link>
               )}
 
@@ -337,7 +290,8 @@ export default function Navbar() {
                   onClick={handleLogout}
                   className="text-xl md:text-2xl font-black italic uppercase tracking-tighter border-b border-zinc-50 dark:border-zinc-800 pb-3 md:pb-4 flex justify-between items-center text-rose-500 transition-colors text-left"
                 >
-                  TERMINATE_SESSION <FiLogOut className="text-zinc-200 dark:text-zinc-700" />
+                  TERMINATE_SESSION{" "}
+                  <FiLogOut className="text-zinc-200 dark:text-zinc-700" />
                 </button>
               )}
             </motion.div>
@@ -386,7 +340,10 @@ export default function Navbar() {
                 {cart.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center">
                     <div className="w-16 md:w-20 h-16 md:h-20 bg-zinc-50 rounded-full flex items-center justify-center mb-6">
-                      <FiShoppingBag size={28} className="text-zinc-200 md:w-[32px]" />
+                      <FiShoppingBag
+                        size={28}
+                        className="text-zinc-200 md:w-[32px]"
+                      />
                     </div>
                     <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] md:tracking-[0.5em] text-zinc-300 italic">
                       Empty_Archive_Vault
@@ -442,7 +399,8 @@ export default function Navbar() {
                               </button>
                             </div>
                             <span className="text-[12px] font-black text-zinc-900 dark:text-zinc-100">
-                              IDR {(item.price * item.quantity).toLocaleString()}
+                              IDR{" "}
+                              {(item.price * item.quantity).toLocaleString()}
                             </span>
                           </div>
                         </div>
@@ -467,7 +425,8 @@ export default function Navbar() {
                     onClick={handleCheckout}
                     className="w-full py-5 md:py-6 bg-zinc-950 text-white rounded-[1.5rem] md:rounded-[2rem] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-[10px] md:text-[11px] shadow-2xl shadow-black/10 hover:bg-zinc-800 transition-all flex items-center justify-center gap-3 md:gap-4 group"
                   >
-                    Initiate_Deployment <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
+                    Initiate_Deployment{" "}
+                    <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
                   </button>
                 </div>
               )}

@@ -1,241 +1,304 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { motion, useScroll, useSpring } from "framer-motion";
 import { supabase } from "@/utils/supabase/client";
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-  ChevronLeft, 
-  Calendar, 
-  Tag, 
-  Clock, 
-  Share2, 
-  User,
-  Zap,
-  ArrowRight
-} from "lucide-react";
-import Image from "next/image";
+import {
+  FiClock,
+  FiUser,
+  FiCalendar,
+  FiArrowLeft,
+  FiShoppingBag,
+  FiArrowRight,
+} from "react-icons/fi";
 import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useCart } from "@/components/providers/CartProvider";
+import { toast } from "react-hot-toast";
 
-export default function JournalDetail() {
+export default function ArticleDetail() {
   const { slug } = useParams();
-  const router = useRouter();
-  const [post, setPost] = useState<any>(null);
+  const [article, setArticle] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+  const { addToCart } = useCart();
+
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001,
+  });
 
   useEffect(() => {
-    const fetchPost = async () => {
-      try {
-        setLoading(true);
-        const { data, error: fetchError } = await supabase
-          .from("journals")
-          .select("*")
-          .eq("slug", slug)
-          .maybeSingle();
+    fetchArticle();
 
-        if (fetchError) throw fetchError;
+    const channel = supabase
+      .channel(`article_${slug}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "articles",
+          filter: `slug=eq.${slug}`,
+        },
+        () => fetchArticle(),
+      )
+      .subscribe();
 
-        if (!data) {
-          setError("MANIFEST_NOT_FOUND");
-        } else {
-          setPost(data);
-        }
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
+    return () => {
+      supabase.removeChannel(channel);
     };
-
-    if (slug) fetchPost();
   }, [slug]);
+
+  const fetchArticle = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("articles")
+      .select("*")
+      .eq("slug", slug)
+      .single();
+
+    if (data) {
+      setArticle(data);
+      if (data.related_products && data.related_products.length > 0) {
+        fetchRelatedProducts(data.related_products);
+      }
+    } else {
+      // Mock data for fallback/dev
+      const mock = {
+        title: "Shadows in the Threads: The Brutalist Aesthetic",
+        excerpt:
+          "Exploring the intersection of raw architecture and streetwear silhouettes in our latest dark drop.",
+        content: `
+          <h2>The Foundation of Silence</h2>
+          <p>Brutalism isn't just about concrete; it's about transparency. It's about showing the structure as it is, without the mask of decorative pretense. In our latest collection, we've translated this philosophy into garments that emphasize form over ornament.</p>
+          <blockquote>"Architecture is the learned game, correct and magnificent, of forms assembled in the light." - Le Corbusier</blockquote>
+          <h2>Materiality & Texture</h2>
+          <p>The choice of heavy-weight cotton was deliberate. It has a structural integrity that reminds us of the raw surfaces of the Barbican or the Hayward Gallery. When you wear these pieces, you feel the weight of the design.</p>
+          <img src="https://images.unsplash.com/photo-1518005020250-ee2b99d4fb1c?q=80&w=2000&auto=format&fit=crop" alt="Brutalist Architecture" />
+          <h2>The Dark Palette</h2>
+          <p>Color is kept to a minimum. We work in the shades of shadows—charcoal, obsidian, and deep slate. This allows the silhouette to speak louder than the hue. It creates a silhouette that is both mysterious and undeniably present.</p>
+        `,
+        image_url:
+          "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop",
+        category: "Style",
+        read_time: "5 min read",
+        author: "Archivist_01",
+        created_at: new Date().toISOString(),
+        related_products: [],
+      };
+      setArticle(mock);
+    }
+    setLoading(false);
+  };
+
+  const fetchRelatedProducts = async (ids: string[]) => {
+    const { data } = await supabase.from("products").select("*").in("id", ids);
+    if (data) setRelatedProducts(data);
+  };
+
+  const handleAddToCart = (product: any) => {
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image_url,
+      size: "M", // Default for journal add
+      quantity: 1,
+    });
+    toast.success(`${product.name} added to vault`, {
+      style: {
+        background: "#000",
+        color: "#fff",
+        borderRadius: "2rem",
+        fontSize: "10px",
+        fontWeight: "bold",
+      },
+    });
+  };
 
   if (loading)
     return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-[#FBFBFD] dark:bg-black font-mono">
-        <motion.div 
-          animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          className="w-10 h-10 border-4 border-zinc-100 dark:border-zinc-900 border-t-zinc-950 dark:border-t-white rounded-full mb-6"
-        />
-        <p className="text-[10px] font-black uppercase tracking-[0.5em] animate-pulse dark:text-white">Registry_Syncing...</p>
+      <div className="min-h-screen bg-[#0B0B0B] flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
-
-  if (error || !post)
-    return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#FBFBFD] dark:bg-black p-6 text-center font-mono">
-        <div className="w-20 h-20 bg-red-500/10 rounded-[2rem] flex items-center justify-center text-red-500 mb-8">
-          <Zap size={32} />
-        </div>
-        <h1 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter mb-4 dark:text-white">
-          Registry_Failure<span className="text-red-500">.</span>
-        </h1>
-        <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest mb-10">{error || "The artifact you seek is lost in the void."}</p>
-        <Link
-          href="/journal"
-          className="px-10 py-5 bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 rounded-full font-black uppercase tracking-widest text-[10px] hover:shadow-2xl transition-all"
-        >
-          Return_to_Archives
-        </Link>
-      </div>
-    );
-
-  const formattedDate = post.created_at 
-    ? new Date(post.created_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })
-    : "Recently_Recorded";
 
   return (
-    <main className="min-h-screen bg-[#FBFBFD] dark:bg-black selection:bg-zinc-950 selection:text-white dark:selection:bg-white dark:selection:text-black transition-colors duration-500 font-sans relative overflow-hidden">
-      
-      {/* Ambient Background Glows */}
-      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-zinc-200/20 dark:bg-zinc-800/10 blur-[120px] rounded-full -z-10 pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-zinc-100/30 dark:bg-zinc-900/10 blur-[120px] rounded-full -z-10 pointer-events-none" />
+    <main className="min-h-screen bg-[#0B0B0B] text-zinc-100 pb-32">
+      {/* Scroll Progress Bar */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-1 bg-red-600 z-[100] origin-left"
+        style={{ scaleX }}
+      />
 
-      {/* NAVIGATION BAR (Floating Style) */}
-      <nav className="fixed top-8 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-3rem)] max-w-7xl">
-        <div className="bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl border border-zinc-100 dark:border-zinc-800/50 p-3 rounded-full flex items-center justify-between shadow-sm">
-          <button 
-            onClick={() => router.back()}
-            className="flex items-center gap-3 pl-4 pr-6 py-3 rounded-full hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all group"
+      {/* Header / Hero Section */}
+      <header className="relative h-[80vh] w-full overflow-hidden">
+        <img
+          src={article.image_url?.split(",")[0]}
+          alt={article.title}
+          className="w-full h-full object-cover opacity-50 grayscale"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0B0B0B] via-[#0B0B0B]/40 to-transparent" />
+
+        <div className="absolute inset-0 flex flex-col justify-end container mx-auto px-6 pb-20">
+          <Link
+            href="/journal"
+            className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 hover:text-white transition-colors mb-8 group"
           >
-            <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 group-hover:text-zinc-950 dark:group-hover:text-white">Back_Archive</span>
-          </button>
-          
-          <div className="hidden md:flex items-center gap-8">
-            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-300">Selinear_Protocols // 0.4.1</span>
-          </div>
-
-          <div className="flex gap-2 pr-2">
-            <button className="p-3 rounded-full hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all text-zinc-400 hover:text-zinc-950 dark:hover:text-white">
-              <Share2 size={16} />
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      {/* HERO SECTION */}
-      <section className="pt-40 md:pt-56 pb-20 px-6">
-        <div className="max-w-4xl mx-auto">
-          
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-wrap items-center gap-4 mb-8"
-          >
-            <div className="px-4 py-2 bg-zinc-950 dark:bg-white rounded-full flex items-center gap-2">
-              <Tag size={12} className="text-white dark:text-zinc-950" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-white dark:text-zinc-950">
-                {post.category || "General_Artifact"}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-zinc-400">
-              <Calendar size={14} />
-              <span className="text-[9px] font-black uppercase tracking-widest">{formattedDate}</span>
-            </div>
-          </motion.div>
-
-          <motion.h1 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="text-[clamp(2.5rem,8vw,6rem)] font-black italic uppercase tracking-tighter leading-[0.85] mb-12 dark:text-white"
-          >
-            {post.title}
-          </motion.h1>
+            <FiArrowLeft className="group-hover:-translate-x-2 transition-transform" />{" "}
+            Back To Journal
+          </Link>
 
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="relative aspect-[16/8] rounded-[3rem] md:rounded-[5rem] overflow-hidden border border-zinc-100 dark:border-zinc-900 bg-zinc-100 dark:bg-zinc-950 shadow-2xl shadow-zinc-200/50 dark:shadow-none mb-20 group"
+            className="max-w-4xl space-y-6"
           >
-            <Image 
-              src={post.cover_image || "/placeholder.jpg"} 
-              alt={post.title}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-[2s] ease-out-expo"
-              priority
-              unoptimized
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
+            <span className="px-4 py-1.5 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full">
+              {article.category}
+            </span>
+            <h1 className="text-4xl md:text-7xl font-black italic uppercase tracking-tighter leading-[0.9]">
+              {article.title}
+            </h1>
+
+            <div className="flex flex-wrap items-center gap-8 text-[10px] font-bold text-zinc-500 uppercase tracking-widest pt-4">
+              <div className="flex items-center gap-2">
+                <FiUser className="text-red-500" /> {article.author}
+              </div>
+              <div className="flex items-center gap-2">
+                <FiCalendar className="text-red-500" />{" "}
+                {new Date(article.created_at).toLocaleDateString()}
+              </div>
+              <div className="flex items-center gap-2">
+                <FiClock className="text-red-500" /> {article.read_time}
+              </div>
+            </div>
           </motion.div>
+        </div>
+      </header>
 
-          {/* ARTICLE CONTENT */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
-            
-            {/* Sidebar Meta */}
-            <aside className="lg:col-span-3 space-y-12">
-              <div className="p-8 rounded-[2.5rem] bg-white dark:bg-zinc-900/30 border border-zinc-50 dark:border-zinc-800/50 shadow-sm">
-                <div className="space-y-6">
-                  <div>
-                    <p className="text-[8px] font-black uppercase tracking-widest text-zinc-400 mb-2 italic">Recorded_By</p>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-900 dark:text-white">
-                        <User size={14} />
-                      </div>
-                      <p className="text-[10px] font-black uppercase text-zinc-900 dark:text-white">CHCKT_Admin</p>
+      {/* Content Area */}
+      <article className="container mx-auto px-6 mt-20 max-w-3xl">
+        <div
+          className="prose prose-invert prose-red max-w-none 
+          prose-h2:text-3xl prose-h2:font-black prose-h2:uppercase prose-h2:italic prose-h2:tracking-tighter prose-h2:mt-12 prose-h2:mb-6
+          prose-p:text-zinc-400 prose-p:text-lg prose-p:leading-relaxed prose-p:mb-8 prose-p:italic
+          prose-blockquote:border-l-4 prose-blockquote:border-red-600 prose-blockquote:bg-zinc-900/50 prose-blockquote:p-8 prose-blockquote:rounded-r-2xl prose-blockquote:italic prose-blockquote:text-zinc-300
+          prose-img:rounded-[2.5rem] prose-img:border prose-img:border-white/5 prose-img:my-16"
+          dangerouslySetInnerHTML={{ __html: article.content }}
+        />
+
+        {/* VISUAL GALLERY */}
+        {article.image_url && article.image_url.split(",").length > 1 && (
+          <section className="mt-20 border-t border-white/5 pt-16">
+            <h3 className="text-2xl font-black uppercase italic tracking-tighter text-white mb-10">
+              Visual Artifacts<span className="text-red-600">.</span>
+            </h3>
+            <div
+              className={`grid gap-4 ${
+                article.image_url.split(",").slice(1).length === 1
+                  ? "grid-cols-1"
+                  : article.image_url.split(",").slice(1).length === 2
+                    ? "grid-cols-2"
+                    : "grid-cols-2 md:grid-cols-3"
+              }`}
+            >
+              {article.image_url
+                .split(",")
+                .slice(1)
+                .map((imgUrl: string, i: number) => (
+                  <div
+                    key={i}
+                    className="relative aspect-square rounded-[2rem] overflow-hidden bg-zinc-900 border border-white/5 group"
+                  >
+                    <img
+                      src={imgUrl}
+                      alt={`Gallery asset ${i + 1}`}
+                      className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-[1s]"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                      <p className="text-[8px] font-black uppercase tracking-widest text-zinc-400">
+                        Asset_0{i + 1}
+                      </p>
                     </div>
                   </div>
-                  <div>
-                    <p className="text-[8px] font-black uppercase tracking-widest text-zinc-400 mb-2 italic">Read_Duration</p>
-                    <div className="flex items-center gap-3 text-zinc-900 dark:text-white">
-                      <Clock size={14} />
-                      <p className="text-[10px] font-black uppercase">~ 4 MIN_READ</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                ))}
+            </div>
+          </section>
+        )}
 
-              <div className="hidden lg:block">
-                <div className="h-px bg-zinc-100 dark:bg-zinc-900 mb-8" />
-                <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-300 leading-relaxed italic">
-                  THIS_ARTIFACT_IS_PART_OF_THE_ARCHIVE_PROTOCOL_SS26. REPRODUCTION_UNAUTHORIZED.
-                </p>
-              </div>
-            </aside>
+        {/* RELATED PRODUCTS - Shop This Look */}
+        <section className="mt-32 p-10 border border-white/5 bg-zinc-900/30 rounded-[3rem] backdrop-blur-xl">
+          <div className="flex items-center justify-between mb-12">
+            <h2 className="text-2xl md:text-4xl font-black italic uppercase tracking-tighter text-white">
+              Shop This Look<span className="text-red-600">.</span>
+            </h2>
+            <FiShoppingBag className="text-zinc-700" size={32} />
+          </div>
 
-            {/* Main Content */}
-            <article className="lg:col-span-9">
-              <div 
-                className="prose prose-zinc dark:prose-invert prose-2xl max-w-none 
-                  prose-headings:font-black prose-headings:italic prose-headings:uppercase prose-headings:tracking-tighter prose-headings:leading-none
-                  prose-headings:mt-[2.5em] prose-headings:mb-[1em]
-                  prose-p:text-zinc-600 dark:prose-p:text-zinc-400 prose-p:leading-relaxed prose-p:font-medium
-                  prose-p:mb-[1.8em]
-                  prose-strong:text-zinc-950 dark:prose-strong:text-white prose-strong:font-black
-                  prose-img:rounded-[2.5rem] prose-img:border prose-img:border-zinc-100 dark:prose-img:border-zinc-800
-                  prose-blockquote:border-l-4 prose-blockquote:border-zinc-950 dark:prose-blockquote:border-white prose-blockquote:pl-10 prose-blockquote:italic prose-blockquote:text-zinc-500
-                "
-                dangerouslySetInnerHTML={{ __html: post.content }}
-              />
-
-              {/* ENDING PROTOCOL */}
-              <div className="mt-24 pt-16 border-t border-zinc-100 dark:border-zinc-900 flex items-center justify-between">
-                <div className="space-y-2">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Status_Update</p>
-                  <p className="text-sm font-black italic uppercase dark:text-white">EndOf_Submission.</p>
-                </div>
-                <Link 
-                  href="/journal"
-                  className="flex items-center gap-4 text-xs font-black uppercase tracking-widest group dark:text-white"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {relatedProducts.length > 0 ? (
+              relatedProducts.map((p) => (
+                <div
+                  key={p.id}
+                  className="group flex items-center gap-6 bg-black/40 p-4 rounded-3xl border border-white/5 hover:border-red-500/30 transition-all"
                 >
-                  Return_Archive
-                  <div className="w-10 h-10 rounded-full border border-zinc-200 dark:border-zinc-800 flex items-center justify-center group-hover:bg-zinc-950 dark:group-hover:bg-white group-hover:text-white dark:group-hover:text-zinc-950 transition-all">
-                    <ArrowRight size={16} />
+                  <div className="w-24 h-24 rounded-2xl overflow-hidden bg-zinc-800 shrink-0">
+                    <img
+                      src={p.image_url}
+                      alt={p.name}
+                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all"
+                    />
                   </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xs font-black uppercase text-white truncate">
+                      {p.name}
+                    </h4>
+                    <p className="text-[10px] font-bold text-zinc-500 mt-1">
+                      IDR {Number(p.price).toLocaleString()}
+                    </p>
+                    <button
+                      onClick={() => handleAddToCart(p)}
+                      className="mt-3 text-[9px] font-black uppercase tracking-widest text-red-500 hover:text-white flex items-center gap-2 group/btn"
+                    >
+                      Add_To_Vault{" "}
+                      <FiArrowRight className="group-hover/btn:translate-x-1 transition-transform" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-2 py-10 text-center border-2 border-dashed border-white/5 rounded-3xl">
+                <p className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em]">
+                  No Artifacts Linked Yet
+                </p>
+                <Link
+                  href="/shop"
+                  className="inline-block mt-4 text-[9px] font-black uppercase tracking-[0.2em] bg-white text-black px-6 py-2 rounded-full"
+                >
+                  Browse Archive
                 </Link>
               </div>
-            </article>
-
+            )}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* FOOTER SPACING */}
-      <div className="h-32" />
+        {/* Bottom Navigation */}
+        <div className="mt-32 pt-20 border-t border-white/5 flex flex-col items-center gap-10">
+          <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-600">
+            You Reached The Void
+          </h3>
+          <Link
+            href="/journal"
+            className="group relative px-20 py-8 bg-white text-black rounded-full font-black uppercase text-[12px] tracking-widest hover:bg-red-600 hover:text-white transition-all transform hover:scale-105 active:scale-95 shadow-2xl"
+          >
+            Return To Timeline
+          </Link>
+        </div>
+      </article>
     </main>
   );
 }

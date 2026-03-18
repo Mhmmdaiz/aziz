@@ -203,10 +203,7 @@ export default function UserManagement() {
       <div className="max-w-7xl mx-auto">
         <header className="flex flex-col md:flex-row justify-between items-end gap-8 mb-16">
           <div>
-            <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 mb-4 italic">
-              <Link href="/admin">Dashboard</Link> <span>/</span>{" "}
-              <span className="text-blue-600">Personnel_Registry</span>
-            </nav>
+            
             <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase leading-[0.9] md:leading-[0.85]">
               Management <br /> <span className="text-zinc-300 dark:text-zinc-700">Console.</span>
             </h1>

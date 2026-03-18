@@ -2,6 +2,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { SettingsProvider } from "@/components/providers/SettingsProvider";
+import { CartProvider } from "@/components/providers/CartProvider";
 import Script from "next/script";
 import DynamicStyle from "@/components/DynamicStyle";
 
@@ -29,16 +30,18 @@ export default function RootLayout({
 
       <body className="antialiased min-h-screen flex flex-col bg-white dark:bg-[#030303] text-[#1D1D1F] dark:text-zinc-100 transition-colors duration-300 overflow-x-hidden">
         <SettingsProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-          >
+          <CartProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+            >
             <Navbar />
             <main className="flex-1 w-full">
               {children}
             </main>
-          </ThemeProvider>
+            </ThemeProvider>
+          </CartProvider>
         </SettingsProvider>
       </body>
     </html>

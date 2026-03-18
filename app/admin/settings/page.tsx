@@ -59,15 +59,60 @@ interface BankAccount {
 type ToastState = { msg: string; type: "success" | "error" } | null;
 
 /* ─── SIDEBAR CONFIG ───────────────────────────────────────── */
-const SIDEBAR_ITEMS: { key: Section; label: string; icon: React.ReactNode; accent: string }[] = [
-  { key: "store",         label: "Store Settings",       icon: <Store size={15} />,       accent: "from-cyan-500 to-blue-500" },
-  { key: "payment",       label: "Payment Settings",     icon: <CreditCard size={15} />,  accent: "from-violet-500 to-purple-500" },
-  { key: "shipping",      label: "Shipping Settings",    icon: <Truck size={15} />,       accent: "from-emerald-500 to-teal-500" },
-  { key: "appearance",    label: "Appearance",           icon: <Palette size={15} />,     accent: "from-pink-500 to-rose-500" },
-  { key: "notifications", label: "Notifications",        icon: <Bell size={15} />,        accent: "from-amber-500 to-orange-500" },
-  { key: "security",      label: "Security",             icon: <ShieldCheck size={15} />, accent: "from-red-500 to-rose-600" },
-  { key: "integrations",  label: "Integrations",         icon: <Puzzle size={15} />,      accent: "from-indigo-500 to-blue-600" },
-  { key: "account",       label: "Admin Account",        icon: <UserCog size={15} />,     accent: "from-zinc-400 to-zinc-600" },
+const SIDEBAR_ITEMS: {
+  key: Section;
+  label: string;
+  icon: React.ReactNode;
+  accent: string;
+}[] = [
+  {
+    key: "store",
+    label: "Store Settings",
+    icon: <Store size={15} />,
+    accent: "from-cyan-500 to-blue-500",
+  },
+  {
+    key: "payment",
+    label: "Payment Settings",
+    icon: <CreditCard size={15} />,
+    accent: "from-violet-500 to-purple-500",
+  },
+  {
+    key: "shipping",
+    label: "Shipping Settings",
+    icon: <Truck size={15} />,
+    accent: "from-emerald-500 to-teal-500",
+  },
+  {
+    key: "appearance",
+    label: "Appearance",
+    icon: <Palette size={15} />,
+    accent: "from-pink-500 to-rose-500",
+  },
+  {
+    key: "notifications",
+    label: "Notifications",
+    icon: <Bell size={15} />,
+    accent: "from-amber-500 to-orange-500",
+  },
+  {
+    key: "security",
+    label: "Security",
+    icon: <ShieldCheck size={15} />,
+    accent: "from-red-500 to-rose-600",
+  },
+  {
+    key: "integrations",
+    label: "Integrations",
+    icon: <Puzzle size={15} />,
+    accent: "from-indigo-500 to-blue-600",
+  },
+  {
+    key: "account",
+    label: "Admin Account",
+    icon: <UserCog size={15} />,
+    accent: "from-zinc-400 to-zinc-600",
+  },
 ];
 
 /* ─── SMALL REUSABLE COMPONENTS ────────────────────────────── */
@@ -79,7 +124,10 @@ function Label({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Input({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
+function Input({
+  className = "",
+  ...props
+}: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
@@ -88,7 +136,10 @@ function Input({ className = "", ...props }: React.InputHTMLAttributes<HTMLInput
   );
 }
 
-function Textarea({ className = "", ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+function Textarea({
+  className = "",
+  ...props
+}: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <textarea
       {...props}
@@ -97,7 +148,11 @@ function Textarea({ className = "", ...props }: React.TextareaHTMLAttributes<HTM
   );
 }
 
-function Select({ className = "", children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
+function Select({
+  className = "",
+  children,
+  ...props
+}: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
       {...props}
@@ -108,7 +163,15 @@ function Select({ className = "", children, ...props }: React.SelectHTMLAttribut
   );
 }
 
-function Toggle({ enabled, onToggle, accent = "bg-cyan-500" }: { enabled: boolean; onToggle: () => void; accent?: string }) {
+function Toggle({
+  enabled,
+  onToggle,
+  accent = "bg-cyan-500",
+}: {
+  enabled: boolean;
+  onToggle: () => void;
+  accent?: string;
+}) {
   return (
     <button
       type="button"
@@ -124,7 +187,13 @@ function Toggle({ enabled, onToggle, accent = "bg-cyan-500" }: { enabled: boolea
   );
 }
 
-function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+function Card({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -137,26 +206,50 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
   );
 }
 
-function CardTitle({ icon, children, accent }: { icon: React.ReactNode; children: React.ReactNode; accent?: string }) {
+function CardTitle({
+  icon,
+  children,
+  accent,
+}: {
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  accent?: string;
+}) {
   return (
     <div className="flex items-center gap-3 mb-6">
-      <div className={`p-2 rounded-xl bg-gradient-to-br ${accent || "from-cyan-500 to-blue-500"} text-white`}>
+      <div
+        className={`p-2 rounded-xl bg-gradient-to-br ${accent || "from-cyan-500 to-blue-500"} text-white`}
+      >
         {icon}
       </div>
-      <h3 className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-white">{children}</h3>
+      <h3 className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-white">
+        {children}
+      </h3>
     </div>
   );
 }
 function SectionDivider({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-3 mb-4 mt-6">
-      <span className="text-[8px] font-black uppercase tracking-[0.3em] text-zinc-500 dark:text-zinc-600">{label}</span>
+      <span className="text-[8px] font-black uppercase tracking-[0.3em] text-zinc-500 dark:text-zinc-600">
+        {label}
+      </span>
       <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-800" />
     </div>
   );
 }
 
-function UploadBox({ label, accept = "image/*", value, onChange }: { label: string; accept?: string; value?: string | null; onChange?: (file: File) => void }) {
+function UploadBox({
+  label,
+  accept = "image/*",
+  value,
+  onChange,
+}: {
+  label: string;
+  accept?: string;
+  value?: string | null;
+  onChange?: (file: File) => void;
+}) {
   const ref = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(value || null);
 
@@ -172,10 +265,17 @@ function UploadBox({ label, accept = "image/*", value, onChange }: { label: stri
         className="relative group border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-cyan-500/50 transition-all duration-200 bg-zinc-50 dark:bg-zinc-950 overflow-hidden"
       >
         {preview ? (
-          <img src={preview} alt="preview" className="w-full h-24 object-cover rounded-lg" />
+          <img
+            src={preview}
+            alt="preview"
+            className="w-full h-24 object-cover rounded-lg"
+          />
         ) : (
           <>
-            <Upload size={20} className="text-zinc-600 group-hover:text-cyan-500 transition-colors" />
+            <Upload
+              size={20}
+              className="text-zinc-600 group-hover:text-cyan-500 transition-colors"
+            />
             <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 group-hover:text-zinc-400 transition-colors">
               Click to upload
             </span>
@@ -199,7 +299,6 @@ function UploadBox({ label, accept = "image/*", value, onChange }: { label: stri
   );
 }
 
-
 function GatewayItem({
   name,
   enabled,
@@ -217,10 +316,16 @@ function GatewayItem({
       <div className="flex items-center justify-between px-4 py-3 bg-zinc-100/60 dark:bg-zinc-900/40">
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-gradient-to-br from-cyan-400 to-purple-600" />
-          <span className="text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">{name}</span>
+          <span className="text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+            {name}
+          </span>
         </div>
         <div className="flex items-center gap-3">
-          <Toggle enabled={enabled} onToggle={() => onToggle(!enabled)} accent="bg-cyan-500" />
+          <Toggle
+            enabled={enabled}
+            onToggle={() => onToggle(!enabled)}
+            accent="bg-cyan-500"
+          />
           {enabled && (
             <button
               type="button"
@@ -252,12 +357,28 @@ function GatewayItem({
 }
 
 /* ─── NOTIFICATION ROW ─────────────────────────────────────── */
-function NotifRow({ label, desc, enabled, onToggle }: { label: string; desc?: string; enabled: boolean; onToggle: (v: boolean) => void }) {
+function NotifRow({
+  label,
+  desc,
+  enabled,
+  onToggle,
+}: {
+  label: string;
+  desc?: string;
+  enabled: boolean;
+  onToggle: (v: boolean) => void;
+}) {
   return (
     <div className="flex items-center justify-between py-3 border-b border-zinc-100 dark:border-zinc-900 last:border-none">
       <div>
-        <p className="text-xs font-black uppercase tracking-wider text-zinc-900 dark:text-white">{label}</p>
-        {desc && <p className="text-[9px] text-zinc-500 dark:text-zinc-600 mt-0.5">{desc}</p>}
+        <p className="text-xs font-black uppercase tracking-wider text-zinc-900 dark:text-white">
+          {label}
+        </p>
+        {desc && (
+          <p className="text-[9px] text-zinc-500 dark:text-zinc-600 mt-0.5">
+            {desc}
+          </p>
+        )}
       </div>
       <Toggle enabled={enabled} onToggle={() => onToggle(!enabled)} />
     </div>
@@ -266,14 +387,35 @@ function NotifRow({ label, desc, enabled, onToggle }: { label: string; desc?: st
 
 /* ─── LOG TABLE ROW ────────────────────────────────────────── */
 const MOCK_LOGS = [
-  { admin: "Administrator", action: "Updated store settings", date: "2026-03-16 09:12", ip: "103.18.52.4" },
-  { admin: "Administrator", action: "Added new product",      date: "2026-03-15 14:30", ip: "103.18.52.4" },
-  { admin: "Administrator", action: "Deleted journal entry",  date: "2026-03-14 11:05", ip: "45.12.66.8" },
+  {
+    admin: "Administrator",
+    action: "Updated store settings",
+    date: "2026-03-16 09:12",
+    ip: "103.18.52.4",
+  },
+  {
+    admin: "Administrator",
+    action: "Added new product",
+    date: "2026-03-15 14:30",
+    ip: "103.18.52.4",
+  },
+  {
+    admin: "Administrator",
+    action: "Deleted journal entry",
+    date: "2026-03-14 11:05",
+    ip: "45.12.66.8",
+  },
 ];
 
 /* ─── SECTIONS ──────────────────────────────────────────────── */
 
-function StoreSettings({ data, onSave }: { data: any; onSave: (newData: any) => void }) {
+function StoreSettings({
+  data,
+  onSave,
+}: {
+  data: any;
+  onSave: (newData: any) => void;
+}) {
   const [formData, setFormData] = useState(data || {});
 
   const handleChange = (key: string, value: any) => {
@@ -285,40 +427,43 @@ function StoreSettings({ data, onSave }: { data: any; onSave: (newData: any) => 
   return (
     <div className="space-y-5">
       <Card>
-        <CardTitle icon={<Store size={14} />} accent="from-cyan-500 to-blue-500">
+        <CardTitle
+          icon={<Store size={14} />}
+          accent="from-cyan-500 to-blue-500"
+        >
           Store Information
         </CardTitle>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label>Store Name</Label>
-            <Input 
-              placeholder="CHCKT.STORE" 
-              value={formData.store_name || ""} 
-              onChange={(e) => handleChange("store_name", e.target.value)} 
+            <Input
+              placeholder="CHCKT.STORE"
+              value={formData.store_name || ""}
+              onChange={(e) => handleChange("store_name", e.target.value)}
             />
           </div>
           <div>
             <Label>Store Email</Label>
-            <Input 
-              type="email" 
-              placeholder="admin@chckt.store" 
-              value={formData.store_email || ""} 
-              onChange={(e) => handleChange("store_email", e.target.value)} 
+            <Input
+              type="email"
+              placeholder="admin@chckt.store"
+              value={formData.store_email || ""}
+              onChange={(e) => handleChange("store_email", e.target.value)}
             />
           </div>
           <div>
             <Label>Store Phone</Label>
-            <Input 
-              type="tel" 
-              placeholder="+62 812 3456 7890" 
-              value={formData.store_phone || ""} 
-              onChange={(e) => handleChange("store_phone", e.target.value)} 
+            <Input
+              type="tel"
+              placeholder="+62 812 3456 7890"
+              value={formData.store_phone || ""}
+              onChange={(e) => handleChange("store_phone", e.target.value)}
             />
           </div>
           <div>
             <Label>Currency</Label>
-            <Select 
-              value={formData.currency || "IDR"} 
+            <Select
+              value={formData.currency || "IDR"}
               onChange={(e) => handleChange("currency", e.target.value)}
             >
               <option value="IDR">IDR — Indonesian Rupiah</option>
@@ -329,33 +474,36 @@ function StoreSettings({ data, onSave }: { data: any; onSave: (newData: any) => 
         </div>
         <div className="mt-4">
           <Label>Store Address</Label>
-          <Textarea 
-            rows={2} 
-            placeholder="Jl. Sudirman No. 1, Jakarta Pusat, 10220" 
-            value={formData.store_address || ""} 
+          <Textarea
+            rows={2}
+            placeholder="Jl. Sudirman No. 1, Jakarta Pusat, 10220"
+            value={formData.store_address || ""}
             onChange={(e) => handleChange("store_address", e.target.value)}
           />
         </div>
         <div className="mt-4">
           <Label>Store Description</Label>
-          <Textarea 
-            rows={3} 
-            placeholder="Premium brutalist streetwear collections..." 
-            value={formData.store_description || ""} 
+          <Textarea
+            rows={3}
+            placeholder="Premium brutalist streetwear collections..."
+            value={formData.store_description || ""}
             onChange={(e) => handleChange("store_description", e.target.value)}
           />
         </div>
       </Card>
 
       <Card>
-        <CardTitle icon={<Globe size={14} />} accent="from-cyan-500 to-blue-500">
+        <CardTitle
+          icon={<Globe size={14} />}
+          accent="from-cyan-500 to-blue-500"
+        >
           Regional Settings
         </CardTitle>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label>Timezone</Label>
-            <Select 
-              value={formData.timezone || "Asia/Jakarta (UTC+7)"} 
+            <Select
+              value={formData.timezone || "Asia/Jakarta (UTC+7)"}
               onChange={(e) => handleChange("timezone", e.target.value)}
             >
               <option>Asia/Jakarta (UTC+7)</option>
@@ -365,8 +513,8 @@ function StoreSettings({ data, onSave }: { data: any; onSave: (newData: any) => 
           </div>
           <div>
             <Label>Language</Label>
-            <Select 
-              value={formData.language || "Bahasa Indonesia"} 
+            <Select
+              value={formData.language || "Bahasa Indonesia"}
               onChange={(e) => handleChange("language", e.target.value)}
             >
               <option>Bahasa Indonesia</option>
@@ -378,50 +526,86 @@ function StoreSettings({ data, onSave }: { data: any; onSave: (newData: any) => 
       </Card>
 
       <Card>
-        <CardTitle icon={<Upload size={14} />} accent="from-cyan-500 to-blue-500">
+        <CardTitle
+          icon={<Upload size={14} />}
+          accent="from-cyan-500 to-blue-500"
+        >
           Brand Assets
         </CardTitle>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <UploadBox 
-            label="Store Logo" 
-            value={formData.logo_url} 
+          <UploadBox
+            label="Store Logo"
+            value={formData.logo_url}
             onChange={async (f) => {
               const fileName = `brand/logo-${Date.now()}.png`;
-              const { data: uploadData, error } = await supabase.storage.from("assets").upload(fileName, f);
-              if (error) return Swal.fire("Upload Failed", error.message, "error");
-              const { data: { publicUrl } } = supabase.storage.from("assets").getPublicUrl(fileName);
+              const { data: uploadData, error } = await supabase.storage
+                .from("assets")
+                .upload(fileName, f);
+              if (error)
+                return Swal.fire("Upload Failed", error.message, "error");
+              const {
+                data: { publicUrl },
+              } = supabase.storage.from("assets").getPublicUrl(fileName);
               handleChange("logo_url", publicUrl);
-            }} 
+            }}
           />
-          <UploadBox 
-            label="Store Banner" 
-            value={formData.banner_url} 
+          <UploadBox
+            label="Store Banner"
+            value={formData.banner_url}
             onChange={async (f) => {
               const fileName = `brand/banner-${Date.now()}.png`;
-              const { data: uploadData, error } = await supabase.storage.from("assets").upload(fileName, f);
-              if (error) return Swal.fire("Upload Failed", error.message, "error");
-              const { data: { publicUrl } } = supabase.storage.from("assets").getPublicUrl(fileName);
+              const { data: uploadData, error } = await supabase.storage
+                .from("assets")
+                .upload(fileName, f);
+              if (error)
+                return Swal.fire("Upload Failed", error.message, "error");
+              const {
+                data: { publicUrl },
+              } = supabase.storage.from("assets").getPublicUrl(fileName);
               handleChange("banner_url", publicUrl);
-            }} 
+            }}
           />
         </div>
         <div className="mt-5 p-4 border border-zinc-800 rounded-xl bg-zinc-900/30 flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-zinc-800 flex items-center justify-center text-[8px] font-black text-zinc-500 overflow-hidden">
-            {formData.logo_url ? <img src={formData.logo_url} alt="logo" className="w-full h-full object-cover" /> : "LOGO"}
+            {formData.logo_url ? (
+              <img
+                src={formData.logo_url}
+                alt="logo"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              "LOGO"
+            )}
           </div>
           <div>
-            <p className="text-xs font-black uppercase tracking-wider text-white">{formData.store_name || "CHCKT.STORE"}</p>
-            <p className="text-[9px] text-zinc-600 mt-0.5">Preview — {formData.currency || "IDR"} · {formData.language || "Bahasa"}</p>
+            <p className="text-xs font-black uppercase tracking-wider text-white">
+              {formData.store_name || "CHCKT.STORE"}
+            </p>
+            <p className="text-[9px] text-zinc-600 mt-0.5">
+              Preview — {formData.currency || "IDR"} ·{" "}
+              {formData.language || "Bahasa"}
+            </p>
           </div>
-          <div className="ml-auto px-3 py-1 rounded-full border border-zinc-800 text-[8px] font-black uppercase tracking-widest text-cyan-500">Live Preview</div>
+          <div className="ml-auto px-3 py-1 rounded-full border border-zinc-800 text-[8px] font-black uppercase tracking-widest text-cyan-500">
+            Live Preview
+          </div>
         </div>
       </Card>
     </div>
   );
 }
 
-function PaymentSettings({ data, onSave }: { data: any; onSave: (newData: any) => void }) {
-  const [formData, setFormData] = useState(data || { gateways: {}, manual_banks: [] });
+function PaymentSettings({
+  data,
+  onSave,
+}: {
+  data: any;
+  onSave: (newData: any) => void;
+}) {
+  const [formData, setFormData] = useState(
+    data || { gateways: {}, manual_banks: [] },
+  );
 
   const handleChange = (section: string, value: any) => {
     const updated = { ...formData, [section]: value };
@@ -432,7 +616,10 @@ function PaymentSettings({ data, onSave }: { data: any; onSave: (newData: any) =
   const addBank = () => {
     const updated = {
       ...formData,
-      manual_banks: [...(formData.manual_banks || []), { id: String(Date.now()), bank: "", number: "", holder: "" }]
+      manual_banks: [
+        ...(formData.manual_banks || []),
+        { id: String(Date.now()), bank: "", number: "", holder: "" },
+      ],
     };
     setFormData(updated);
     onSave(updated);
@@ -441,7 +628,7 @@ function PaymentSettings({ data, onSave }: { data: any; onSave: (newData: any) =
   const removeBank = (id: string) => {
     const updated = {
       ...formData,
-      manual_banks: formData.manual_banks.filter((x: any) => x.id !== id)
+      manual_banks: formData.manual_banks.filter((x: any) => x.id !== id),
     };
     setFormData(updated);
     onSave(updated);
@@ -450,7 +637,9 @@ function PaymentSettings({ data, onSave }: { data: any; onSave: (newData: any) =
   const updateBank = (id: string, key: string, value: string) => {
     const updated = {
       ...formData,
-      manual_banks: formData.manual_banks.map((b: any) => b.id === id ? { ...b, [key]: value } : b)
+      manual_banks: formData.manual_banks.map((b: any) =>
+        b.id === id ? { ...b, [key]: value } : b,
+      ),
     };
     setFormData(updated);
     onSave(updated);
@@ -459,18 +648,56 @@ function PaymentSettings({ data, onSave }: { data: any; onSave: (newData: any) =
   return (
     <div className="space-y-5">
       <Card>
-        <CardTitle icon={<CreditCard size={14} />} accent="from-violet-500 to-purple-500">
+        <CardTitle
+          icon={<CreditCard size={14} />}
+          accent="from-violet-500 to-purple-500"
+        >
           Payment Gateways
         </CardTitle>
         <div className="space-y-3">
-          <GatewayItem 
-            name="Midtrans" 
+          <GatewayItem
+            name="Midtrans"
             enabled={formData.gateways?.midtrans?.enabled || false}
-            onToggle={(v) => handleChange("gateways", { ...formData.gateways, midtrans: { ...formData.gateways.midtrans, enabled: v } })}
+            onToggle={(v) =>
+              handleChange("gateways", {
+                ...formData.gateways,
+                midtrans: { ...formData.gateways.midtrans, enabled: v },
+              })
+            }
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div><Label>Server Key</Label><Input placeholder="SB-Mid-server-xxxxx" value={formData.gateways?.midtrans?.server_key} onChange={(e) => handleChange("gateways", { ...formData.gateways, midtrans: { ...formData.gateways.midtrans, server_key: e.target.value } })} /></div>
-              <div><Label>Client Key</Label><Input placeholder="SB-Mid-client-xxxxx" value={formData.gateways?.midtrans?.client_key} onChange={(e) => handleChange("gateways", { ...formData.gateways, midtrans: { ...formData.gateways.midtrans, client_key: e.target.value } })} /></div>
+              <div>
+                <Label>Server Key</Label>
+                <Input
+                  placeholder="SB-Mid-server-xxxxx"
+                  value={formData.gateways?.midtrans?.server_key}
+                  onChange={(e) =>
+                    handleChange("gateways", {
+                      ...formData.gateways,
+                      midtrans: {
+                        ...formData.gateways.midtrans,
+                        server_key: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label>Client Key</Label>
+                <Input
+                  placeholder="SB-Mid-client-xxxxx"
+                  value={formData.gateways?.midtrans?.client_key}
+                  onChange={(e) =>
+                    handleChange("gateways", {
+                      ...formData.gateways,
+                      midtrans: {
+                        ...formData.gateways.midtrans,
+                        client_key: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
             </div>
           </GatewayItem>
         </div>
@@ -478,7 +705,10 @@ function PaymentSettings({ data, onSave }: { data: any; onSave: (newData: any) =
 
       <Card>
         <div className="flex items-center justify-between mb-6">
-          <CardTitle icon={<Layers size={14} />} accent="from-violet-500 to-purple-500">
+          <CardTitle
+            icon={<Layers size={14} />}
+            accent="from-violet-500 to-purple-500"
+          >
             Manual Bank Transfer
           </CardTitle>
           <button
@@ -491,9 +721,14 @@ function PaymentSettings({ data, onSave }: { data: any; onSave: (newData: any) =
         </div>
         <div className="space-y-4">
           {formData.manual_banks?.map((bank: any, i: number) => (
-            <div key={bank.id} className="p-4 border border-zinc-900 rounded-xl bg-zinc-900/20 relative">
+            <div
+              key={bank.id}
+              className="p-4 border border-zinc-900 rounded-xl bg-zinc-900/20 relative"
+            >
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Account #{i + 1}</span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">
+                  Account #{i + 1}
+                </span>
                 <button
                   type="button"
                   onClick={() => removeBank(bank.id)}
@@ -503,9 +738,36 @@ function PaymentSettings({ data, onSave }: { data: any; onSave: (newData: any) =
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div><Label>Bank Name</Label><Input placeholder="BCA" value={bank.bank} onChange={(e) => updateBank(bank.id, "bank", e.target.value)} /></div>
-                <div><Label>Number</Label><Input placeholder="1234567890" value={bank.number} onChange={(e) => updateBank(bank.id, "number", e.target.value)} /></div>
-                <div><Label>Holder</Label><Input placeholder="PT CHCKT STORE" value={bank.holder} onChange={(e) => updateBank(bank.id, "holder", e.target.value)} /></div>
+                <div>
+                  <Label>Bank Name</Label>
+                  <Input
+                    placeholder="BCA"
+                    value={bank.bank}
+                    onChange={(e) =>
+                      updateBank(bank.id, "bank", e.target.value)
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Number</Label>
+                  <Input
+                    placeholder="1234567890"
+                    value={bank.number}
+                    onChange={(e) =>
+                      updateBank(bank.id, "number", e.target.value)
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Holder</Label>
+                  <Input
+                    placeholder="PT CHCKT STORE"
+                    value={bank.holder}
+                    onChange={(e) =>
+                      updateBank(bank.id, "holder", e.target.value)
+                    }
+                  />
+                </div>
               </div>
             </div>
           ))}
@@ -515,8 +777,16 @@ function PaymentSettings({ data, onSave }: { data: any; onSave: (newData: any) =
   );
 }
 
-function ShippingSettings({ data, onSave }: { data: any; onSave: (newData: any) => void }) {
-  const [formData, setFormData] = useState(data || { fee_mode: "dynamic", providers: {} });
+function ShippingSettings({
+  data,
+  onSave,
+}: {
+  data: any;
+  onSave: (newData: any) => void;
+}) {
+  const [formData, setFormData] = useState(
+    data || { fee_mode: "dynamic", providers: {} },
+  );
 
   const handleChange = (key: string, value: any) => {
     const updated = { ...formData, [key]: value };
@@ -527,25 +797,66 @@ function ShippingSettings({ data, onSave }: { data: any; onSave: (newData: any) 
   return (
     <div className="space-y-5">
       <Card>
-        <CardTitle icon={<Truck size={14} />} accent="from-emerald-500 to-teal-500">
+        <CardTitle
+          icon={<Truck size={14} />}
+          accent="from-emerald-500 to-teal-500"
+        >
           Shipping Providers
         </CardTitle>
         <div className="space-y-3">
-          <GatewayItem 
+          <GatewayItem
             name="RajaOngkir"
             enabled={formData.providers?.rajaongkir?.enabled || false}
-            onToggle={(v) => handleChange("providers", { ...formData.providers, rajaongkir: { ...formData.providers.rajaongkir, enabled: v } })}
+            onToggle={(v) =>
+              handleChange("providers", {
+                ...formData.providers,
+                rajaongkir: { ...formData.providers.rajaongkir, enabled: v },
+              })
+            }
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div><Label>API Key</Label><Input placeholder="xxxxxxxxxxxxxxxxxx" value={formData.providers?.rajaongkir?.api_key} onChange={(e) => handleChange("providers", { ...formData.providers, rajaongkir: { ...formData.providers.rajaongkir, api_key: e.target.value } })} /></div>
-              <div><Label>Default Origin City</Label><Input placeholder="Jakarta" value={formData.providers?.rajaongkir?.origin} onChange={(e) => handleChange("providers", { ...formData.providers, rajaongkir: { ...formData.providers.rajaongkir, origin: e.target.value } })} /></div>
+              <div>
+                <Label>API Key</Label>
+                <Input
+                  placeholder="xxxxxxxxxxxxxxxxxx"
+                  value={formData.providers?.rajaongkir?.api_key}
+                  onChange={(e) =>
+                    handleChange("providers", {
+                      ...formData.providers,
+                      rajaongkir: {
+                        ...formData.providers.rajaongkir,
+                        api_key: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label>Default Origin City</Label>
+                <Input
+                  placeholder="Jakarta"
+                  value={formData.providers?.rajaongkir?.origin}
+                  onChange={(e) =>
+                    handleChange("providers", {
+                      ...formData.providers,
+                      rajaongkir: {
+                        ...formData.providers.rajaongkir,
+                        origin: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
             </div>
           </GatewayItem>
         </div>
       </Card>
 
       <Card>
-        <CardTitle icon={<DollarSign size={14} />} accent="from-emerald-500 to-teal-500">
+        <CardTitle
+          icon={<DollarSign size={14} />}
+          accent="from-emerald-500 to-teal-500"
+        >
           Shipping Fee Mode
         </CardTitle>
         <div className="grid grid-cols-2 gap-3 mb-5">
@@ -572,7 +883,12 @@ function ShippingSettings({ data, onSave }: { data: any; onSave: (newData: any) 
               exit={{ opacity: 0, height: 0 }}
             >
               <Label>Flat Rate Price (IDR)</Label>
-              <Input type="number" placeholder="25000" value={formData.flat_rate} onChange={(e) => handleChange("flat_rate", e.target.value)} />
+              <Input
+                type="number"
+                placeholder="25000"
+                value={formData.flat_rate}
+                onChange={(e) => handleChange("flat_rate", e.target.value)}
+              />
             </motion.div>
           )}
         </AnimatePresence>
@@ -581,8 +897,19 @@ function ShippingSettings({ data, onSave }: { data: any; onSave: (newData: any) 
   );
 }
 
-function AppearanceSettings({ data, onSave }: { data: any; onSave: (newData: any) => void }) {
-  const [formData, setFormData] = useState(data || { colors: { primary: "#06b6d4", secondary: "#8b5cf6", accent: "#f43f5e" }, typography: "Inter" });
+function AppearanceSettings({
+  data,
+  onSave,
+}: {
+  data: any;
+  onSave: (newData: any) => void;
+}) {
+  const [formData, setFormData] = useState(
+    data || {
+      colors: { primary: "#06b6d4", secondary: "#8b5cf6", accent: "#f43f5e" },
+      typography: "Inter",
+    },
+  );
 
   const handleChange = (key: string, value: any) => {
     const updated = { ...formData, [key]: value };
@@ -593,7 +920,10 @@ function AppearanceSettings({ data, onSave }: { data: any; onSave: (newData: any
   return (
     <div className="space-y-5">
       <Card>
-        <CardTitle icon={<Palette size={14} />} accent="from-pink-500 to-rose-500">
+        <CardTitle
+          icon={<Palette size={14} />}
+          accent="from-pink-500 to-rose-500"
+        >
           Color System
         </CardTitle>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -604,10 +934,17 @@ function AppearanceSettings({ data, onSave }: { data: any; onSave: (newData: any
                 <input
                   type="color"
                   value={formData.colors?.[c] || "#000000"}
-                  onChange={(e) => handleChange("colors", { ...formData.colors, [c]: e.target.value })}
+                  onChange={(e) =>
+                    handleChange("colors", {
+                      ...formData.colors,
+                      [c]: e.target.value,
+                    })
+                  }
                   className="w-8 h-8 rounded-lg border-0 bg-transparent cursor-pointer"
                 />
-                <span className="text-xs font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{formData.colors?.[c]}</span>
+                <span className="text-xs font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  {formData.colors?.[c]}
+                </span>
               </div>
             </div>
           ))}
@@ -620,8 +957,8 @@ function AppearanceSettings({ data, onSave }: { data: any; onSave: (newData: any
         </CardTitle>
         <div>
           <Label>Font Family</Label>
-          <Select 
-            value={formData.typography || "Inter"} 
+          <Select
+            value={formData.typography || "Inter"}
             onChange={(e) => handleChange("typography", e.target.value)}
           >
             <option value="Inter">Inter — Modern Geometric</option>
@@ -632,15 +969,29 @@ function AppearanceSettings({ data, onSave }: { data: any; onSave: (newData: any
         </div>
       </Card>
       <div className="p-4 border border-rose-500/20 bg-rose-500/5 rounded-2xl">
-        <p className="text-[10px] font-black uppercase tracking-widest text-rose-500 mb-1">Visual Synchronizer</p>
-        <p className="text-[9px] text-rose-500/70">Warna dan tipografi yang Anda pilih di sini akan langsung disuntikkan ke dalam CSS variables aplikasi setelah Anda menekan tombol "Save Changes".</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-rose-500 mb-1">
+          Visual Synchronizer
+        </p>
+        <p className="text-[9px] text-rose-500/70">
+          Warna dan tipografi yang Anda pilih di sini akan langsung disuntikkan
+          ke dalam CSS variables aplikasi setelah Anda menekan tombol "Save
+          Changes".
+        </p>
       </div>
     </div>
   );
 }
 
-function NotificationSettings({ data, onSave }: { data: any; onSave: (newData: any) => void }) {
-  const [formData, setFormData] = useState(data || { admin_email: "", events: {} });
+function NotificationSettings({
+  data,
+  onSave,
+}: {
+  data: any;
+  onSave: (newData: any) => void;
+}) {
+  const [formData, setFormData] = useState(
+    data || { admin_email: "", events: {} },
+  );
 
   const handleChange = (key: string, value: any) => {
     const updated = { ...formData, [key]: value };
@@ -651,38 +1002,53 @@ function NotificationSettings({ data, onSave }: { data: any; onSave: (newData: a
   return (
     <div className="space-y-5">
       <Card>
-        <CardTitle icon={<Bell size={14} />} accent="from-amber-500 to-orange-500">
+        <CardTitle
+          icon={<Bell size={14} />}
+          accent="from-amber-500 to-orange-500"
+        >
           Email Notifications
         </CardTitle>
         <div className="mb-4">
           <Label>Admin Email Address</Label>
-          <Input 
-            type="email" 
-            placeholder="admin@chckt.store" 
-            value={formData.admin_email || ""} 
-            onChange={(e) => handleChange("admin_email", e.target.value)} 
+          <Input
+            type="email"
+            placeholder="admin@chckt.store"
+            value={formData.admin_email || ""}
+            onChange={(e) => handleChange("admin_email", e.target.value)}
           />
         </div>
         <SectionDivider label="Trigger Events" />
-        <NotifRow 
-          label="New Order" 
-          desc="Trigger when a customer places an order" 
+        <NotifRow
+          label="New Order"
+          desc="Trigger when a customer places an order"
           enabled={formData.events?.new_order || false}
-          onToggle={(v) => handleChange("events", { ...formData.events, new_order: v })}
+          onToggle={(v) =>
+            handleChange("events", { ...formData.events, new_order: v })
+          }
         />
-        <NotifRow 
-          label="Low Stock Alert" 
-          desc="Trigger when product stock is below 10 items" 
+        <NotifRow
+          label="Low Stock Alert"
+          desc="Trigger when product stock is below 10 items"
           enabled={formData.events?.low_stock || false}
-          onToggle={(v) => handleChange("events", { ...formData.events, low_stock: v })}
+          onToggle={(v) =>
+            handleChange("events", { ...formData.events, low_stock: v })
+          }
         />
       </Card>
     </div>
   );
 }
 
-function SecuritySettings({ data, onSave }: { data: any; onSave: (newData: any) => void }) {
-  const [formData, setFormData] = useState(data || { two_fa: false, login_alert: true });
+function SecuritySettings({
+  data,
+  onSave,
+}: {
+  data: any;
+  onSave: (newData: any) => void;
+}) {
+  const [formData, setFormData] = useState(
+    data || { two_fa: false, login_alert: true },
+  );
 
   const handleChange = (key: string, value: any) => {
     const updated = { ...formData, [key]: value };
@@ -693,29 +1059,53 @@ function SecuritySettings({ data, onSave }: { data: any; onSave: (newData: any) 
   return (
     <div className="space-y-5">
       <Card>
-        <CardTitle icon={<ShieldCheck size={14} />} accent="from-red-500 to-rose-600">
+        <CardTitle
+          icon={<ShieldCheck size={14} />}
+          accent="from-red-500 to-rose-600"
+        >
           Authentication
         </CardTitle>
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 border border-zinc-200 dark:border-zinc-900 rounded-xl bg-zinc-50 dark:bg-zinc-900/20">
             <div>
-              <p className="text-xs font-black uppercase tracking-wider text-zinc-900 dark:text-white">Two Factor Authentication</p>
-              <p className="text-[9px] text-zinc-500 dark:text-zinc-600 mt-0.5">Requires OTP on every login</p>
+              <p className="text-xs font-black uppercase tracking-wider text-zinc-900 dark:text-white">
+                Two Factor Authentication
+              </p>
+              <p className="text-[9px] text-zinc-500 dark:text-zinc-600 mt-0.5">
+                Requires OTP on every login
+              </p>
             </div>
-            <Toggle enabled={formData.two_fa} onToggle={() => handleChange("two_fa", !formData.two_fa)} accent="bg-red-500" />
+            <Toggle
+              enabled={formData.two_fa}
+              onToggle={() => handleChange("two_fa", !formData.two_fa)}
+              accent="bg-red-500"
+            />
           </div>
           <div className="flex items-center justify-between p-4 border border-zinc-200 dark:border-zinc-900 rounded-xl bg-zinc-50 dark:bg-zinc-900/20">
             <div>
-              <p className="text-xs font-black uppercase tracking-wider text-zinc-900 dark:text-white">Login Alert Email</p>
-              <p className="text-[9px] text-zinc-500 dark:text-zinc-600 mt-0.5">Send email on new device login</p>
+              <p className="text-xs font-black uppercase tracking-wider text-zinc-900 dark:text-white">
+                Login Alert Email
+              </p>
+              <p className="text-[9px] text-zinc-500 dark:text-zinc-600 mt-0.5">
+                Send email on new device login
+              </p>
             </div>
-            <Toggle enabled={formData.login_alert} onToggle={() => handleChange("login_alert", !formData.login_alert)} accent="bg-red-500" />
+            <Toggle
+              enabled={formData.login_alert}
+              onToggle={() =>
+                handleChange("login_alert", !formData.login_alert)
+              }
+              accent="bg-red-500"
+            />
           </div>
         </div>
       </Card>
 
       <Card>
-        <CardTitle icon={<Activity size={14} />} accent="from-red-500 to-rose-600">
+        <CardTitle
+          icon={<Activity size={14} />}
+          accent="from-red-500 to-rose-600"
+        >
           Admin Activity Log
         </CardTitle>
         <div className="overflow-x-auto">
@@ -723,16 +1113,28 @@ function SecuritySettings({ data, onSave }: { data: any; onSave: (newData: any) 
             <thead>
               <tr className="border-b border-zinc-200 dark:border-zinc-900">
                 {["Admin", "Action", "Date", "IP Address"].map((h) => (
-                  <th key={h} className="pb-3 pr-6 text-left text-[8px] font-black uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-600">{h}</th>
+                  <th
+                    key={h}
+                    className="pb-3 pr-6 text-left text-[8px] font-black uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-600"
+                  >
+                    {h}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {MOCK_LOGS.map((row, i) => (
-                <tr key={i} className="border-b border-zinc-100 dark:border-zinc-900/50 hover:bg-zinc-50 dark:hover:bg-zinc-900/20 transition-colors">
-                  <td className="py-3 pr-6 text-zinc-700 dark:text-zinc-300 font-bold">{row.admin}</td>
+                <tr
+                  key={i}
+                  className="border-b border-zinc-100 dark:border-zinc-900/50 hover:bg-zinc-50 dark:hover:bg-zinc-900/20 transition-colors"
+                >
+                  <td className="py-3 pr-6 text-zinc-700 dark:text-zinc-300 font-bold">
+                    {row.admin}
+                  </td>
                   <td className="py-3 pr-6 text-zinc-500">{row.action}</td>
-                  <td className="py-3 pr-6 text-zinc-400 dark:text-zinc-600 font-mono">{row.date}</td>
+                  <td className="py-3 pr-6 text-zinc-400 dark:text-zinc-600 font-mono">
+                    {row.date}
+                  </td>
                   <td className="py-3 text-cyan-600 font-mono">{row.ip}</td>
                 </tr>
               ))}
@@ -744,8 +1146,16 @@ function SecuritySettings({ data, onSave }: { data: any; onSave: (newData: any) 
   );
 }
 
-function IntegrationSettings({ data, onSave }: { data: any; onSave: (newData: any) => void }) {
-  const [formData, setFormData] = useState(data || { google_analytics: "", meta_pixel: "" });
+function IntegrationSettings({
+  data,
+  onSave,
+}: {
+  data: any;
+  onSave: (newData: any) => void;
+}) {
+  const [formData, setFormData] = useState(
+    data || { google_analytics: "", meta_pixel: "" },
+  );
 
   const handleChange = (key: string, value: any) => {
     const updated = { ...formData, [key]: value };
@@ -756,16 +1166,19 @@ function IntegrationSettings({ data, onSave }: { data: any; onSave: (newData: an
   return (
     <div className="space-y-5">
       <Card>
-        <CardTitle icon={<Puzzle size={14} />} accent="from-indigo-500 to-blue-600">
+        <CardTitle
+          icon={<Puzzle size={14} />}
+          accent="from-indigo-500 to-blue-600"
+        >
           Analytics & Tracking
         </CardTitle>
         <div className="space-y-4">
           <div className="p-4 border border-zinc-900 rounded-xl bg-zinc-900/20">
             <Label>Google Analytics Tracking ID</Label>
-            <Input 
-              placeholder="G-XXXXXXXXXX" 
-              value={formData.google_analytics || ""} 
-              onChange={(e) => handleChange("google_analytics", e.target.value)} 
+            <Input
+              placeholder="G-XXXXXXXXXX"
+              value={formData.google_analytics || ""}
+              onChange={(e) => handleChange("google_analytics", e.target.value)}
             />
           </div>
         </div>
@@ -774,7 +1187,13 @@ function IntegrationSettings({ data, onSave }: { data: any; onSave: (newData: an
   );
 }
 
-function AccountSettings({ profile, onUpdate }: { profile: any; onUpdate: () => void }) {
+function AccountSettings({
+  profile,
+  onUpdate,
+}: {
+  profile: any;
+  onUpdate: () => void;
+}) {
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -836,9 +1255,9 @@ function AccountSettings({ profile, onUpdate }: { profile: any; onUpdate: () => 
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(filePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
       const { error: updateError } = await supabase
         .from("profiles")
@@ -848,7 +1267,11 @@ function AccountSettings({ profile, onUpdate }: { profile: any; onUpdate: () => 
       if (updateError) throw updateError;
 
       setFormData({ ...formData, avatar_url: publicUrl });
-      Swal.fire("Avatar Updated", "Your profile photo has been changed.", "success");
+      Swal.fire(
+        "Avatar Updated",
+        "Your profile photo has been changed.",
+        "success",
+      );
       onUpdate();
     } catch (error: any) {
       Swal.fire("Error", error.message, "error");
@@ -860,14 +1283,21 @@ function AccountSettings({ profile, onUpdate }: { profile: any; onUpdate: () => 
   return (
     <div className="space-y-5">
       <Card>
-        <CardTitle icon={<UserCog size={14} />} accent="from-zinc-400 to-zinc-600">
+        <CardTitle
+          icon={<UserCog size={14} />}
+          accent="from-zinc-400 to-zinc-600"
+        >
           Admin Profile
         </CardTitle>
         <form onSubmit={handleUpdateProfile}>
           <div className="flex items-center gap-5 mb-6 p-4 border border-zinc-900 rounded-xl bg-zinc-900/20">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center text-xl font-black text-white shrink-0 overflow-hidden">
               {formData.avatar_url ? (
-                <img src={formData.avatar_url} alt="avatar" className="w-full h-full object-cover" />
+                <img
+                  src={formData.avatar_url}
+                  alt="avatar"
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 formData.full_name?.charAt(0) || "A"
               )}
@@ -876,7 +1306,9 @@ function AccountSettings({ profile, onUpdate }: { profile: any; onUpdate: () => 
               <p className="text-sm font-black uppercase tracking-wider text-white">
                 {formData.full_name || "Administrator"}
               </p>
-              <p className="text-[9px] text-zinc-600 mt-0.5">{formData.email}</p>
+              <p className="text-[9px] text-zinc-600 mt-0.5">
+                {formData.email}
+              </p>
             </div>
             <UploadBox label="Change Photo" onChange={handleAvatarChange} />
           </div>
@@ -886,7 +1318,9 @@ function AccountSettings({ profile, onUpdate }: { profile: any; onUpdate: () => 
               <Input
                 placeholder="Administrator"
                 value={formData.full_name}
-                onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, full_name: e.target.value })
+                }
               />
             </div>
             <div>
@@ -895,7 +1329,9 @@ function AccountSettings({ profile, onUpdate }: { profile: any; onUpdate: () => 
                 type="email"
                 placeholder="admin@chckt.store"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
               />
             </div>
           </div>
@@ -904,7 +1340,11 @@ function AccountSettings({ profile, onUpdate }: { profile: any; onUpdate: () => 
               disabled={loading}
               className="px-6 py-2 bg-white text-black text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-cyan-500 hover:text-white transition-all flex items-center gap-2"
             >
-              {loading ? <Loader2 className="animate-spin" size={12} /> : <Save size={12} />}
+              {loading ? (
+                <Loader2 className="animate-spin" size={12} />
+              ) : (
+                <Save size={12} />
+              )}
               Sync Update
             </button>
           </div>
@@ -912,22 +1352,25 @@ function AccountSettings({ profile, onUpdate }: { profile: any; onUpdate: () => 
       </Card>
 
       <Card>
-        <CardTitle icon={<ShieldCheck size={14} />} accent="from-zinc-400 to-zinc-600">
+        <CardTitle
+          icon={<ShieldCheck size={14} />}
+          accent="from-zinc-400 to-zinc-600"
+        >
           Change Password
         </CardTitle>
         <div className="space-y-4">
           <div>
             <Label>New Password</Label>
             <div className="relative">
-              <Input 
-                type={showNew ? "text" : "password"} 
-                placeholder="Minimum 8 characters" 
-                className="pr-10" 
+              <Input
+                type={showNew ? "text" : "password"}
+                placeholder="Minimum 8 characters"
+                className="pr-10"
                 id="new-password-input"
               />
-              <button 
-                type="button" 
-                onClick={() => setShowNew(!showNew)} 
+              <button
+                type="button"
+                onClick={() => setShowNew(!showNew)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-white transition-colors"
               >
                 {showNew ? <EyeOff size={13} /> : <Eye size={13} />}
@@ -937,10 +1380,21 @@ function AccountSettings({ profile, onUpdate }: { profile: any; onUpdate: () => 
           <button
             type="button"
             onClick={async () => {
-              const pwd = (document.getElementById("new-password-input") as HTMLInputElement).value;
-              if (pwd.length < 8) return Swal.fire("Weak Password", "Required at least 8 characters", "warning");
+              const pwd = (
+                document.getElementById(
+                  "new-password-input",
+                ) as HTMLInputElement
+              ).value;
+              if (pwd.length < 8)
+                return Swal.fire(
+                  "Weak Password",
+                  "Required at least 8 characters",
+                  "warning",
+                );
               setLoading(true);
-              const { error } = await supabase.auth.updateUser({ password: pwd });
+              const { error } = await supabase.auth.updateUser({
+                password: pwd,
+              });
               setLoading(false);
               if (error) return Swal.fire("Error", error.message, "error");
               Swal.fire("Success", "Password updated successfully", "success");
@@ -951,7 +1405,9 @@ function AccountSettings({ profile, onUpdate }: { profile: any; onUpdate: () => 
           </button>
           <div className="p-3 border border-amber-500/20 bg-amber-500/5 rounded-xl flex items-center gap-2">
             <AlertTriangle size={12} className="text-amber-500 shrink-0" />
-            <span className="text-[9px] text-amber-500/80 font-semibold">Changing your password will sign you out of all active sessions.</span>
+            <span className="text-[9px] text-amber-500/80 font-semibold">
+              Changing your password will sign you out of all active sessions.
+            </span>
           </div>
         </div>
       </Card>
@@ -960,17 +1416,78 @@ function AccountSettings({ profile, onUpdate }: { profile: any; onUpdate: () => 
 }
 
 /* ─── SECTION RENDERER ─────────────────────────────────────── */
-function SectionRenderer({ active, profile, settings, onUpdate, onUpdateSetting }: { active: Section; profile: any; settings: any; onUpdate: () => void; onUpdateSetting: (section: Section, data: any) => void }) {
+function SectionRenderer({
+  active,
+  profile,
+  settings,
+  onUpdate,
+  onUpdateSetting,
+}: {
+  active: Section;
+  profile: any;
+  settings: any;
+  onUpdate: () => void;
+  onUpdateSetting: (section: Section, data: any) => void;
+}) {
   switch (active) {
-    case "store":         return <StoreSettings data={settings.store} onSave={(d) => onUpdateSetting("store", d)} />;
-    case "payment":       return <PaymentSettings data={settings.payment} onSave={(d) => onUpdateSetting("payment", d)} />;
-    case "shipping":      return <ShippingSettings data={settings.shipping} onSave={(d) => onUpdateSetting("shipping", d)} />;
-    case "appearance":    return <AppearanceSettings data={settings.appearance} onSave={(d) => onUpdateSetting("appearance", d)} />;
-    case "notifications": return <NotificationSettings data={settings.notifications} onSave={(d) => onUpdateSetting("notifications", d)} />;
-    case "security":      return <SecuritySettings data={settings.security} onSave={(d) => onUpdateSetting("security", d)} />;
-    case "integrations":  return <IntegrationSettings data={settings.integrations} onSave={(d) => onUpdateSetting("integrations", d)} />;
-    case "account":       return <AccountSettings profile={profile} onUpdate={onUpdate} />;
-    default:              return <StoreSettings data={settings.store} onSave={(d) => onUpdateSetting("store", d)} />;
+    case "store":
+      return (
+        <StoreSettings
+          data={settings.store}
+          onSave={(d) => onUpdateSetting("store", d)}
+        />
+      );
+    case "payment":
+      return (
+        <PaymentSettings
+          data={settings.payment}
+          onSave={(d) => onUpdateSetting("payment", d)}
+        />
+      );
+    case "shipping":
+      return (
+        <ShippingSettings
+          data={settings.shipping}
+          onSave={(d) => onUpdateSetting("shipping", d)}
+        />
+      );
+    case "appearance":
+      return (
+        <AppearanceSettings
+          data={settings.appearance}
+          onSave={(d) => onUpdateSetting("appearance", d)}
+        />
+      );
+    case "notifications":
+      return (
+        <NotificationSettings
+          data={settings.notifications}
+          onSave={(d) => onUpdateSetting("notifications", d)}
+        />
+      );
+    case "security":
+      return (
+        <SecuritySettings
+          data={settings.security}
+          onSave={(d) => onUpdateSetting("security", d)}
+        />
+      );
+    case "integrations":
+      return (
+        <IntegrationSettings
+          data={settings.integrations}
+          onSave={(d) => onUpdateSetting("integrations", d)}
+        />
+      );
+    case "account":
+      return <AccountSettings profile={profile} onUpdate={onUpdate} />;
+    default:
+      return (
+        <StoreSettings
+          data={settings.store}
+          onSave={(d) => onUpdateSetting("store", d)}
+        />
+      );
   }
 }
 
@@ -997,7 +1514,9 @@ export default function SettingsPage() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         router.push("/auth");
         return;
@@ -1052,7 +1571,9 @@ export default function SettingsPage() {
         updated_at: new Date().toISOString(),
       }));
 
-      const { error } = await supabase.from("site_settings").upsert(upsertData, { onConflict: "key" });
+      const { error } = await supabase
+        .from("site_settings")
+        .upsert(upsertData, { onConflict: "key" });
       if (error) throw error;
 
       Swal.fire({
@@ -1087,7 +1608,9 @@ export default function SettingsPage() {
       <div className="min-h-screen bg-[#FBFBFD] dark:bg-black flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="animate-spin text-cyan-500" size={40} />
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500">Initializing Terminal...</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500">
+            Initializing Terminal...
+          </p>
         </div>
       </div>
     );
@@ -1099,11 +1622,10 @@ export default function SettingsPage() {
       <div className="sticky top-[72px] md:top-[96px] z-40 border-b border-zinc-100 dark:border-zinc-900 bg-white/80 dark:bg-black/80 backdrop-blur-xl">
         <div className="w-full px-4 md:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="text-[8px] font-black uppercase tracking-[0.4em] text-zinc-600">
-              Admin_Ctrl &rsaquo; Settings
-            </div>
             <div className="w-1 h-1 rounded-full bg-zinc-800" />
-            <div className={`text-[8px] font-black uppercase tracking-widest bg-gradient-to-r ${activeItem.accent} bg-clip-text text-transparent`}>
+            <div
+              className={`text-[8px] font-black uppercase tracking-widest bg-gradient-to-r ${activeItem.accent} bg-clip-text text-transparent`}
+            >
               {activeItem.label}
             </div>
           </div>
@@ -1116,7 +1638,9 @@ export default function SettingsPage() {
                 className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20"
               >
                 <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                <span className="text-[8px] font-black uppercase tracking-widest text-amber-500">Unsaved Changes</span>
+                <span className="text-[8px] font-black uppercase tracking-widest text-amber-500">
+                  Unsaved Changes
+                </span>
               </motion.div>
             )}
             <button
@@ -1136,7 +1660,14 @@ export default function SettingsPage() {
               }`}
             >
               {saving ? (
-                <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: 0.8,
+                    ease: "linear",
+                  }}
+                >
                   <RotateCcw size={11} />
                 </motion.div>
               ) : saved ? (
@@ -1161,7 +1692,10 @@ export default function SettingsPage() {
             return (
               <button
                 key={item.key}
-                onClick={() => { setActive(item.key); setHasChanges(false); }}
+                onClick={() => {
+                  setActive(item.key);
+                  setHasChanges(false);
+                }}
                 className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 group ${
                   isActive
                     ? "bg-zinc-900 dark:bg-zinc-900 text-white"
@@ -1175,10 +1709,14 @@ export default function SettingsPage() {
                     transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
                   />
                 )}
-                <span className={`transition-all ${isActive ? `bg-gradient-to-br ${item.accent} bg-clip-text text-transparent` : ""}`}>
+                <span
+                  className={`transition-all ${isActive ? `bg-gradient-to-br ${item.accent} bg-clip-text text-transparent` : ""}`}
+                >
                   {item.icon}
                 </span>
-                <span className="text-[10px] font-black uppercase tracking-wider">{item.label}</span>
+                <span className="text-[10px] font-black uppercase tracking-wider">
+                  {item.label}
+                </span>
               </button>
             );
           })}
@@ -1208,8 +1746,12 @@ export default function SettingsPage() {
         <main className="flex-1 min-w-0">
           {/* Section heading */}
           <div className="mb-6">
-            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-200 dark:border-zinc-900 bg-zinc-100 dark:bg-zinc-950 mb-3`}>
-              <span className={`bg-gradient-to-r ${activeItem.accent} bg-clip-text text-transparent`}>
+            <div
+              className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-200 dark:border-zinc-900 bg-zinc-100 dark:bg-zinc-950 mb-3`}
+            >
+              <span
+                className={`bg-gradient-to-r ${activeItem.accent} bg-clip-text text-transparent`}
+              >
                 {activeItem.icon}
               </span>
               <span className="text-[8px] font-black uppercase tracking-[0.3em] text-zinc-500">
@@ -1219,7 +1761,9 @@ export default function SettingsPage() {
             <h1 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter text-zinc-900 dark:text-white">
               {activeItem.label.replace(/ /g, "_")}
             </h1>
-            <div className={`h-0.5 w-12 rounded bg-gradient-to-r ${activeItem.accent} mt-2`} />
+            <div
+              className={`h-0.5 w-12 rounded bg-gradient-to-r ${activeItem.accent} mt-2`}
+            />
           </div>
 
           <AnimatePresence mode="wait">
@@ -1230,11 +1774,11 @@ export default function SettingsPage() {
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
             >
-              <SectionRenderer 
-                active={active} 
-                profile={profile} 
+              <SectionRenderer
+                active={active}
+                profile={profile}
                 settings={settings}
-                onUpdate={fetchData} 
+                onUpdate={fetchData}
                 onUpdateSetting={handleUpdateSetting}
               />
             </motion.div>
@@ -1252,7 +1796,9 @@ export default function SettingsPage() {
             className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl shadow-black/60 backdrop-blur-xl lg:hidden"
           >
             <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-            <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Unsaved</span>
+            <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400">
+              Unsaved
+            </span>
             <button
               onClick={handleSave}
               className="flex items-center gap-1.5 px-4 py-2 bg-white text-black rounded-xl text-[9px] font-black uppercase tracking-widest"

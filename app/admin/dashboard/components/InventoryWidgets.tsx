@@ -11,7 +11,10 @@ interface InventoryWidgetsProps {
   topProducts: DashboardProduct[];
 }
 
-export default function InventoryWidgets({ lowStock, topProducts }: InventoryWidgetsProps) {
+export default function InventoryWidgets({
+  lowStock,
+  topProducts,
+}: InventoryWidgetsProps) {
   return (
     <div className="space-y-8">
       {/* LOW STOCK SECTION */}
@@ -28,29 +31,41 @@ export default function InventoryWidgets({ lowStock, topProducts }: InventoryWid
           </h4>
           <FiAlertCircle className="text-red-500" />
         </div>
-        
+
         <div className="space-y-6">
           {lowStock.length > 0 ? (
             lowStock.map((item) => (
               <div key={item.id} className="flex items-center gap-4 group">
                 <div className="w-12 h-12 border border-zinc-100 dark:border-zinc-800 rounded-xl overflow-hidden bg-zinc-50 dark:bg-zinc-900 grayscale group-hover:grayscale-0 transition-opacity">
-                  <img src={item.image_url || "/placeholder.jpg"} className="w-full h-full object-cover" alt="" />
+                  <img
+                    src={item.image_url || "/placeholder.jpg"}
+                    className="w-full h-full object-cover"
+                    alt=""
+                  />
                 </div>
                 <div className="flex-1">
-                  <p className="text-[10px] font-black uppercase truncate italic text-zinc-900 dark:text-white">{item.name}</p>
-                  <p className="text-[9px] font-bold text-red-500 uppercase">STOCK_CRITICAL: {item.stock}</p>
+                  <p className="text-[10px] font-black uppercase truncate italic text-zinc-900 dark:text-white">
+                    {item.name}
+                  </p>
+                  <p className="text-[9px] font-bold text-red-500 uppercase">
+                    STOCK_CRITICAL: {item.stock}
+                  </p>
                 </div>
                 <div className="h-1.5 w-16 bg-zinc-100 dark:bg-zinc-900 rounded-full overflow-hidden shadow-inner">
-                  <motion.div 
+                  <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: `${(Math.min(item.stock || 0, 5) / 5) * 100}%` }}
-                    className="h-full bg-gradient-to-r from-rose-600 to-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.4)]" 
+                    animate={{
+                      width: `${(Math.min(item.stock || 0, 5) / 5) * 100}%`,
+                    }}
+                    className="h-full bg-gradient-to-r from-rose-600 to-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.4)]"
                   />
                 </div>
               </div>
             ))
           ) : (
-            <p className="text-[9px] font-black uppercase tracking-widest text-zinc-600 italic">No_Shortage_Detected</p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-zinc-600 italic">
+              No_Shortage_Detected
+            </p>
           )}
         </div>
       </motion.section>
@@ -66,7 +81,7 @@ export default function InventoryWidgets({ lowStock, topProducts }: InventoryWid
 
         <div className="flex items-center justify-between mb-8">
           <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">
-            Top_Performing_Assets
+            Trending
           </h4>
           <FiTrendingUp className="text-emerald-500" />
         </div>
@@ -92,7 +107,9 @@ export default function InventoryWidgets({ lowStock, topProducts }: InventoryWid
               </div>
             ))
           ) : (
-            <p className="text-[9px] font-black uppercase tracking-widest text-zinc-300 italic">Data_Insufficiency</p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-zinc-300 italic">
+              Data_Insufficiency
+            </p>
           )}
         </div>
       </motion.section>
