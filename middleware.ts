@@ -37,17 +37,30 @@ export async function middleware(request: NextRequest) {
     },
   );
 
-  // 3. Cek User (Ini penting untuk me-refresh session jika perlu)
+  const url = request.nextUrl.clone();
+
+  // 3. Skip middleware auth check for callback route
+  // Supaya tidak mengganggu proses exchangeCodeForSession di route.ts
+  if (url.pathname === "/auth/callback") {
+    return response;
+  }
+
+  // 4. Cek User (Ini penting untuk me-refresh session jika perlu)
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
+
+  if (authError) {
+    // Jika ada error auth (seperti refresh token invalid), 
+    // kita biarkan user null agar proteksi route tetap jalan
+    console.error("MIDDLEWARE_AUTH_ERROR:", authError.message);
+  }
 
   // DEBUG LOGS (Bisa dihapus jika sudah lancar)
   if (request.nextUrl.pathname.startsWith("/api")) {
     console.log(`MIDDLEWARE_API_CHECK: ${request.nextUrl.pathname} - User: ${user?.id || "NULL"}`);
   }
-
-  const url = request.nextUrl.clone();
 
   // 4. PROTEKSI: Jika ke /admin tapi BELUM LOGIN
   if (url.pathname.startsWith("/admin") && !user) {

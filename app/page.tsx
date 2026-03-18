@@ -24,9 +24,9 @@ function AuthRedirectHandler() {
 
   useEffect(() => {
     if (code) {
-      router.replace(`/auth/callback?code=${code}`);
+      window.location.href = `/auth/callback?code=${code}`;
     }
-  }, [code, router]);
+  }, [code]);
 
   return null;
 }

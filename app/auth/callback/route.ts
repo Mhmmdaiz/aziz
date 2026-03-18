@@ -11,6 +11,10 @@ export async function GET(request: Request) {
   if (code) {
     // 1. WAJIB: Gunakan await pada cookies() untuk Next.js 15+
     const cookieStore = await cookies();
+    
+    // DEBUG: Cek cookies yang ada
+    const allCookies = cookieStore.getAll();
+    console.log("DEBUG_AUTH_CALLBACK_COOKIES:", allCookies.map(c => c.name));
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

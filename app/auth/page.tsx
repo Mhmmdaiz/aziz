@@ -492,10 +492,12 @@ function OAuthButton({
 
   const handleClick = async () => {
     setLoading(true);
-    console.log("OAuth Redirecting to:", `http://localhost:3000/auth/callback`);
+    const origin = window.location.origin;
+    const redirectTo = `${origin}/auth/callback`;
+    console.log("OAuth Redirecting to:", redirectTo);
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: `http://localhost:3000/auth/callback` },
+      options: { redirectTo },
     });
     if (error) {
       setLoading(false);
