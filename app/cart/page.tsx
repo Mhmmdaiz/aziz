@@ -13,18 +13,28 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import Swal from "sweetalert2";
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+// PERBAIKAN: Gunakan Environment Variable atau fallback
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
 export default function CartPage() {
   const [cart, setCart] = useState<any[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const router = useRouter();
 
+  // Load cart data
   useEffect(() => {
     const savedCart = JSON.parse(localStorage.getItem("cart") || "[]");
     setCart(savedCart);
     setSelectedIds(savedCart.map((item: any) => item.id));
   }, []);
+
+  // Sync ke LocalStorage setiap kali cart berubah
+  const saveAndSetCart = (updatedCart: any[]) => {
+    setCart(updatedCart);
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+    // Trigger event agar Navbar/Cart Icon di komponen lain ikut update
+    window.dispatchEvent(new Event("storage"));
+  };
 
   const updateQuantity = (id: number, delta: number) => {
     const updatedCart = cart.map((item) => {
@@ -34,8 +44,7 @@ export default function CartPage() {
       }
       return item;
     });
-    setCart(updatedCart);
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
+    saveAndSetCart(updatedCart);
   };
 
   const toggleSelect = (id: number) => {
@@ -46,12 +55,10 @@ export default function CartPage() {
 
   const removeFromCart = (id: number) => {
     const updatedCart = cart.filter((item) => item.id !== id);
-    setCart(updatedCart);
+    saveAndSetCart(updatedCart);
     setSelectedIds((prev) => prev.filter((i) => i !== id));
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
   };
 
-  // Optimization: Memoized Total Price
   const totalPrice = useMemo(() => {
     return cart
       .filter((item) => selectedIds.includes(item.id))
@@ -65,115 +72,123 @@ export default function CartPage() {
     const itemsToCheckout = cart.filter((item) =>
       selectedIds.includes(item.id),
     );
+
     if (itemsToCheckout.length === 0) {
       Swal.fire({
-        title: "Selection Empty",
+        title: "SELECTION_EMPTY",
         text: "Please select at least one item to proceed.",
         icon: "warning",
         confirmButtonColor: "#000",
+        background: "#000",
+        color: "#fff",
       });
       return;
     }
+
     localStorage.setItem("checkout_items", JSON.stringify(itemsToCheckout));
     localStorage.setItem("checkout_total", totalPrice.toString());
+
     const token = localStorage.getItem("token");
-    router.push(token ? "/checkout" : "/login");
+    router.push(token ? "/checkout" : "/login?redirect=checkout");
   };
 
   return (
-    <main className="min-h-screen bg-zinc-50 dark:bg-black text-zinc-900 dark:text-white pt-24 md:pt-32 pb-20 selection:bg-cyan-500 selection:text-white transition-colors duration-300">
+    <main className="min-h-screen bg-zinc-50 dark:bg-black text-zinc-900 dark:text-white pt-24 md:pt-32 pb-20 selection:bg-blue-500 transition-colors duration-500">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* --- DYNAMIC HEADER --- */}
         <header className="mb-12 md:mb-20">
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="text-[clamp(3.5rem,15vw,10rem)] font-black italic uppercase tracking-tighter leading-[0.85] text-zinc-900 dark:text-white"
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-baseline gap-4"
           >
-            Bag<span className="text-zinc-200 dark:text-zinc-800">.</span>
-          </motion.h1>
-          <div className="h-px w-full bg-zinc-200 dark:bg-zinc-900 mt-8 md:mt-12" />
+            <span className="text-[10px] font-black text-blue-600 tracking-[0.5em] uppercase vertical-text hidden md:block">
+              Inventory_v1
+            </span>
+            <h1 className="text-[clamp(3.5rem,12vw,9rem)] font-black italic uppercase tracking-tighter leading-[0.8] text-zinc-900 dark:text-white">
+              Bag<span className="text-blue-600">.</span>
+            </h1>
+          </motion.div>
+          <div className="h-[2px] w-full bg-zinc-900 dark:bg-white/10 mt-8 md:mt-12" />
         </header>
 
-        {/* --- GRID SYSTEM --- */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 items-start">
-          {/* CART LIST (LEFT) */}
-          <div className="lg:col-span-7 xl:col-span-8 space-y-4 md:space-y-6">
-            <AnimatePresence mode="popLayout" initial={false}>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-16 items-start">
+          {/* CART LIST */}
+          <div className="lg:col-span-7 xl:col-span-8 space-y-4">
+            <AnimatePresence mode="popLayout">
               {cart.length > 0 ? (
-                cart.map((item, index) => (
+                cart.map((item) => (
                   <motion.div
                     key={item.id}
                     layout
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, x: -50 }}
-                    transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-                    className={`group relative bg-white dark:bg-zinc-950 p-4 md:p-6 rounded-2xl md:rounded-[2.5rem] border-2 flex flex-row items-center gap-4 md:gap-8 transition-all duration-500 ${
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className={`group relative bg-white dark:bg-zinc-950 p-4 md:p-8 rounded-[2rem] md:rounded-[3rem] border transition-all duration-500 flex flex-row items-center gap-4 md:gap-10 ${
                       selectedIds.includes(item.id)
-                        ? "border-black dark:border-white shadow-xl shadow-black/5 dark:shadow-none"
-                        : "border-transparent opacity-50 grayscale hover:opacity-100 hover:grayscale-0 dark:border-zinc-900"
+                        ? "border-zinc-900 dark:border-white shadow-2xl"
+                        : "border-zinc-100 dark:border-white/5 opacity-60"
                     }`}
                   >
-                    {/* CUSTOM CHECKBOX */}
+                    {/* CHECKBOX */}
                     <button
                       onClick={() => toggleSelect(item.id)}
-                      className={`shrink-0 w-6 h-6 md:w-8 md:h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                      className={`shrink-0 w-6 h-6 md:w-10 md:h-10 rounded-full border-2 flex items-center justify-center transition-all ${
                         selectedIds.includes(item.id)
                           ? "bg-black dark:bg-white border-black dark:border-white"
-                          : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-black dark:hover:border-white"
+                          : "border-zinc-200 dark:border-zinc-800"
                       }`}
                     >
                       {selectedIds.includes(item.id) && (
-                        <FiCheck className="text-white dark:text-black" size={14} />
+                        <FiCheck
+                          className="text-white dark:text-black"
+                          size={16}
+                        />
                       )}
                     </button>
 
-                    {/* PRODUCT IMAGE */}
-                    <div className="w-20 h-20 md:w-32 md:h-32 shrink-0 bg-zinc-50 dark:bg-zinc-900 rounded-xl md:rounded-[2rem] overflow-hidden border border-zinc-100 dark:border-zinc-800 relative">
+                    {/* IMAGE */}
+                    <div className="w-24 h-24 md:w-40 md:h-40 shrink-0 bg-zinc-100 dark:bg-zinc-900 rounded-3xl overflow-hidden border border-zinc-100 dark:border-white/5 relative">
                       <img
-                        src={`${API_BASE_URL}/storage/${item.image}`}
+                        src={
+                          item.image.startsWith("http")
+                            ? item.image
+                            : `${API_BASE_URL}/storage/${item.image}`
+                        }
                         alt={item.name}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
                       />
                     </div>
 
-                    {/* INFO BLOCK */}
-                    <div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="space-y-1">
-                        <h3 className="text-lg md:text-2xl font-black italic uppercase tracking-tighter leading-none truncate pr-4">
-                          {item.name}
-                        </h3>
-                        <p className="text-sm md:text-lg font-bold italic tracking-tighter text-zinc-400 dark:text-zinc-500">
-                          Rp {Number(item.price).toLocaleString()}
-                        </p>
-                      </div>
+                    {/* INFO */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg md:text-3xl font-black italic uppercase tracking-tighter leading-tight truncate">
+                        {item.name}
+                      </h3>
+                      <p className="text-sm md:text-xl font-mono text-zinc-400 mb-4">
+                        IDR {Number(item.price).toLocaleString()}
+                      </p>
 
-                      {/* CONTROLS */}
-                      <div className="flex items-center gap-3 md:gap-6 self-start md:self-center">
-                        <div className="flex items-center bg-zinc-50 dark:bg-zinc-900 rounded-full border border-zinc-100 dark:border-zinc-800 p-1">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center bg-zinc-100 dark:bg-zinc-900 rounded-full p-1 border border-zinc-200 dark:border-white/5">
                           <button
                             onClick={() => updateQuantity(item.id, -1)}
-                            className="w-7 h-7 md:w-9 md:h-9 flex items-center justify-center hover:bg-white dark:hover:bg-zinc-800 rounded-full transition-all"
+                            className="p-2 hover:bg-white dark:hover:bg-zinc-800 rounded-full transition-all"
                           >
                             <FiMinus size={12} />
                           </button>
-                          <span className="w-8 md:w-10 text-center font-black italic text-xs md:text-sm">
+                          <span className="w-8 text-center font-black text-xs">
                             {item.quantity || 1}
                           </span>
                           <button
                             onClick={() => updateQuantity(item.id, 1)}
-                            className="w-7 h-7 md:w-9 md:h-9 flex items-center justify-center hover:bg-white rounded-full transition-all"
+                            className="p-2 hover:bg-white dark:hover:bg-zinc-800 rounded-full transition-all"
                           >
                             <FiPlus size={12} />
                           </button>
                         </div>
-
                         <button
                           onClick={() => removeFromCart(item.id)}
-                          className="p-2 text-zinc-300 hover:text-red-500 transition-colors"
-                          title="Remove item"
+                          className="text-zinc-300 hover:text-red-500 transition-colors"
                         >
                           <FiTrash2 size={18} />
                         </button>
@@ -182,69 +197,50 @@ export default function CartPage() {
                   </motion.div>
                 ))
               ) : (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="py-32 flex flex-col items-center justify-center text-zinc-300 space-y-4"
-                >
-                  <FiPackage size={48} strokeWidth={1} />
-                  <p className="italic uppercase text-[10px] tracking-[0.4em] font-black">
-                    Inventory_is_Empty
-                  </p>
-                </motion.div>
+                <div className="py-20 text-center opacity-20 italic uppercase font-black tracking-widest text-[10px]">
+                  Inventory_is_Empty
+                </div>
               )}
             </AnimatePresence>
           </div>
 
-          {/* SUMMARY SIDEBAR (RIGHT) */}
-          <div className="lg:col-span-5 xl:col-span-4">
-            <div className="bg-black dark:bg-white text-white dark:text-black p-8 md:p-10 rounded-3xl md:rounded-[3rem] lg:sticky lg:top-28 shadow-2xl shadow-black/20 dark:shadow-none">
-              <div className="space-y-10">
-                <div className="space-y-2">
-                  <p className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-500 dark:text-zinc-400 italic">
-                    Checkout_Valuation
+          {/* SUMMARY SIDEBAR */}
+          <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-32">
+            <div className="bg-zinc-900 dark:bg-white text-white dark:text-black p-8 md:p-12 rounded-[3rem] shadow-2xl">
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 mb-4 block">
+                Final_Valuation
+              </span>
+              <h2 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none mb-10">
+                Total<span className="text-blue-600">.</span>
+              </h2>
+
+              <div className="space-y-6 border-t border-white/10 dark:border-black/10 pt-8 mb-10">
+                <div className="flex justify-between items-end">
+                  <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
+                    Subtotal
+                  </span>
+                  <p className="text-3xl md:text-4xl font-black italic tracking-tighter">
+                    {totalPrice.toLocaleString()}
                   </p>
-                  <h2 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter leading-none">
-                    Total<span className="text-zinc-800 dark:text-zinc-200">.</span>
-                  </h2>
                 </div>
-
-                <div className="space-y-4">
-                  <div className="flex justify-between items-end border-b border-zinc-800 dark:border-zinc-200 pb-6">
-                    <span className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest italic">
-                      Subtotal
-                    </span>
-                    <p className="text-3xl md:text-4xl font-black italic tracking-tighter leading-none">
-                      <span className="text-[10px] align-top mr-1 opacity-40 font-bold">
-                        IDR
-                      </span>
-                      {totalPrice.toLocaleString()}
-                    </p>
-                  </div>
-
-                  <div className="flex justify-between items-center text-zinc-500">
-                    <span className="text-[10px] uppercase font-bold tracking-widest italic">
-                      Shipping
-                    </span>
-                    <span className="text-[10px] font-black uppercase italic tracking-widest">
-                      Calculated_at_Step_2
-                    </span>
-                  </div>
+                <div className="flex justify-between items-center italic">
+                  <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
+                    Shipping
+                  </span>
+                  <span className="text-[9px] font-black uppercase">
+                    Calculated_Later
+                  </span>
                 </div>
-
-                <button
-                  onClick={handleCheckout}
-                  disabled={selectedIds.length === 0}
-                  className="group relative w-full py-5 md:py-6 bg-white dark:bg-black text-black dark:text-white rounded-full font-black uppercase tracking-[0.3em] text-[11px] hover:bg-zinc-200 dark:hover:bg-zinc-800 active:scale-[0.98] transition-all disabled:opacity-20 disabled:cursor-not-allowed flex items-center justify-center gap-3"
-                >
-                  Execute_Purchase ({selectedIds.length})
-                  <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
-                </button>
-
-                <p className="text-center text-[8px] text-zinc-600 uppercase tracking-widest font-bold italic">
-                  * All transactions are encrypted and secure
-                </p>
               </div>
+
+              <button
+                onClick={handleCheckout}
+                disabled={selectedIds.length === 0}
+                className="w-full py-6 bg-blue-600 text-white dark:bg-black rounded-full font-black uppercase tracking-[0.3em] text-[11px] hover:bg-white hover:text-black transition-all active:scale-95 disabled:opacity-20 flex items-center justify-center gap-3"
+              >
+                Execute_Order ({selectedIds.length})
+                <FiArrowRight />
+              </button>
             </div>
           </div>
         </div>

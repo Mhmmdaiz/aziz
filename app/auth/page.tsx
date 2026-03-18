@@ -236,6 +236,17 @@ function EmailForm({
       setLoading(false);
       if (error) return onToast(error.message);
 
+      const userId = data.session?.user?.id || data.user?.id;
+      if (userId) {
+        await supabase.from("profiles").upsert({
+          id: userId,
+          email: email,
+          full_name: fullName,
+          role: "customer",
+          updated_at: new Date().toISOString()
+        }, { onConflict: "id" });
+      }
+
       if (data.session) {
         // Auto session — email confirmation disabled
         onToast("Akun berhasil dibuat!", "success");

@@ -2,8 +2,14 @@
 
 import { motion } from "framer-motion";
 import { FiPlayCircle } from "react-icons/fi";
+import { useSettings } from "@/components/providers/SettingsProvider";
 
 export default function Lookbook() {
+  const { settings } = useSettings();
+  const lookbook = settings?.landing_content?.lookbook || {
+    image_1: "https://images.unsplash.com/photo-1544441893-675973e31985?q=80&w=800",
+    image_2: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800"
+  };
   return (
     <section className="py-32 bg-[#0B0B0B] text-white">
       <div className="container mx-auto px-6">
@@ -31,7 +37,7 @@ export default function Lookbook() {
                  className="aspect-[3/5] rounded-[2.5rem] overflow-hidden bg-zinc-900 mt-12"
                >
                  <img 
-                   src="https://images.unsplash.com/photo-1544441893-675973e31985?q=80&w=800" 
+                   src={lookbook.image_1} 
                    className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000"
                    alt="Lookbook 1"
                  />
@@ -43,7 +49,7 @@ export default function Lookbook() {
                  className="aspect-[3/5] rounded-[2.5rem] overflow-hidden bg-zinc-900"
                >
                  <img 
-                   src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800" 
+                   src={lookbook.image_2} 
                    className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000"
                    alt="Lookbook 2"
                  />

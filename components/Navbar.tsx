@@ -128,7 +128,6 @@ export default function Navbar() {
     ? [
         { href: "/admin/dashboard", label: "Dashboard", icon: <FiZap /> },
         { href: "/admin/settings", label: "Settings", icon: <FiSettings /> },
-        { href: "/admin/landing", label: "Landing", icon: <FiEdit /> },
       ]
     : [
         { href: "/", label: "Home", icon: <FiHome /> },

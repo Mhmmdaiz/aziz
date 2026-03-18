@@ -41,11 +41,24 @@ export async function GET(request: Request) {
 
       if (user) {
         // 4. Ambil role dari tabel profiles
-        const { data: profile } = await supabase
+        let { data: profile } = await supabase
           .from("profiles")
           .select("role")
           .eq("id", user.id)
           .single();
+
+        // Jika profile tidak ada, berarti user baru dari OAuth, kita buat profilenya
+        if (!profile) {
+          await supabase.from("profiles").upsert({
+            id: user.id,
+            email: user.email,
+            full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0],
+            role: "customer",
+            updated_at: new Date().toISOString(),
+          }, { onConflict: "id" });
+          
+          profile = { role: "customer" };
+        }
 
         // 5. Logic Redirect Admin
         if (profile?.role?.toLowerCase() === "admin") {

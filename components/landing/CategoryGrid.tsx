@@ -3,8 +3,9 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { FiArrowUpRight } from "react-icons/fi";
+import { useSettings } from "@/components/providers/SettingsProvider";
 
-const categories = [
+const defaultCategories = [
   { name: "Oversize", count: "12 Artifacts", img: "https://images.unsplash.com/photo-1571945153237-4929e783ee4a?q=80&w=800" },
   { name: "Graphic", count: "08 Artifacts", img: "https://images.unsplash.com/photo-1554568218-0f1715e72254?q=80&w=800" },
   { name: "Minimal", count: "05 Artifacts", img: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=800" },
@@ -12,6 +13,8 @@ const categories = [
 ];
 
 export default function CategoryGrid() {
+  const { settings } = useSettings();
+  const categories = settings?.landing_content?.categories || defaultCategories;
   return (
     <section className="py-24 bg-white dark:bg-[#0B0B0B] text-black dark:text-white">
       <div className="container mx-auto px-6">

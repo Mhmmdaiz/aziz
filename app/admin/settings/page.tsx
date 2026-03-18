@@ -35,8 +35,10 @@ import {
   Zap,
   AlertTriangle,
   Loader2,
+  LayoutDashboard,
 } from "lucide-react";
 import { useSettings } from "@/components/providers/SettingsProvider";
+import { LandingPageSettings } from "./LandingPageSettings";
 
 /* ─── TYPES ────────────────────────────────────────────────── */
 type Section =
@@ -47,6 +49,7 @@ type Section =
   | "notifications"
   | "security"
   | "integrations"
+  | "landing_page"
   | "account";
 
 interface BankAccount {
@@ -106,6 +109,12 @@ const SIDEBAR_ITEMS: {
     label: "Integrations",
     icon: <Puzzle size={15} />,
     accent: "from-indigo-500 to-blue-600",
+  },
+  {
+    key: "landing_page",
+    label: "Landing Page",
+    icon: <LayoutDashboard size={15} />,
+    accent: "from-fuchsia-500 to-pink-500",
   },
   {
     key: "account",
@@ -1479,6 +1488,13 @@ function SectionRenderer({
           onSave={(d) => onUpdateSetting("integrations", d)}
         />
       );
+    case "landing_page":
+      return (
+        <LandingPageSettings
+          data={settings.landing_content}
+          onSave={(d) => onUpdateSetting("landing_content", d)}
+        />
+      );
     case "account":
       return <AccountSettings profile={profile} onUpdate={onUpdate} />;
     default:
@@ -1509,6 +1525,7 @@ export default function SettingsPage() {
     notifications: {},
     security: {},
     integrations: {},
+    landing_content: {},
   });
 
   const fetchData = useCallback(async () => {
