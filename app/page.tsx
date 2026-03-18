@@ -20,13 +20,19 @@ import { useEffect, Suspense } from "react";
 function AuthRedirectHandler() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const code = searchParams.get("code");
+  const codeFromNext = searchParams.get("code");
 
   useEffect(() => {
+    // Coba ambil code dari useSearchParams dulu, kalau gagal coba ambil manual dari URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = codeFromNext || urlParams.get("code");
+
     if (code) {
+      console.log("AuthRedirectHandler: OAuth code detected, redirecting to callback...");
+      // Jangan pakai router.push karena terkadang masalah di middleware, force full reload ke callback
       window.location.href = `/auth/callback?code=${code}`;
     }
-  }, [code]);
+  }, [codeFromNext]);
 
   return null;
 }

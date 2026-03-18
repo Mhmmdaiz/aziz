@@ -494,16 +494,24 @@ function OAuthButton({
     setLoading(true);
     const origin = window.location.origin;
     const redirectTo = `${origin}/auth/callback`;
-    console.log("OAuth Redirecting to:", redirectTo);
+    
+    console.log("[OAuth] Initiating login...");
+    console.log("[OAuth] Origin:", origin);
+    console.log("[OAuth] RedirectTo:", redirectTo);
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo },
+      options: { 
+        redirectTo,
+        skipBrowserRedirect: false // Pastikan browser redirect
+      },
     });
+
     if (error) {
+      console.error("[OAuth] Error during sign-in:", error.message);
       setLoading(false);
       onToast(error.message);
     }
-    // Browser will redirect, no need to reset loading
   };
 
   return (

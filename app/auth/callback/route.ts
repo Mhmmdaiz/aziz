@@ -5,13 +5,13 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/shop";
+  const next = searchParams.get("next") ?? "/"; // Default ke landing page sesuai permintaan
 
   if (code) {
     const cookieStore = await cookies();
 
-    // Inisialisasi response agar kita bisa set cookies di header
-    const response = NextResponse.redirect(`${origin}${next}`);
+    // Inisialisasi response awal untuk menangkap cookies
+    let response = NextResponse.redirect(`${origin}${next}`);
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
-      console.error("Supabase OAuth Exchange Error:", error);
+      console.error("Supabase OAuth Exchange Error:", error.message);
       return NextResponse.redirect(`${origin}/auth?error=${encodeURIComponent(error.message)}`);
     }
 
@@ -75,10 +75,18 @@ export async function GET(request: Request) {
 
       // REDIRECT LOGIC
       if (profile?.role?.toLowerCase() === "admin") {
-        return NextResponse.redirect(`${origin}/admin/dashboard`);
+        console.log("Redirecting Admin to dashboard...");
+        const adminResponse = NextResponse.redirect(`${origin}/admin/dashboard`);
+        
+        // KRITIS: Salin semua cookies (session) dari response awal ke response baru
+        response.cookies.getAll().forEach(cookie => {
+          adminResponse.cookies.set(cookie.name, cookie.value, cookie);
+        });
+        
+        return adminResponse;
       }
 
-      // Kembalikan response yang sudah berisi cookies session
+      console.log("Redirecting Customer to:", next);
       return response;
     }
   }
