@@ -49,6 +49,12 @@ export async function middleware(request: NextRequest) {
 
   const url = request.nextUrl.clone();
 
+  // 0. Intercept OAuth Redirect to root
+  if (url.pathname === "/" && url.searchParams.has("code")) {
+    url.pathname = "/auth/callback";
+    return NextResponse.redirect(url);
+  }
+
   // 4. PROTEKSI: Jika ke /admin tapi BELUM LOGIN
   if (url.pathname.startsWith("/admin") && !user) {
     url.pathname = "/auth";
@@ -86,5 +92,5 @@ export async function middleware(request: NextRequest) {
 
 // 7. Matcher: Jalankan middleware ini untuk folder admin, page auth, dan API
 export const config = {
-  matcher: ["/admin/:path*", "/auth", "/auth/callback", "/api/:path*"],
+  matcher: ["/", "/admin/:path*", "/auth", "/auth/callback", "/api/:path*"],
 };

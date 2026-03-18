@@ -68,10 +68,12 @@ export async function GET(request: Request) {
 
       // Jika user biasa atau profile tidak ditemukan, lempar ke rute 'next'
       return NextResponse.redirect(`${origin}${next}`);
+    } else {
+      console.error("Supabase OAuth Exchange Error:", error);
+      return NextResponse.redirect(`${origin}/auth?error=${encodeURIComponent(error.message)}`);
     }
   }
 
   // Jika tidak ada code atau terjadi error autentikasi, balikkan ke login
-  // Tambahkan query param error untuk memberi tahu UI
-  return NextResponse.redirect(`${origin}/auth?error=auth_failed`);
+  return NextResponse.redirect(`${origin}/auth?error=no_code_provided`);
 }
