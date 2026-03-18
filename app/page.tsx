@@ -14,7 +14,20 @@ import Footer from "@/components/landing/Footer";
 import RecentPurchase from "@/components/landing/RecentPurchase";
 import { Toaster } from "react-hot-toast";
 
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+
 export default function FashionLandingPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const code = searchParams.get("code");
+
+  useEffect(() => {
+    if (code) {
+      router.replace(`/auth/callback?code=${code}`);
+    }
+  }, [code, router]);
+
   return (
     <main className="bg-[#0B0B0B] text-white selection:bg-red-500 selection:text-white overflow-x-hidden">
       <Toaster position="bottom-right" />
