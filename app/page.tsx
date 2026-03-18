@@ -15,9 +15,9 @@ import RecentPurchase from "@/components/landing/RecentPurchase";
 import { Toaster } from "react-hot-toast";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 
-export default function FashionLandingPage() {
+function AuthRedirectHandler() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const code = searchParams.get("code");
@@ -28,8 +28,15 @@ export default function FashionLandingPage() {
     }
   }, [code, router]);
 
+  return null;
+}
+
+export default function FashionLandingPage() {
   return (
     <main className="bg-[#0B0B0B] text-white selection:bg-red-500 selection:text-white overflow-x-hidden">
+      <Suspense fallback={null}>
+        <AuthRedirectHandler />
+      </Suspense>
       <Toaster position="bottom-right" />
       <RecentPurchase />
       
