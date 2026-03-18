@@ -39,7 +39,7 @@ export default function FashionLandingPage() {
       </Suspense>
       <Toaster position="bottom-right" />
       <RecentPurchase />
-      
+
       {/* 1. HERO */}
       <Hero />
 
