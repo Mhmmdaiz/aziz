@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-// Update: Menggunakan client utilitas terbaru
 import { supabase } from "@/utils/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -23,6 +22,12 @@ import {
 } from "react-icons/fi";
 import Link from "next/link";
 import Swal from "sweetalert2";
+import {
+  updateUserRoleAction,
+  updateUserStatusAction,
+  updateUserProfileAction,
+  deleteUserAction,
+} from "./actions";
 
 export default function UserManagement() {
 
@@ -103,22 +108,18 @@ export default function UserManagement() {
     e.preventDefault();
     try {
       const payload = {
-        full_name: formData.name, // Pastikan nama kolom sesuai tabel DB (full_name)
+        full_name: formData.name,
         email: formData.email,
         phone: formData.phone,
         address: formData.address,
         role: formData.role,
-        updated_at: new Date().toISOString(),
       };
 
       if (formData.id) {
-        const { error } = await supabase
-          .from("profiles")
-          .update(payload)
-          .eq("id", formData.id);
-        if (error) throw error;
+        const result = await updateUserProfileAction(formData.id, payload);
+        if (!result.success) throw new Error(result.error);
       } else {
-        const { error } = await supabase.from("profiles").insert([payload]);
+        const { error } = await supabase.from("profiles").insert([{ ...payload, updated_at: new Date().toISOString() }]);
         if (error) throw error;
       }
 
@@ -142,32 +143,38 @@ export default function UserManagement() {
 
     if (result.isConfirmed) {
       try {
-        const { error } = await supabase
-          .from("profiles")
-          .update({ status: newStatus })
-          .eq("id", id);
-        if (error) throw error;
+        // Optimistic update
+        setUsers((prev: any[]) =>
+          prev.map((u) => (u.id === id ? { ...u, status: newStatus } : u))
+        );
+        if (selectedUser?.id === id) {
+          setSelectedUser((prev: any) => ({ ...prev, status: newStatus }));
+        }
+
+        const res = await updateUserStatusAction(id, newStatus);
+        if (!res.success) throw new Error(res.error);
         fetchUsers();
         setSelectedUser(null);
-      } catch (err) {
-        Swal.fire("Error", "Action failed.", "error");
+      } catch (err: any) {
+        fetchUsers();
+        Swal.fire("Error", err.message || "Action failed.", "error");
       }
     }
   };
 
   const handleUpdateRole = async (id: string, newRole: string) => {
+    // Optimistic update: langsung ubah state lokal agar UI responsif
+    setUsers((prev: any[]) =>
+      prev.map((u) => (u.id === id ? { ...u, role: newRole } : u))
+    );
+    if (selectedUser?.id === id) {
+      setSelectedUser((prev: any) => ({ ...prev, role: newRole }));
+    }
+
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ role: newRole, updated_at: new Date().toISOString() })
-        .eq("id", id);
-      if (error) throw error;
-      
-      // Update local state for immediate feedback if selected
-      if (selectedUser?.id === id) {
-        setSelectedUser({ ...selectedUser, role: newRole });
-      }
-      
+      const result = await updateUserRoleAction(id, newRole);
+      if (!result.success) throw new Error(result.error);
+
       Swal.fire({
         title: "ROLE UPDATED",
         text: `Identity access level adjusted to ${newRole.toUpperCase()}.`,
@@ -177,7 +184,11 @@ export default function UserManagement() {
         showConfirmButton: false,
         timer: 3000
       });
+
+      fetchUsers();
     } catch (err: any) {
+      // Rollback jika gagal
+      fetchUsers();
       Swal.fire("Error", err.message, "error");
     }
   };
@@ -193,11 +204,11 @@ export default function UserManagement() {
 
     if (result.isConfirmed) {
       try {
-        const { error } = await supabase.from("profiles").delete().eq("id", id);
-        if (error) throw error;
+        const res = await deleteUserAction(id);
+        if (!res.success) throw new Error(res.error);
         fetchUsers();
-      } catch (err) {
-        Swal.fire("Error", "Action failed.", "error");
+      } catch (err: any) {
+        Swal.fire("Error", err.message || "Action failed.", "error");
       }
     }
   };
