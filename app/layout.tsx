@@ -21,11 +21,6 @@ export default function RootLayout({
       <head>
         <meta name="google" content="notranslate" />
         <DynamicStyle />
-        <Script
-          src={process.env.NEXT_PUBLIC_MIDTRANS_SNAP_URL || "https://app.sandbox.midtrans.com/snap/snap.js"}
-          data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
-          strategy="beforeInteractive"
-        />
       </head>
 
       <body className="antialiased min-h-screen flex flex-col bg-white dark:bg-[#030303] text-[#1D1D1F] dark:text-zinc-100 transition-colors duration-300 overflow-x-hidden">

@@ -822,7 +822,7 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
                         value={vp.title}
                         onChange={(e) => {
                           const newItems = [...(formData.value_props?.items || [])];
-                          newItems[idx].title = e.target.value;
+                          newItems[idx] = { ...newItems[idx], title: e.target.value };
                           handleChange("value_props", { ...formData.value_props, items: newItems });
                         }}
                       />
@@ -833,7 +833,7 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
                         value={vp.desc}
                         onChange={(e) => {
                           const newItems = [...(formData.value_props?.items || [])];
-                          newItems[idx].desc = e.target.value;
+                          newItems[idx] = { ...newItems[idx], desc: e.target.value };
                           handleChange("value_props", { ...formData.value_props, items: newItems });
                         }}
                       />
@@ -929,7 +929,7 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
                                   value={cat.name}
                                   onChange={(e) => {
                                     const newCats = [...(formData.categories || [])];
-                                    newCats[i].name = e.target.value;
+                                    newCats[i] = { ...newCats[i], name: e.target.value };
                                     handleChange("categories", newCats);
                                   }}
                                 />
@@ -940,7 +940,7 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
                                   value={cat.count}
                                   onChange={(e) => {
                                     const newCats = [...(formData.categories || [])];
-                                    newCats[i].count = e.target.value;
+                                    newCats[i] = { ...newCats[i], count: e.target.value };
                                     handleChange("categories", newCats);
                                   }}
                                 />
@@ -1107,7 +1107,10 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
                           value={(() => {
                             if (!formData.preorder?.countdown_target) return "";
                             const d = new Date(formData.preorder.countdown_target);
-                            return isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 16);
+                            if (isNaN(d.getTime())) return "";
+                            // Adjust for local timezone to show correct time in datetime-local input
+                            const localDate = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+                            return localDate.toISOString().slice(0, 16);
                           })()}
                           onChange={(e) => {
                             if (!e.target.value) {
@@ -1224,7 +1227,7 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
                                 value={faq.q}
                                 onChange={(e) => {
                                   const newFaqs = [...(formData.faqs || [])];
-                                  newFaqs[i].q = e.target.value;
+                                  newFaqs[i] = { ...newFaqs[i], q: e.target.value };
                                   handleChange("faqs", newFaqs);
                                 }}
                               />
@@ -1236,7 +1239,7 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
                                 value={faq.a}
                                 onChange={(e) => {
                                   const newFaqs = [...(formData.faqs || [])];
-                                  newFaqs[i].a = e.target.value;
+                                  newFaqs[i] = { ...newFaqs[i], a: e.target.value };
                                   handleChange("faqs", newFaqs);
                                 }}
                               />

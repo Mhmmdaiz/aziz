@@ -123,7 +123,6 @@ export default function Navbar() {
     : [
         { href: "/", label: "Home", icon: <FiHome /> },
         { href: "/shop", label: "Shop", icon: <FiGrid /> },
-        { href: "/orders", label: "Orders", icon: <FiClock /> },
         { href: "/journal", label: "Journal", icon: <FiBookOpen /> },
       ];
 

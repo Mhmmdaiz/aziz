@@ -7,7 +7,7 @@ const defaultFaqs = [
   { q: "How long is the dispatch protocol?", a: "Standard deployment takes 2-4 cycles (days). International synchronization may vary." },
   { q: "Can I return an artifact?", a: "We offer 30-day vault returns for unworn pieces in original modular packaging." },
   { q: "Where can I find the size chart?", a: "Detailed dimensions are available on each unit detail page under 'Technical Data'." },
-  { q: "What secure gateways are accepted?", a: "We accept Midtrans Secure, Bank Vault Transfer, and major Credit Nodes." }
+  { q: "What secure gateways are accepted?", a: "We accept Pakasir (QRIS & VA), Bank Vault Transfer, and major Credit Nodes." }
 ];
 
 export default function FAQSection({ theme = "dark" }: { theme?: "dark" | "light" }) {

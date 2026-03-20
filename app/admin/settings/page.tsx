@@ -659,43 +659,44 @@ function PaymentSettings({
         </CardTitle>
         <div className="space-y-3">
           <GatewayItem
-            name="Midtrans"
-            enabled={formData.gateways?.midtrans?.enabled || false}
+            name="Pakasir"
+            enabled={formData.gateways?.pakasir?.enabled || false}
             onToggle={(v) =>
               handleChange("gateways", {
                 ...formData.gateways,
-                midtrans: { ...formData.gateways.midtrans, enabled: v },
+                pakasir: { ...formData.gateways.pakasir, enabled: v },
               })
             }
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <Label>Server Key</Label>
+                <Label>API Key</Label>
                 <Input
-                  placeholder="SB-Mid-server-xxxxx"
-                  value={formData.gateways?.midtrans?.server_key}
+                  type="password"
+                  placeholder="Pakasir API Key"
+                  value={formData.gateways?.pakasir?.api_key || ""}
                   onChange={(e) =>
                     handleChange("gateways", {
                       ...formData.gateways,
-                      midtrans: {
-                        ...formData.gateways.midtrans,
-                        server_key: e.target.value,
+                      pakasir: {
+                        ...formData.gateways.pakasir,
+                        api_key: e.target.value,
                       },
                     })
                   }
                 />
               </div>
               <div>
-                <Label>Client Key</Label>
+                <Label>Project Slug</Label>
                 <Input
-                  placeholder="SB-Mid-client-xxxxx"
-                  value={formData.gateways?.midtrans?.client_key}
+                  placeholder="daemonium"
+                  value={formData.gateways?.pakasir?.slug || ""}
                   onChange={(e) =>
                     handleChange("gateways", {
                       ...formData.gateways,
-                      midtrans: {
-                        ...formData.gateways.midtrans,
-                        client_key: e.target.value,
+                      pakasir: {
+                        ...formData.gateways.pakasir,
+                        slug: e.target.value,
                       },
                     })
                   }
