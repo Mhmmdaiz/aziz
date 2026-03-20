@@ -61,9 +61,10 @@ export async function POST(req: Request) {
     const PAKASIR_API_KEY = process.env.PAKASIR_API_KEY;
     const PAKASIR_SLUG = process.env.PAKASIR_SLUG;
 
-    if (!PAKASIR_API_KEY || !PAKASIR_SLUG || PAKASIR_API_KEY.includes("your_")) {
-        // Fallback for demo or if keys aren't set yet
-        console.warn("PAKASIR_KEYS_MISSING: Using internal pending status only.");
+    if (!PAKASIR_API_KEY || !PAKASIR_SLUG) {
+        return NextResponse.json({ 
+          error: "Konfigurasi Pakasir belum lengkap. Pastikan API_KEY dan SLUG sudah terpasang di Vercel/Env." 
+        }, { status: 500 });
     }
 
     // Request to Pakasir
