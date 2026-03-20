@@ -113,7 +113,17 @@ export default function DaemoniumProductPage() {
 
   const handleBuyNow = () => {
     if (!product) return;
-    handleAddToCart();
+    
+    const checkoutItem = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image_url,
+      size: selectedSize || "Default",
+      quantity: 1,
+    };
+
+    localStorage.setItem("checkout_items", JSON.stringify([checkoutItem]));
     router.push("/checkout");
   };
 

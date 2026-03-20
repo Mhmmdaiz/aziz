@@ -186,7 +186,20 @@ export default function PreOrderDetailPage() {
   };
 
   const handleBuyNow = () => {
-    handleAddToCart();
+    if (!product) return;
+
+    const checkoutItem = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image_url,
+      size: selectedSize || "Default",
+      quantity: 1,
+      is_preorder: true,
+    };
+
+    localStorage.setItem("checkout_items", JSON.stringify([checkoutItem]));
+    localStorage.setItem("is_preorder_session", "true");
     router.push("/checkout");
   };
 
@@ -274,7 +287,7 @@ export default function PreOrderDetailPage() {
 
               <div className="space-y-6">
                 <SizeSelector
-                  sizes={product.sizes || []}
+                  sizes={campaign?.sizes || product.sizes || []}
                   selectedSize={selectedSize}
                   onSelectSize={setSelectedSize}
                 />

@@ -71,6 +71,7 @@ interface LandingData {
     countdown_target?: string;
     featured_badge?: string;
     cta_secondary?: string;
+    sizes?: string[];
     steps?: Array<{ title: string; desc: string }>;
   };
   value_props?: {
@@ -158,6 +159,60 @@ function UploadBox({ label, accept = "image/*", value, onChange }: { label: stri
             }
           }}
         />
+      </div>
+    </div>
+  );
+}
+
+function TagInput({ label, tags, onChange }: { label: string; tags: string[]; onChange: (tags: string[]) => void }) {
+  const [inputValue, setInputValue] = useState("");
+
+  const addTag = () => {
+    const val = inputValue.trim();
+    if (val && !tags.includes(val)) {
+      onChange([...tags, val]);
+      setInputValue("");
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <Label>{label}</Label>
+      <div className="flex flex-wrap gap-2 mb-2">
+        {tags.map((tag, idx) => (
+          <div key={idx} className="flex items-center gap-2 bg-zinc-100 dark:bg-white/5 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-white/10 group transition-all hover:border-fuchsia-500/30">
+            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 group-hover:text-fuchsia-500">{tag}</span>
+            <button
+              type="button"
+              onClick={() => onChange(tags.filter((_, i) => i !== idx))}
+              className="text-zinc-400 hover:text-red-500 transition-colors"
+            >
+              <Trash2 size={10} />
+            </button>
+          </div>
+        ))}
+        {tags.length === 0 && <span className="text-[9px] font-bold text-zinc-500 italic uppercase">No sizes defined</span>}
+      </div>
+      <div className="flex gap-2">
+        <Input
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          placeholder="New value (e.g. XXL)"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              addTag();
+            }
+          }}
+          className="flex-1"
+        />
+        <button
+          type="button"
+          onClick={addTag}
+          className="px-6 py-3 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-xl text-[9px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-zinc-500/10"
+        >
+          Add
+        </button>
       </div>
     </div>
   );
@@ -277,6 +332,7 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
       image_url: "https://images.unsplash.com/photo-1554568218-0f1715e72254?q=80&w=800",
       product_id: "",
       countdown_target: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      sizes: ["S", "M", "L", "XL"],
       steps: [
         { title: "01 SECURE", desc: "Place your order to secure your allocation." },
         { title: "02 ARCHITECT", desc: "Your artifact enters the production phase." },
@@ -1080,6 +1136,13 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
                         />
                       </div>
                       <div className="md:col-span-2">
+                        <TagInput
+                          label="Available Sizes"
+                          tags={formData.preorder?.sizes || []}
+                          onChange={(sizes) => handleChange("preorder", { ...formData.preorder, sizes })}
+                        />
+                      </div>
+                      <div className="md:col-span-2">
                         <UploadBox
                           label="Featured Product Image (PO)"
                           value={formData.preorder?.image_url}
@@ -1279,6 +1342,7 @@ export default function AdminPreorder() {
             image_url: product.image_url,
             image_urls: product.image_urls || [product.image_url],
             show_in_shop: product.show_in_shop,
+            sizes: product.sizes || [],
         }).eq("id", product.id);
 
         // 2. Update Site Settings (Overlay Texts & Image sync)
@@ -1512,6 +1576,11 @@ export default function AdminPreorder() {
                           <label className="text-[8px] font-black uppercase text-zinc-500 mb-1 block">Description</label>
                           <textarea value={product.description} onChange={(e) => setProduct({ ...product, description: e.target.value })} rows={3} className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800 px-4 py-3 rounded-xl text-xs font-bold outline-none focus:border-fuchsia-500/50 resize-none" />
                         </div>
+                        <TagInput
+                           label="Available Sizes"
+                           tags={product.sizes || []}
+                           onChange={(sizes) => setProduct({ ...product, sizes })}
+                        />
                       </div>
                     </div>
                   </div>

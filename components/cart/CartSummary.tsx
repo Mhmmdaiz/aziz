@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { FiArrowRight, FiLock, FiShield, FiZap } from "react-icons/fi";
 import { useRouter } from "next/navigation";
+import { useCart } from "@/components/providers/CartProvider";
 
 interface CartSummaryProps {
   total: number;
@@ -11,9 +12,15 @@ interface CartSummaryProps {
 
 export default function CartSummary({ total, count }: CartSummaryProps) {
   const router = useRouter();
+  const { cart } = useCart();
   const freeShippingThreshold = 500000;
   const progress = Math.min((total / freeShippingThreshold) * 100, 100);
   const remaining = freeShippingThreshold - total;
+
+  const handleCheckout = () => {
+    localStorage.setItem("checkout_items", JSON.stringify(cart));
+    router.push("/checkout");
+  };
 
   return (
     <div className="space-y-6">
@@ -53,7 +60,7 @@ export default function CartSummary({ total, count }: CartSummaryProps) {
 
         {/* Action Button */}
         <button
-          onClick={() => router.push("/checkout")}
+          onClick={handleCheckout}
           className="w-full group relative py-6 bg-indigo-600 hover:bg-white text-white hover:text-black rounded-[2rem] font-black uppercase tracking-[0.4em] text-[11px] shadow-2xl shadow-indigo-500/20 transition-all active:scale-95 flex items-center justify-center gap-4 overflow-hidden"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />

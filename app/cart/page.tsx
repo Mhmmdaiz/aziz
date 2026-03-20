@@ -82,7 +82,10 @@ export default function CartPage() {
           className="fixed bottom-0 left-0 right-0 z-50 p-4 md:hidden bg-black/80 backdrop-blur-xl border-t border-white/5"
         >
           <button
-            onClick={() => router.push("/checkout")}
+            onClick={() => {
+              localStorage.setItem("checkout_items", JSON.stringify(cart));
+              router.push("/checkout");
+            }}
             className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-[0.3em] text-[10px] shadow-2xl flex items-center justify-center gap-3"
           >
             Checkout_Now (Rp {cartTotal.toLocaleString()})
