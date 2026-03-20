@@ -2,6 +2,14 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  const url = request.nextUrl.clone();
+
+  // 3. Skip middleware auth check for callback route (PENGECUALIAN KRUSIAL)
+  // Supaya browser mengirim cookie PKCE (code_verifier) langsung ke route.ts
+  if (url.pathname === "/auth/callback") {
+    return NextResponse.next();
+  }
+
   // 1. Inisialisasi response awal
   let response = NextResponse.next({
     request: {
@@ -19,7 +27,6 @@ export async function middleware(request: NextRequest) {
           return request.cookies.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          // Update request dan response cookies agar session sinkron
           request.cookies.set({ name, value, ...options });
           response = NextResponse.next({
             request: { headers: request.headers },
@@ -36,14 +43,6 @@ export async function middleware(request: NextRequest) {
       },
     },
   );
-
-  const url = request.nextUrl.clone();
-
-  // 3. Skip middleware auth check for callback route
-  // Supaya tidak mengganggu proses exchangeCodeForSession di route.ts
-  if (url.pathname === "/auth/callback") {
-    return response;
-  }
 
   // 4. Cek User (Ini penting untuk me-refresh session jika perlu)
   const {
@@ -99,5 +98,5 @@ export async function middleware(request: NextRequest) {
 
 // 7. Matcher: Jalankan middleware ini untuk folder admin, page auth, dan API
 export const config = {
-  matcher: ["/admin/:path*", "/auth", "/auth/callback", "/api/:path*"],
+  matcher: ["/admin/:path*", "/auth", "/api/:path*"],
 };

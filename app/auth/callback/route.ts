@@ -5,14 +5,11 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/"; // Default ke landing page sesuai permintaan
+  const next = searchParams.get("next") ?? "/";
+  const type = searchParams.get("type");
 
   if (code) {
     const cookieStore = await cookies();
-
-    // Inisialisasi response awal untuk menangkap cookies
-    let response = NextResponse.redirect(`${origin}${next}`);
-
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -23,11 +20,9 @@ export async function GET(request: Request) {
           },
           set(name: string, value: string, options: CookieOptions) {
             cookieStore.set({ name, value, ...options });
-            response.cookies.set({ name, value, ...options });
           },
           remove(name: string, options: CookieOptions) {
             cookieStore.set({ name, value: "", ...options });
-            response.cookies.set({ name, value: "", ...options });
           },
         },
       },
@@ -40,17 +35,20 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${origin}/auth?error=${encodeURIComponent(error.message)}`);
     }
 
+    if (type === "recovery") {
+      return NextResponse.redirect(`${origin}/reset-password`);
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
 
     if (user) {
-      // Cek profile
+      // Cek/Update Profile
       let { data: profile } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", user.id)
         .single();
 
-      // Jika user baru via OAuth (Google), buatkan profilenya otomatis
       if (!profile) {
         const { data: newProfile } = await supabase
           .from("profiles")
@@ -58,10 +56,7 @@ export async function GET(request: Request) {
             {
               id: user.id,
               email: user.email,
-              full_name:
-                user.user_metadata?.full_name ||
-                user.user_metadata?.name ||
-                user.email?.split("@")[0],
+              full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0],
               role: "customer",
               updated_at: new Date().toISOString(),
             },
@@ -69,28 +64,13 @@ export async function GET(request: Request) {
           )
           .select()
           .single();
-
         profile = newProfile;
       }
 
-      // REDIRECT LOGIC
-      if (profile?.role?.toLowerCase() === "admin") {
-        console.log("Redirecting Admin to dashboard...");
-        const adminResponse = NextResponse.redirect(`${origin}/admin/dashboard`);
-        
-        // KRITIS: Salin semua cookies (session) dari response awal ke response baru
-        response.cookies.getAll().forEach(cookie => {
-          adminResponse.cookies.set(cookie.name, cookie.value, cookie);
-        });
-        
-        return adminResponse;
-      }
-
-      console.log("Redirecting Customer to:", next);
-      return response;
+      const redirectPath = profile?.role?.toLowerCase() === "admin" ? "/admin/dashboard" : next;
+      return NextResponse.redirect(`${origin}${redirectPath}`);
     }
   }
 
-  // Jika gagal atau tidak ada code, balik ke login dengan pesan error
   return NextResponse.redirect(`${origin}/auth?error=auth_failed`);
 }

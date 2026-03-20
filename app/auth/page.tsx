@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   FiMail,
   FiLock,
@@ -9,7 +10,6 @@ import {
   FiLoader,
   FiAlertCircle,
   FiCheckCircle,
-  FiSmartphone,
 } from "react-icons/fi";
 import { FaGoogle } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
@@ -98,9 +98,6 @@ export default function AuthPage() {
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         className="relative z-10 w-full max-w-[460px]  mt-15"
       >
-        {/* Brand */}
-        <div className="mb-10 flex justify-center"></div>
-
         <div className="overflow-hidden rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800/60 bg-white dark:bg-zinc-900/40 shadow-2xl backdrop-blur-2xl">
           {/* Tabs */}
           <div className="flex border-b border-zinc-100 dark:border-zinc-800/50 bg-zinc-50/50 dark:bg-black/40 p-2">
@@ -207,7 +204,10 @@ function EmailForm({ mode, onToast, onRedirect, onSwitchToLogin }: any) {
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
         password,
-        options: { data: { full_name: fullName, role: "customer" } },
+        options: { 
+          data: { full_name: fullName, role: "customer" },
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        },
       });
       setLoading(false);
       if (error) return onToast(error.message);
@@ -272,13 +272,12 @@ function EmailForm({ mode, onToast, onRedirect, onSwitchToLogin }: any) {
         />
         {mode === "login" && (
           <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={() => onToast("Fitur reset password menyusul.")}
-              className="text-[9px] font-bold uppercase text-zinc-400 hover:text-black dark:hover:text-white"
+            <Link
+              href="/forgot-password"
+              className="text-[9px] font-bold uppercase text-zinc-400 hover:text-black dark:hover:text-white transition-colors"
             >
               Lupa_Password?
-            </button>
+            </Link>
           </div>
         )}
       </div>
@@ -310,7 +309,6 @@ function Field({ icon, onChange, value, ...rest }: any) {
         {...rest}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        // CLASS 'uppercase' DIHAPUS BIAR GAK KAPITAL SEMUA
         className="w-full rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-black/40 p-5 pl-14 text-xs font-bold tracking-tight text-zinc-900 dark:text-white outline-none focus:border-black dark:focus:border-white focus:bg-white dark:focus:bg-black/60 transition-all disabled:opacity-50"
       />
     </div>
