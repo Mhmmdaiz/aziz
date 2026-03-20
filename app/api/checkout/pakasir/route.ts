@@ -91,7 +91,8 @@ export async function POST(req: Request) {
         order_id: orderId,
         status: "pending",
         total_price: totalAmount,
-        snap_token: paymentData?.data?.qr_url || paymentData?.data?.payment_url || null, // Reuse field for storage
+        payment_payload: paymentData?.data?.qr_url || paymentData?.data?.payment_url || null,
+        payment_gateway: "pakasir",
         customer_name: customer_details.name,
         customer_email: customer_details.email,
         customer_phone: customer_details.phone,
