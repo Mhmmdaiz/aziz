@@ -44,6 +44,19 @@ export default function CheckoutPage() {
     notes: "",
   });
 
+  const isFormValid = useMemo(() => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return (
+      formData.name.trim().length >= 3 &&
+      emailRegex.test(formData.email) &&
+      formData.phone.trim().length >= 10 &&
+      formData.address.trim().length >= 10 &&
+      formData.city.trim() !== "" &&
+      formData.postalCode.trim() !== "" &&
+      agreedToTerms
+    );
+  }, [formData, agreedToTerms]);
+
   // --- INITIALIZATION ---
   useEffect(() => {
     const initCheckout = async () => {
@@ -103,10 +116,10 @@ export default function CheckoutPage() {
   };
 
   const handleFinalCheckout = async () => {
-    if (!agreedToTerms) {
+    if (!isFormValid) {
       Swal.fire({
-        title: "PROTOCOL_ERROR",
-        text: "Please accept the terms and conditions protocol.",
+        title: "Incomplete Data",
+        text: "Please complete all identity and logistics fields (Real Name, Email, Phone, and Address) to proceed with your acquisition.",
         icon: "warning",
         confirmButtonColor: "#000",
         customClass: { popup: "rounded-[2rem] font-mono border border-zinc-800" }
@@ -117,7 +130,7 @@ export default function CheckoutPage() {
     setIsSubmitting(true);
     
     Swal.fire({
-      title: "INITIALIZING_BRIDGE",
+      title: "Initializing Bridge",
       text: "Securing transaction tunnel...",
       allowOutsideClick: false,
       background: "#000",
@@ -139,6 +152,7 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           items: checkoutItems,
           customer_details: formData,
+          is_preorder: localStorage.getItem("is_preorder_session") === "true",
         }),
       });
 
@@ -146,6 +160,7 @@ export default function CheckoutPage() {
 
       if (!response.ok) throw new Error(data.error || "Deployment failed.");
 
+      localStorage.removeItem("is_preorder_session");
       Swal.close();
 
       // Open Midtrans Snap
@@ -155,13 +170,13 @@ export default function CheckoutPage() {
           localStorage.removeItem("cart");
           localStorage.removeItem("checkout_items");
           Swal.fire({
-            title: "DEPLOY_SUCCESS",
-            text: "Payment verified. Initializing item logistics.",
+            title: "Success",
+            text: "Payment verified. Initializing delivery logistics.",
             icon: "success",
             background: "#000",
             color: "#fff",
             confirmButtonColor: "#fff",
-            confirmButtonText: "CONTINUE_TO_ORDERS",
+            confirmButtonText: "View Orders",
             customClass: { 
               popup: "rounded-[2rem] font-mono border border-zinc-800",
               confirmButton: "text-black font-black"
@@ -190,7 +205,7 @@ export default function CheckoutPage() {
       
     } catch (err: any) {
       Swal.fire({
-          title: "FATAL_DEPLOY_ERROR",
+          title: "System Error",
           text: err.message || "Unknown error in payment bridge.",
           icon: "error",
           background: "#000",
@@ -204,7 +219,7 @@ export default function CheckoutPage() {
   if (fetchingUser) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center font-mono">
-        <div className="text-white text-xs tracking-[0.5em] animate-pulse">SYNCHRONIZING_CORE...</div>
+        <div className="text-white text-xs tracking-[0.5em] animate-pulse">SYNCHRONIZING...</div>
       </div>
     );
   }
@@ -225,29 +240,29 @@ export default function CheckoutPage() {
                className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 hover:text-black dark:hover:text-white transition-all mb-4"
             >
               <FiChevronLeft className="group-hover:-translate-x-1 transition-transform" />
-              Return_to_vault
+              Return to vault
             </button>
             <h1 className="text-[clamp(2.5rem,10vw,7rem)] font-black uppercase tracking-tighter leading-[0.9] md:leading-[0.85] italic break-words">
-              Deploy<span className="text-zinc-200 dark:text-zinc-800">.</span>Checkout
+              Checkout<span className="text-zinc-200 dark:text-zinc-800">.</span>Process
             </h1>
             <p className="text-xs font-bold uppercase tracking-[0.3em] text-zinc-500 max-w-md">
-              Secure_transaction_tunnel_v2.0 // Port_8080_Active
+              Secure transaction protocol v2.0 // Port 8080 Active
             </p>
           </motion.div>
 
           <div className="hidden lg:flex items-center gap-12 border-l border-zinc-100 dark:border-zinc-900 pl-12">
              <div className="space-y-1">
-                <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Security_Level</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Security Level</p>
                 <div className="flex items-center gap-2 text-xs font-bold italic">
                    <FiLock className="text-emerald-500" />
-                   E2E_ENCRYPTED
+                   ENCRYPTED
                 </div>
              </div>
              <div className="space-y-1">
-                <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Node_Location</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Node Location</p>
                 <div className="flex items-center gap-2 text-xs font-bold italic">
                    <FiExternalLink className="text-blue-500" />
-                   SECURE_GATEWAY
+                   SECURE GATEWAY
                 </div>
              </div>
           </div>
@@ -261,45 +276,58 @@ export default function CheckoutPage() {
             <section className="space-y-10">
                <div className="flex items-center gap-4">
                   <span className="text-3xl font-black italic opacity-10">01</span>
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400">Identity_Verification</h3>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400">Identity Verification</h3>
                   <div className="h-px flex-1 bg-zinc-100 dark:bg-zinc-900" />
                </div>
 
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="group space-y-3">
-                     <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-4">Full_Identity_Name</label>
-                     <input 
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        placeholder="ENTER_NAME"
-                        className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 p-6 rounded-[2rem] font-bold italic focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
-                     />
-                  </div>
-                  <div className="group space-y-3">
-                     <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-4">Communication_Protocol</label>
-                     <input 
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        placeholder="EMAIL_HOST_ADDRESS"
-                        className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 p-6 rounded-[2rem] font-bold italic focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
-                     />
-                  </div>
-               </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                   <div className="group space-y-3">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-4">Full Identity Name <span className="text-emerald-500">(REQUIRED)</span></label>
+                      <input 
+                         name="name"
+                         value={formData.name}
+                         onChange={handleInputChange}
+                         placeholder="ENTER REAL NAME"
+                         className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 p-6 rounded-[2rem] font-bold italic focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
+                      />
+                   </div>
+                   <div className="group space-y-3">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-4">Communication Hub <span className="text-emerald-500">(REQUIRED)</span></label>
+                      <input 
+                         name="email"
+                         type="email"
+                         value={formData.email}
+                         onChange={handleInputChange}
+                         placeholder="GMAIL / PRIMARY EMAIL"
+                         className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 p-6 rounded-[2rem] font-bold italic focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
+                      />
+                   </div>
+                </div>
+
+                <div className="group space-y-3 pt-4">
+                   <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-4">Hotline Number <span className="text-emerald-500">(REQUIRED)</span></label>
+                   <input 
+                      name="phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      placeholder="ACTIVE PHONE NUMBER"
+                      className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 p-6 rounded-[2rem] font-bold italic focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
+                   />
+                </div>
             </section>
 
             {/* 02. LOGISTICS */}
             <section className="space-y-10">
                <div className="flex items-center gap-4">
                   <span className="text-3xl font-black italic opacity-10">02</span>
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400">Logistics_Coordination</h3>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400">Logistics Coordination</h3>
                   <div className="h-px flex-1 bg-zinc-100 dark:bg-zinc-900" />
                </div>
 
-               <div className="space-y-8">
-                  <div className="space-y-3">
-                     <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-4">Drop_Zone_Address</label>
+                <div className="space-y-8">
+                   <div className="space-y-3">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-4">Strategic Delivery Address <span className="text-emerald-500">(REQUIRED)</span></label>
                      <textarea 
                         name="address"
                         value={formData.address}
@@ -332,7 +360,7 @@ export default function CheckoutPage() {
             <section className="space-y-10">
                <div className="flex items-center gap-4">
                   <span className="text-3xl font-black italic opacity-10">03</span>
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400">Payment_Tunnel</h3>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400">Payment Gateway</h3>
                   <div className="h-px flex-1 bg-zinc-100 dark:bg-zinc-900" />
                </div>
 
@@ -378,7 +406,7 @@ export default function CheckoutPage() {
              <div className="lg:sticky lg:top-32 space-y-8">
                 <div className="bg-black dark:bg-zinc-900 text-white rounded-[3rem] p-10 md:p-12 shadow-2xl space-y-12 border border-zinc-800">
                    <header className="space-y-2">
-                      <p className="text-[9px] font-black uppercase tracking-[0.6em] text-zinc-500 italic">Order_Manifest</p>
+                      <p className="text-[9px] font-black uppercase tracking-[0.6em] text-zinc-500 italic">Order Manifest</p>
                       <h2 className="text-4xl font-black italic uppercase tracking-tighter">Summary<span className="text-zinc-700">.</span></h2>
                    </header>
 
@@ -409,17 +437,17 @@ export default function CheckoutPage() {
                    <div className="pt-10 border-t border-zinc-800 space-y-8">
                       <div className="space-y-4">
                          <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                            <span>Subtotal_Amount</span>
+                            <span>Subtotal Amount</span>
                             <span className="text-white">Rp {subtotal.toLocaleString()}</span>
                          </div>
                          <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                            <span>Delivery_Fee</span>
-                            <span className="text-emerald-500 italic tracking-tighter">FREE_LOGISTICS</span>
+                            <span>Delivery Fee</span>
+                            <span className="text-emerald-500 italic tracking-tighter">FREE DELIVERY</span>
                          </div>
                       </div>
 
                       <div className="space-y-2">
-                         <p className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-600 italic">Final_Valuation</p>
+                         <p className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-600 italic">Total Amount</p>
                          <p className="text-6xl font-black italic tracking-tighter flex items-start">
                             <span className="text-xs opacity-20 mr-2 pt-2">IDR</span>
                             {grandTotal.toLocaleString()}
@@ -438,17 +466,17 @@ export default function CheckoutPage() {
                             <FiCheckCircle className="absolute text-black opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" size={14} />
                           </div>
                           <span className="text-[9px] font-bold text-zinc-500 group-hover:text-zinc-300 uppercase tracking-widest leading-tight transition-colors">
-                            I_AGREE_TO_PROTOCOLS_AND_SYSTEM_PRIVACY
+                            I AGREE TO THE TERMS AND PRIVACY POLICY
                           </span>
                         </label>
 
                         <button
                           onClick={handleFinalCheckout}
-                          disabled={fetchingUser || checkoutItems.length === 0 || isSubmitting}
-                          className="group relative w-full py-8 bg-white text-black rounded-full font-black uppercase tracking-[0.5em] text-xs hover:bg-zinc-200 transition-all active:scale-[0.98] disabled:opacity-10 disabled:grayscale flex items-center justify-center gap-3 overflow-hidden"
+                          disabled={fetchingUser || checkoutItems.length === 0 || isSubmitting || !isFormValid}
+                          className="group relative w-full py-8 bg-white text-black rounded-full font-black uppercase tracking-[0.5em] text-xs hover:bg-zinc-200 transition-all active:scale-[0.98] disabled:opacity-20 disabled:grayscale flex items-center justify-center gap-3 overflow-hidden"
                         >
                           <span className="relative z-10 flex items-center gap-3">
-                             {isSubmitting ? "SYNCING_DATA..." : "EXECUTE_PURCHASE"}
+                             {isSubmitting ? "PROCESSING..." : !isFormValid ? "FORM INCOMPLETE" : "PLACE ORDER"}
                              <FiArrowRight className="group-hover:translate-x-2 transition-transform duration-500" />
                           </span>
                           <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/10 to-emerald-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
@@ -462,7 +490,7 @@ export default function CheckoutPage() {
                       <FiShield className="text-zinc-500" />
                    </div>
                    <div className="space-y-1">
-                      <p className="text-[10px] font-black uppercase italic tracking-widest">Encrypted_Bridge</p>
+                      <p className="text-[10px] font-black uppercase italic tracking-widest">Secure Connection</p>
                       <p className="text-[9px] font-bold text-zinc-400 leading-tight">Your data is secured using military-grade encryption protocols.</p>
                    </div>
                 </div>

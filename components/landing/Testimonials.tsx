@@ -6,19 +6,19 @@ import { FaQuoteLeft } from "react-icons/fa";
 
 const testimonials = [
   { 
-    name: "ALEX_K", 
+    name: "ALEX K", 
     role: "Collector", 
     text: "The fabric weight is insane. It's the first streetwear brand that actually feels architectural.",
     rating: 5
   },
   { 
-    name: "SARAH_V", 
+    name: "SARAH V", 
     role: "Designer", 
     text: "Minimalist but devastating. The fit is exactly what I've been searching for years.",
     rating: 5
   },
   { 
-    name: "JASON_M", 
+    name: "JASON M", 
     role: "Regular", 
     text: "Quick shipping, even better packaging. Daemonium is the new standard for the underground.",
     rating: 5
@@ -30,7 +30,7 @@ export default function Testimonials() {
     <section className="py-32 bg-zinc-50 dark:bg-[#050505] text-black dark:text-white">
       <div className="container mx-auto px-6">
         <div className="text-center mb-24 space-y-4">
-          <span className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400 italic block">Voice_of_the_archive</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400 italic block">Voice of the archive</span>
           <h2 className="text-4xl md:text-[5rem] font-black italic uppercase tracking-tighter leading-none mb-12">
             The Verified.
           </h2>

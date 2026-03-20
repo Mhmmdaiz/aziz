@@ -24,7 +24,10 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(true);
-  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [expandedOrderId, setExpandedOrderId] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [showPreOrderOnly, setShowPreOrderOnly] = useState(false);
 
   // Authentication Check
   useEffect(() => {
@@ -77,7 +80,7 @@ export default function AdminOrders() {
             toast: true,
             position: "bottom-end",
             icon: "info",
-            title: "VAULT_SYNC",
+            title: "Vault Sync",
             text: "Incoming timeline mutation detected.",
             showConfirmButton: false,
             timer: 3000,
@@ -111,11 +114,23 @@ export default function AdminOrders() {
       setOrders(data || []);
     } catch (err: any) {
       console.error("Fetch orders error:", err);
-      Swal.fire("SYNC_ERROR", err.message, "error");
+      Swal.fire("Sync Error", err.message, "error");
     } finally {
       setLoading(false);
     }
   };
+
+  const filteredOrders = orders.filter((order) => {
+    const matchesSearch = 
+      order.order_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customer_email?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === "all" || order.status === statusFilter;
+    const matchesPreOrder = !showPreOrderOnly || order.is_preorder === true;
+
+    return matchesSearch && matchesStatus && matchesPreOrder;
+  });
 
   const toggleExpand = (id: string) => {
     setExpandedOrderId(expandedOrderId === id ? null : id);
@@ -141,13 +156,13 @@ export default function AdminOrders() {
           o.id === orderId ? { ...o, status: currentStatus } : o,
         ),
       );
-      Swal.fire("UPDATE_FAILED", result.error, "error");
+      Swal.fire("Update Failed", result.error, "error");
     } else {
       Swal.fire({
         toast: true,
         position: "top-end",
         icon: "success",
-        title: "STATUS_OVERRIDDEN",
+        title: "Status Updated",
         showConfirmButton: false,
         timer: 1500,
         background: "#0B0B0B",
@@ -161,7 +176,7 @@ export default function AdminOrders() {
       <div className="min-h-[80vh] flex flex-col items-center justify-center font-mono bg-[#FBFBFD] dark:bg-black text-black dark:text-white">
         <FiRefreshCw className="w-8 h-8 animate-spin mb-4" />
         <div className="text-[10px] font-black tracking-[0.5em] uppercase">
-          SYNCHRONIZING_VAULT...
+          Synchronizing Orders...
         </div>
       </div>
     );
@@ -190,26 +205,70 @@ export default function AdminOrders() {
     <main className="min-h-screen bg-[#FBFBFD] dark:bg-black text-black dark:text-white pt-24 pb-20 px-4 md:px-8 font-mono">
       <div className="max-w-7xl mx-auto space-y-12">
         {/* Header */}
-        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-zinc-200 dark:border-zinc-900 pb-8 mt-5">
-          <div>
-            <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter italic">
-              Logistics<span className="text-cyan-500"> </span>Vault
-            </h1>
+        <header className="space-y-8 mt-5">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-zinc-200 dark:border-zinc-900 pb-8">
+            <div>
+              <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter italic">
+                Logistics<span className="text-cyan-500"> </span>Vault
+              </h1>
+            </div>
+            <div className="bg-white dark:bg-zinc-950 px-6 py-3 border border-zinc-200 dark:border-zinc-800 rounded-full flex items-center gap-4">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400">
+                Live
+              </span>
+              <span className="text-[10px] font-black uppercase tracking-widest bg-zinc-100 dark:bg-zinc-900 px-3 py-1 rounded-full">
+                {filteredOrders.length} / {orders.length}
+              </span>
+            </div>
           </div>
-          <div className="bg-white dark:bg-zinc-950 px-6 py-3 border border-zinc-200 dark:border-zinc-800 rounded-full flex items-center gap-4">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400">
-              Live
-            </span>
-            <span className="text-[10px] font-black uppercase tracking-widest bg-zinc-100 dark:bg-zinc-900 px-3 py-1 rounded-full">
-              {orders.length}
-            </span>
+
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1 relative group">
+              <input 
+                type="text"
+                placeholder="SEARCH_BY_ID_OR_NAME..."
+                className="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-900 p-4 pl-12 rounded-2xl text-[10px] font-black uppercase tracking-widest outline-none focus:border-cyan-500 transition-all placeholder:text-zinc-300 dark:placeholder:text-zinc-800"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-300 dark:text-zinc-800">
+                <FiRefreshCw className={loading ? "animate-spin" : ""} size={14} />
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {['all', 'pending', 'paid', 'processing', 'shipped', 'completed'].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setStatusFilter(s)}
+                  className={`px-4 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${
+                    statusFilter === s 
+                    ? "bg-black dark:bg-white text-white dark:text-black border-transparent shadow-lg shadow-cyan-500/10" 
+                    : "bg-white dark:bg-zinc-950 border-zinc-100 dark:border-zinc-900 text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700"
+                  }`}
+                >
+                  {s === "paid" ? "Sudah Bayar" : s}
+                </button>
+              ))}
+              
+              <button
+                onClick={() => setShowPreOrderOnly(!showPreOrderOnly)}
+                className={`ml-2 px-6 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${
+                  showPreOrderOnly 
+                  ? "bg-emerald-500 text-white border-transparent" 
+                  : "bg-white dark:bg-zinc-950 border-zinc-100 dark:border-zinc-900 text-emerald-600/50 hover:border-emerald-500/20"
+                }`}
+              >
+                Pre-Order Only
+              </button>
+            </div>
           </div>
         </header>
 
         {/* Orders Table/List */}
         <div className="w-full space-y-4">
-          {orders.length === 0 ? (
+          {filteredOrders.length === 0 ? (
             <div className="py-32 flex flex-col items-center justify-center text-zinc-400 border-2 border-dashed border-zinc-200 dark:border-zinc-900 rounded-[2rem]">
               <FiBox size={48} className="mb-6 opacity-20" />
               <p className="text-[12px] font-black uppercase tracking-[0.5em] italic">
@@ -217,7 +276,7 @@ export default function AdminOrders() {
               </p>
             </div>
           ) : (
-            orders.map((order) => {
+            filteredOrders.map((order) => {
               const isExpanded = expandedOrderId === order.id;
               return (
                 <div
@@ -239,7 +298,7 @@ export default function AdminOrders() {
                     </div>
                     <div className="hidden md:block col-span-1">
                       <p className="text-[8px] font-black uppercase tracking-widest text-zinc-400 mb-1">
-                        Target_Subject
+                        Customer
                       </p>
                       <p className="text-[11px] font-bold truncate">
                         {order.customer_name}
@@ -259,7 +318,7 @@ export default function AdminOrders() {
                     </div>
                     <div className="col-span-1 text-left md:text-right">
                       <p className="text-[8px] font-black uppercase tracking-widest text-zinc-400 mb-1">
-                        Valuation
+                        Total
                       </p>
                       <p className="text-[11px] font-black">
                         IDR {Number(order.total_price).toLocaleString()}
@@ -269,7 +328,7 @@ export default function AdminOrders() {
                       <span
                         className={`px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-full border ${getStatusColor(order.status)}`}
                       >
-                        {order.status}
+                        {order.status === "paid" ? "SUDAH BAYAR" : order.status}
                       </span>
                     </div>
                     <div className="hidden md:flex col-span-1 justify-end">
@@ -294,14 +353,14 @@ export default function AdminOrders() {
                           <div className="space-y-8">
                             <div>
                               <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 mb-6 italic">
-                                Target_Coordinates
+                                Customer Details
                               </h3>
                               <div className="bg-white dark:bg-zinc-900/50 rounded-2xl p-6 border border-zinc-200 dark:border-zinc-800 space-y-4">
                                 <div className="flex gap-4 items-start">
                                   <FiMail className="text-zinc-400 shrink-0 mt-1" />
                                   <div>
                                     <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-1">
-                                      Comms_Array
+                                      Email
                                     </p>
                                     <p className="text-[11px] font-bold">
                                       {order.customer_email}
@@ -312,7 +371,7 @@ export default function AdminOrders() {
                                   <FiPhone className="text-zinc-400 shrink-0 mt-1" />
                                   <div>
                                     <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-1">
-                                      Freq_Line
+                                      Phone
                                     </p>
                                     <p className="text-[11px] font-bold">
                                       {order.customer_phone}
@@ -323,7 +382,7 @@ export default function AdminOrders() {
                                   <FiMapPin className="text-zinc-400 shrink-0 mt-1" />
                                   <div>
                                     <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-1">
-                                      Drop_Zone
+                                      Address
                                     </p>
                                     <p className="text-[11px] font-bold leading-relaxed">
                                       {order.shipping_address}
@@ -335,7 +394,7 @@ export default function AdminOrders() {
 
                             <div>
                               <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 mb-6 italic">
-                                Operational_Status
+                                Order Status
                               </h3>
                               <div className="flex flex-wrap gap-3">
                                 {[
@@ -362,7 +421,7 @@ export default function AdminOrders() {
                                         : "bg-white dark:bg-zinc-900 text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-cyan-500/50"
                                     }`}
                                   >
-                                    {sts}
+                                    {sts === "PAID" ? "SUDAH BAYAR" : sts}
                                   </button>
                                 ))}
                               </div>
@@ -372,7 +431,7 @@ export default function AdminOrders() {
                           {/* Right: Manifest */}
                           <div>
                             <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 mb-6 italic">
-                              Equipment_Manifest ({order.items?.length || 0})
+                              Order Items ({order.items?.length || 0})
                             </h3>
                             <div className="space-y-4">
                               {order.items?.map((item: any) => (
@@ -399,7 +458,7 @@ export default function AdminOrders() {
 
                             <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
                               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                                Gross_Valuation
+                                Gross_Total
                               </span>
                               <span className="text-xl font-black italic">
                                 IDR {Number(order.total_price).toLocaleString()}

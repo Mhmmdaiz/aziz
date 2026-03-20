@@ -49,6 +49,7 @@ export default function ShopPage() {
     const { data, error } = await supabase
       .from("products")
       .select("*")
+      .eq("show_in_shop", true)
       .order("created_at", { ascending: false });
 
     if (data) setProducts(data);
@@ -161,7 +162,7 @@ export default function ShopPage() {
                 >
                   <option value="newest">Newest First</option>
                   <option value="price-low">Price Low</option>
-                  <option value="price-high">PriceHigh</option>
+                  <option value="price-high">Price High</option>
                 </select>
               </div>
             </div>

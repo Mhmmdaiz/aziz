@@ -155,6 +155,33 @@ export default function UserManagement() {
     }
   };
 
+  const handleUpdateRole = async (id: string, newRole: string) => {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ role: newRole, updated_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+      
+      // Update local state for immediate feedback if selected
+      if (selectedUser?.id === id) {
+        setSelectedUser({ ...selectedUser, role: newRole });
+      }
+      
+      Swal.fire({
+        title: "ROLE UPDATED",
+        text: `Identity access level adjusted to ${newRole.toUpperCase()}.`,
+        icon: "success",
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000
+      });
+    } catch (err: any) {
+      Swal.fire("Error", err.message, "error");
+    }
+  };
+
   const confirmDelete = async (id: string, name: string) => {
     const result = await Swal.fire({
       title: "PURGE DATA?",
@@ -290,9 +317,16 @@ export default function UserManagement() {
                             {(u.full_name || u.email)?.charAt(0) || "?"}
                           </div>
                           <div>
-                            <p className="text-sm font-black italic uppercase leading-none mb-1">
-                              {u.full_name || "No Name"}
-                            </p>
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="text-sm font-black italic uppercase leading-none">
+                                {u.full_name || "No Name"}
+                              </p>
+                              {u.role === "admin" && (
+                                <span className="bg-blue-500/10 text-blue-500 text-[7px] font-black px-1.5 py-0.5 rounded border border-blue-500/20 uppercase">
+                                  Admin
+                                </span>
+                              )}
+                            </div>
                             <p className="text-[10px] font-bold text-zinc-400">
                               {u.email}
                             </p>
@@ -415,6 +449,27 @@ export default function UserManagement() {
                     className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-4 rounded-2xl outline-none focus:ring-2 ring-black dark:ring-white h-24 transition-all dark:text-white"
                   />
                 </div>
+                
+                <div className="space-y-2">
+                  <label>Access Level (Role)</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {["customer", "admin"].map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, role: r })}
+                        className={`p-4 rounded-2xl border text-[9px] font-black uppercase tracking-widest transition-all ${
+                          formData.role === r
+                            ? "bg-black dark:bg-white text-white dark:text-black border-transparent"
+                            : "bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 text-zinc-400"
+                        }`}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                   <button
                     type="submit"
                     className="w-full bg-black dark:bg-white text-white dark:text-black p-5 rounded-2xl flex items-center justify-center gap-3 mt-4 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all font-black italic tracking-widest uppercase shadow-xl"
@@ -483,6 +538,25 @@ export default function UserManagement() {
                   label="Location"
                   value={selectedUser.address || "N/A"}
                 />
+                
+                <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800">
+                  <p className="text-[9px] font-black text-zinc-400 uppercase italic mb-4">Elevate / Restrict Access</p>
+                  <div className="flex gap-2 bg-zinc-50 dark:bg-zinc-900 p-1 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                    {["customer", "admin"].map((r) => (
+                      <button
+                        key={r}
+                        onClick={() => handleUpdateRole(selectedUser.id, r)}
+                        className={`flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-tighter transition-all ${
+                          selectedUser.role === r
+                            ? "bg-white dark:bg-zinc-800 text-blue-600 shadow-sm border border-zinc-100 dark:border-zinc-700"
+                            : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+                        }`}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <div className="pt-10 grid grid-cols-2 gap-4">
                   <button
                     onClick={() => {

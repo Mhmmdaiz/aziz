@@ -17,8 +17,8 @@ export function AddToCart({ onAdd, onBuyNow, disabled, price }: AddToCartProps) 
 
   const showError = () => {
     Swal.fire({
-      title: "ACCESS_DENIED",
-      text: "Please select a dimension artifact before proceeding.",
+      title: "Access Denied",
+      text: "Please select a size before proceeding.",
       icon: "error",
       background: "#FBFBFD", // Will be overridden in actual DOM via theme but setting base
       color: "#1D1D1F",
@@ -61,7 +61,7 @@ export function AddToCart({ onAdd, onBuyNow, disabled, price }: AddToCartProps) 
           <ShoppingBag size={20} className={disabled ? "opacity-50" : ""} />
         )}
         <span className="relative z-10 mt-0.5">
-          {loadingCart ? "AUTHORIZING..." : disabled ? "SELECT SIZE" : `STASH [ ${Number(price).toLocaleString()} ]`}
+          {loadingCart ? "LOADING..." : disabled ? "SELECT SIZE" : `STASH [ ${Number(price).toLocaleString()} ]`}
         </span>
       </button>
 
@@ -84,7 +84,7 @@ export function AddToCart({ onAdd, onBuyNow, disabled, price }: AddToCartProps) 
         )}
         
         <span className="relative z-10 mt-0.5">
-          {loadingBuy ? "INITIATING..." : disabled ? "SELECT SIZE" : "CHECKOUT"}
+          {loadingBuy ? "PROCESSING..." : disabled ? "SELECT SIZE" : "CHECKOUT"}
         </span>
 
         {!disabled && (

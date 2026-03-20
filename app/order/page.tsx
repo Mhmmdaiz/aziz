@@ -50,7 +50,7 @@ function OrderContent() {
     setTimeout(() => {
       if (!token) {
         Swal.fire({
-          title: "AUTH_REQUIRED",
+          title: "Identification Required",
           text: "You must be identified to proceed.",
           icon: "info",
           confirmButtonColor: "#000",
@@ -69,7 +69,7 @@ function OrderContent() {
       <div className="bg-white dark:bg-zinc-950 rounded-[3rem] p-20 shadow-sm border border-gray-100 dark:border-zinc-900 flex flex-col items-center justify-center notranslate transition-colors duration-300">
         <div className="w-10 h-10 border-4 border-black dark:border-white border-t-transparent dark:border-t-transparent rounded-full animate-spin mb-4"></div>
         <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-zinc-600">
-          Syncing_Data...
+          Establishing Link...
         </p>
       </div>
     );
@@ -83,7 +83,7 @@ function OrderContent() {
     >
       <header className="mb-12 border-b border-gray-50 dark:border-zinc-900 pb-10">
         <h1 className="text-5xl font-black italic uppercase tracking-tighter mb-4 notranslate text-zinc-900 dark:text-white">
-          Review_Order
+          Review Order
         </h1>
         <p className="text-[10px] font-bold text-gray-400 dark:text-zinc-600 uppercase tracking-[0.4em] notranslate">
           Transaction ID: #TRX-{trxId}
@@ -94,7 +94,7 @@ function OrderContent() {
         <div className="flex justify-between items-end bg-gray-50 dark:bg-zinc-900 p-8 rounded-[2rem]">
           <div className="notranslate">
             <p className="text-[9px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-2">
-              Service_Selected
+              Product Selected
             </p>
             <h3 className="text-2xl font-black italic uppercase text-zinc-900 dark:text-white">
               {item ? item.title : `Artifact #${serviceId}`}
@@ -111,7 +111,7 @@ function OrderContent() {
         disabled={loading || !item}
         className="w-full bg-black dark:bg-white text-white dark:text-black p-8 rounded-[2.5rem] font-black uppercase text-xs hover:bg-blue-600 dark:hover:bg-blue-400 transition-all flex items-center justify-center gap-4 disabled:bg-gray-400 dark:disabled:bg-zinc-800 shadow-xl dark:shadow-none"
       >
-        {loading ? "CHECKING_AUTH..." : "Validate & Proceed"}
+        {loading ? "IDENTIFYING..." : "Validate & Proceed"}
       </button>
     </motion.div>
   );
@@ -124,7 +124,7 @@ export default function OrderPage() {
         <Suspense
           fallback={
             <div className="text-center p-20 font-black opacity-20">
-              SYSTEM_BOOTING...
+              INITIALIZING...
             </div>
           }
         >

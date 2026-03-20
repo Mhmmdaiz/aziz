@@ -13,15 +13,9 @@ import { motion } from "framer-motion";
 export default function QuickActions() {
   const actions = [
     {
-      label: "Product",
+      label: "New",
       icon: <FiPlus />,
-      href: "/admin/inventory",
-      color: "hover:bg-emerald-500",
-    },
-    {
-      label: "Journal",
-      icon: <FiPlus />,
-      href: "/admin/journal",
+      href: "/admin/new",
       color: "hover:bg-emerald-500",
     },
     {
@@ -39,7 +33,7 @@ export default function QuickActions() {
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 w-full">
       {actions.map((action, i) => (
         <motion.div
           key={action.label}

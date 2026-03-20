@@ -16,14 +16,14 @@ const defaultBadges = [
   { icon: "FiRotateCcw", label: "Easy Return", sub: "30-Day Window" },
 ];
 
-export default function TrustBadges() {
+export default function TrustBadges({ theme = "dark" }: { theme?: "dark" | "light" }) {
   const { settings } = useSettings();
   const badges = settings?.landing_content?.trust_badges || defaultBadges;
   return (
-    <section className="py-12 bg-white dark:bg-[#0B0B0B] border-y border-zinc-100 dark:border-zinc-900 overflow-hidden">
+    <section className={`py-12 border-y transition-colors duration-500 ${theme === "dark" ? "bg-[#0B0B0B] border-zinc-900" : "bg-white border-zinc-100"}`}>
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
-          {badges.map((badge, idx) => (
+          {badges.map((badge: any, idx: number) => (
             <motion.div
               key={idx}
               initial={{ opacity: 0, y: 20 }}
@@ -32,11 +32,11 @@ export default function TrustBadges() {
               transition={{ delay: idx * 0.1 }}
               className="flex items-center gap-4 group cursor-default"
             >
-              <div className="w-12 h-12 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex items-center justify-center text-xl shadow-sm group-hover:scale-110 transition-transform duration-500">
+              <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center text-xl shadow-sm group-hover:scale-110 transition-all duration-500 ${theme === "dark" ? "bg-zinc-900 border-zinc-800" : "bg-zinc-50 border-zinc-100"}`}>
                 {ICON_MAP[badge.icon] || <FiStar />}
               </div>
               <div className="flex flex-col">
-                <span className="text-[11px] font-black uppercase tracking-widest text-zinc-900 dark:text-white">
+                <span className={`text-[11px] font-black uppercase tracking-widest ${theme === "dark" ? "text-white" : "text-zinc-900"}`}>
                   {badge.label}
                 </span>
                 <span className="text-[9px] font-bold uppercase tracking-tighter text-zinc-400">

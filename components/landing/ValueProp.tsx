@@ -13,44 +13,47 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 };
 
 const defaultContent = {
-  title: "Why be anything but elite?",
+  title: "NOT FOR EVERYONE. ONLY FOR THE ELITE.",
   items: [
     {
-      icon: "FiZap",
-      title: "Premium Material",
-      desc: "Heavyweight 100% Cotton, architectural durability.",
-    },
-    {
-      icon: "FiHexagon",
-      title: "Limited Drop",
-      desc: "Only 50 units per design. No restocks, ever.",
+      icon: "FiBox",
+      title: "PREMIUM ARMOR",
+      desc: "24oz Industrial-grade heavyweight cotton. Engineered for structural dominance and lifetime durability.",
     },
     {
       icon: "FiTarget",
-      title: "Unique Design",
-      desc: "Brutalist-horror aesthetics by top-tier silhouettists.",
+      title: "THE LIMITED VOID",
+      desc: "Micro-batch production: 50 units worldwide. Individually numbered. No restocks, no second chances.",
     },
     {
-      icon: "FiBox",
-      title: "Eco Packaging",
-      desc: "Sustainable unboxing for a superior tactile experience.",
+      icon: "FiZap",
+      title: "BRUTAL AESTHETICS",
+      desc: "A fusion of raw industrial horror and high-end silhouette. Designed for the fringe, not the mass.",
+    },
+    {
+      icon: "FiHexagon",
+      title: "TACTICAL UNBOXING",
+      desc: "Vacuum-sealed sustainable logistics. Zero-waste packaging engineered for a premium tactile reveal.",
     },
   ],
 };
 
-export default function ValueProp() {
+export default function ValueProp({ theme = "dark" }: { theme?: "dark" | "light" }) {
   const { settings } = useSettings();
-  const content = settings?.landing_content?.value_props || defaultContent;
+  const cmsContent = settings?.landing_content?.value_props;
+  
+  const content = (cmsContent && cmsContent.title) 
+    ? cmsContent 
+    : defaultContent;
 
-  // Fungsi aman untuk membagi judul tanpa merusak layout jika kata "but" tidak ada
   const renderTitle = () => {
-    const parts = content.title.split(/(but)/i); // Split tapi tetap simpan kata "but"
+    const parts = content.title.split(/(ONLY)/i);
     if (parts.length < 3) return content.title;
 
     return (
       <>
         {parts[0]} <br />
-        <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-indigo-500 to-blue-600">
+        <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-accent)] via-[var(--color-secondary-accent)] to-[var(--color-accent)]">
           {parts[1]} {parts[2]}
         </span>
       </>
@@ -58,14 +61,14 @@ export default function ValueProp() {
   };
 
   return (
-    <section className="py-24 md:py-32 bg-[#0B0B0B] text-white overflow-hidden selection:bg-red-600">
+    <section className={`py-24 md:py-32 overflow-hidden transition-colors duration-500 selection:bg-[var(--color-primary-accent)] ${theme === "dark" ? "bg-[#0B0B0B] text-white" : "bg-white text-black"}`}>
       <div className="container mx-auto px-6">
         {/* HEADER SECTION */}
         <div className="max-w-4xl mb-16 md:mb-24 space-y-6">
           <div className="flex items-center gap-4">
-            <div className="h-px w-12 bg-red-600" />
+            <div className="h-px w-12 bg-[var(--color-primary-accent)]" />
             <span className="text-[10px] font-black uppercase tracking-[0.6em] text-zinc-600 block italic">
-              Daemonium_manifest // 004
+              Daemonium manifest // 004
             </span>
           </div>
           <h2 className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter leading-[0.85]">
@@ -73,41 +76,30 @@ export default function ValueProp() {
           </h2>
         </div>
 
-        {/* GRID SYSTEM - Responsive Scroll on Mobile */}
-        <div className="flex md:grid overflow-x-auto md:overflow-visible grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 pb-10 md:pb-0 snap-x snap-mandatory scrollbar-hide -mx-6 px-6 md:mx-0 md:px-0">
-          {content.items.map((p: any, i: number) => (
+        {/* ITEMS GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
+          {content.items.map((item: any, i: number) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.1, duration: 0.8 }}
-              className="min-w-[85%] md:min-w-0 p-8 md:p-10 rounded-[2.5rem] bg-gradient-to-br from-zinc-900/80 to-black border border-white/5 hover:border-red-600/50 transition-all duration-700 group relative overflow-hidden snap-center"
+              transition={{ delay: i * 0.1 }}
+              className={`group p-8 rounded-[2.5rem] border transition-all duration-500 relative overflow-hidden ${theme === "dark" ? "bg-zinc-900/40 border-white/5 hover:border-[var(--color-primary-accent)]/30" : "bg-zinc-50 border-zinc-100 hover:border-[var(--color-primary-accent)]/50 shadow-sm hover:shadow-xl"}`}
             >
-              {/* Animated Glow Effect */}
-              <div className="absolute -top-20 -right-20 w-40 h-40 bg-red-600/10 blur-[80px] group-hover:bg-red-600/20 transition-all duration-700" />
-
-              {/* Icon Container */}
-              <div className="w-16 h-16 bg-zinc-950 rounded-2xl flex items-center justify-center text-3xl text-red-600 mb-10 border border-white/5 shadow-2xl group-hover:shadow-red-900/20 group-hover:scale-110 group-hover:-rotate-3 transition-all duration-500">
-                {ICON_MAP[p.icon] || <FiZap />}
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <span className="text-[10px] font-mono text-zinc-700">
-                    0{i + 1}
-                  </span>
-                  <h4 className="text-[14px] font-black uppercase tracking-[0.2em] text-white">
-                    {p.title}
-                  </h4>
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-primary-accent)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              
+              <div className="relative z-10">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-[var(--color-primary-accent)] mb-8 group-hover:scale-110 transition-all duration-500 ${theme === "dark" ? "bg-white/5" : "bg-white shadow-inner"}`}>
+                  {ICON_MAP[item.icon] || <FiZap />}
                 </div>
-                <p className="text-[12px] font-medium text-zinc-500 leading-relaxed italic opacity-80 group-hover:opacity-100 transition-opacity">
-                  {p.desc}
+                <h3 className={`text-lg font-black uppercase italic tracking-tighter mb-4 group-hover:text-[var(--color-primary-accent)] transition-colors ${theme === "dark" ? "text-white" : "text-black"}`}>
+                  {item.title}
+                </h3>
+                <p className="text-sm text-zinc-500 font-medium leading-relaxed italic">
+                  {item.desc}
                 </p>
               </div>
-
-              {/* Bottom Decorative Line */}
-              <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-red-600 group-hover:w-full transition-all duration-700" />
             </motion.div>
           ))}
         </div>

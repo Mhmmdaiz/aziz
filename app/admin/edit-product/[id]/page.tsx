@@ -42,6 +42,10 @@ export default function EditProductPage() {
     category: "UNCASTEGORY",
     sizes: [] as string[],
     specifications: [] as Specification[],
+    is_high_demand: false,
+    sold_today: 0,
+    rating: 4.9,
+    short_description: "",
   });
 
   const [images, setImages] = useState<File[]>([]); // New files to upload
@@ -89,6 +93,10 @@ export default function EditProductPage() {
             category: data.category || "UNCASTEGORY",
             sizes: data.sizes || [],
             specifications: data.specifications || [{ key: "", value: "" }],
+            is_high_demand: data.is_high_demand || false,
+            sold_today: data.sold_today || 0,
+            rating: data.rating || 4.9,
+            short_description: data.short_description || "",
           });
 
           if (data.image_urls && data.image_urls.length > 0) {
@@ -143,8 +151,13 @@ export default function EditProductPage() {
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target as HTMLInputElement;
+    if (type === 'checkbox') {
+        const { checked } = e.target as HTMLInputElement;
+        setFormData(prev => ({ ...prev, [name]: checked }));
+    } else {
+        setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const toggleSize = (size: string) => {
@@ -214,6 +227,10 @@ export default function EditProductPage() {
           category: formData.category,
           sizes: formData.sizes,
           specifications: formData.specifications.filter(s => s.key && s.value),
+          is_high_demand: formData.is_high_demand,
+          sold_today: parseInt(formData.sold_today.toString()) || 0,
+          rating: parseFloat(formData.rating.toString()) || 4.9,
+          short_description: formData.short_description,
         })
         .eq("id", id);
 
@@ -379,6 +396,41 @@ export default function EditProductPage() {
                     ))}
                     <button type="button" onClick={addSpecification} className="text-[9px] font-black uppercase tracking-widest text-cyan-500 flex items-center gap-2 hover:gap-3 transition-all"><Plus size={14} /> Add_Specification_Entry</button>
                   </div>
+                </div>
+
+                {/* URGENCY SETTINGS */}
+                <div className="p-6 bg-zinc-50 dark:bg-zinc-900/30 rounded-3xl border border-zinc-100 dark:border-zinc-800 space-y-6">
+                   <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-900 dark:text-white">High_Demand_Status</h4>
+                        <p className="text-[8px] text-zinc-400 font-bold uppercase mt-1">Enable urgency UI for this artifact</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_high_demand" checked={formData.is_high_demand} onChange={handleInputChange} className="sr-only peer" />
+                        <div className="w-11 h-6 bg-zinc-200 dark:bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                      </label>
+                   </div>
+
+                   <div>
+                      <label className={labelClass}>Units_Claimed_Today</label>
+                      <input name="sold_today" type="number" value={formData.sold_today} onChange={handleInputChange} className={inputClass} placeholder="0" />
+                   </div>
+
+                   <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <label className={labelClass}>Rating_Artifact</label>
+                        <input name="rating" type="number" step="0.1" min="0" max="5" value={formData.rating} onChange={handleInputChange} className={inputClass} placeholder="4.9" />
+                      </div>
+                      <div className="flex items-center gap-4 pt-6">
+                        <span className="text-[10px] font-black text-yellow-500">★ ★ ★ ★ ★</span>
+                        <span className="text-[8px] text-zinc-500 font-bold uppercase">Public_Trust_Metric</span>
+                      </div>
+                   </div>
+
+                   <div>
+                      <label className={labelClass}>Short_Briefing_(Visual_Hook)</label>
+                      <textarea name="short_description" value={formData.short_description} onChange={handleInputChange} className={`${inputClass} min-h-[80px] py-4`} placeholder="Tactical silhouette engineered for urban survival..." />
+                   </div>
                 </div>
 
                 <div>

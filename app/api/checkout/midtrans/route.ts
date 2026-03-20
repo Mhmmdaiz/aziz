@@ -7,11 +7,11 @@ import Midtrans from "midtrans-client";
 export async function POST(req: Request) {
   try {
     const supabase = await createClient();
-    
+
     // 1. Otorisasi Ganda: Cek Header Authorization (Bearer) atau Cookies
     const authHeader = req.headers.get("Authorization");
     const token = authHeader?.split(" ")[1];
-    
+
     let user = null;
     let authError = null;
 
@@ -26,12 +26,23 @@ export async function POST(req: Request) {
     }
 
     if (!user) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: "Unauthorized access detected. Please refresh or re-login.",
       }, { status: 401 });
     }
 
-    const { items, customer_details } = await req.json();
+    const { items, customer_details, is_preorder } = await req.json();
+
+    // 1. Server-side Validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (
+      !customer_details.name || customer_details.name.length < 3 ||
+      !customer_details.email || !emailRegex.test(customer_details.email) ||
+      !customer_details.phone || customer_details.phone.length < 10 ||
+      !customer_details.address || customer_details.address.length < 10
+    ) {
+      return NextResponse.json({ error: "Mission-critical identity data is missing or invalid. Protocol aborted." }, { status: 400 });
+    }
 
     // 1. Fetch Dynamic API Keys from site_settings (Bypass RLS if service key exists)
     let midtransConfig = null;
@@ -52,10 +63,10 @@ export async function POST(req: Request) {
     }
 
     // Fallback logic
-    const serverKey = midtransConfig?.server_key && !midtransConfig.server_key.includes("xxxxx") 
-      ? midtransConfig.server_key 
+    const serverKey = midtransConfig?.server_key && !midtransConfig.server_key.includes("xxxxx")
+      ? midtransConfig.server_key
       : process.env.MIDTRANS_SERVER_KEY;
-      
+
     const clientKey = midtransConfig?.client_key && !midtransConfig.client_key.includes("xxxxx")
       ? midtransConfig.client_key
       : process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY;
@@ -119,8 +130,23 @@ export async function POST(req: Request) {
 
     if (!transaction.token) throw new Error("Midtrans failed to generate deployment token.");
 
-    // 5. Atomic Order Creation in Supabase
+    // 5. Update User Profile (Persistence Sync)
     const adminSupabase = createAdminClient();
+    try {
+      await adminSupabase
+        .from("profiles")
+        .update({
+          full_name: customer_details.name,
+          phone: customer_details.phone,
+          address: customer_details.address,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", user.id);
+    } catch (e) {
+      console.warn("Profile sync failed, but proceeding with order.", e);
+    }
+
+    // 6. Atomic Order Creation in Supabase
     const { data: order, error: orderError } = await adminSupabase
       .from("orders")
       .insert({
@@ -133,6 +159,7 @@ export async function POST(req: Request) {
         customer_email: customer_details.email,
         customer_phone: customer_details.phone,
         shipping_address: `${customer_details.address}, ${customer_details.city} ${customer_details.postalCode}`,
+        is_preorder: !!is_preorder,
       })
       .select()
       .single();
@@ -152,10 +179,10 @@ export async function POST(req: Request) {
     const { error: itemsError } = await adminSupabase.from("order_items").insert(orderItems);
     if (itemsError) throw itemsError;
 
-    return NextResponse.json({ 
-      token: transaction.token, 
+    return NextResponse.json({
+      token: transaction.token,
       orderId: orderId,
-      redirect_url: transaction.redirect_url 
+      redirect_url: transaction.redirect_url
     });
 
   } catch (err: any) {

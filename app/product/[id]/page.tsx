@@ -123,7 +123,7 @@ export default function DaemoniumProductPage() {
     return (
       <div className="min-h-screen bg-[#FBFBFD] dark:bg-[#0B0B0B] flex items-center justify-center font-mono transition-colors duration-500">
         <h1 className="text-4xl text-red-600 font-black animate-pulse">
-          404 // ARTIFACT_MISSING
+          404 // PRODUCT NOT FOUND
         </h1>
       </div>
     );
@@ -160,9 +160,9 @@ export default function DaemoniumProductPage() {
           {/* RIGHT: INFO & ACTIONS */}
           <div className="lg:col-span-5 flex flex-col">
             <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2, ease: "circOut" }}
               className="sticky top-28 h-fit pb-10"
             >
               <ProductInfo
@@ -171,6 +171,10 @@ export default function DaemoniumProductPage() {
                 price={product.price}
                 category={product.category}
                 stock={product.stock}
+                is_high_demand={product.is_high_demand}
+                sold_today={product.sold_today}
+                rating={product.rating}
+                short_description={product.short_description}
               />
 
               <div className="my-8 h-px bg-zinc-200 dark:bg-[#222] w-full" />
@@ -228,7 +232,7 @@ function LoadingSequence() {
         </span>
       </div>
       <p className="text-[10px] text-red-600 font-black uppercase tracking-[0.5em] animate-pulse">
-        Establishing_Link...
+        Establishing Link...
       </p>
     </div>
   );

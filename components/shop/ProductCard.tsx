@@ -73,9 +73,20 @@ export default function ProductCard({ product }: ProductCardProps) {
         
         {/* Badges */}
         <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
-          {product.stock < 10 && (
+          {product.stock > 0 && product.stock <= 10 && (
             <div className="px-2 md:px-3 py-1 bg-red-600 text-white text-[7px] md:text-[8px] font-black uppercase tracking-widest rounded-full shadow-lg flex items-center gap-1">
-              <FiZap className="animate-pulse" /> Stok: {product.stock}
+              <FiZap className="animate-pulse" /> Stock: {product.stock}
+            </div>
+          )}
+          {product.stock === 0 && (
+            <div className="px-2 md:px-3 py-1 bg-zinc-800 text-zinc-400 text-[7px] md:text-[8px] font-black uppercase tracking-widest rounded-full shadow-lg">
+              SOLD OUT
+            </div>
+          )}
+          {/* Label "Hot/Popular" berdasarkan ID (deterministik 30% produk) */}
+          {parseInt(product.id.slice(0, 2), 16) % 10 < 3 && (
+            <div className="px-2 md:px-3 py-1 bg-indigo-600 text-white text-[7px] md:text-[8px] font-black uppercase tracking-widest rounded-full shadow-lg flex items-center gap-1">
+              🔥 HIGHEST DEMAND
             </div>
           )}
           {new Date(product.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) && (
@@ -91,7 +102,7 @@ export default function ProductCard({ product }: ProductCardProps) {
            <Link href={`/product/${product.id}`} className="absolute inset-0 z-0" />
            
            <div className="relative z-10 space-y-3">
-              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 text-center">Select_Size_Protocol</p>
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 text-center">Select Size</p>
               <div className="flex justify-center gap-2">
                 {SIZES.map((size) => (
                   <button
@@ -121,7 +132,7 @@ export default function ProductCard({ product }: ProductCardProps) {
              disabled={!selectedSize}
              className="relative z-10 w-full py-4 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-full font-black uppercase text-[10px] tracking-[0.2em] hover:bg-red-600 dark:hover:bg-red-600 hover:text-white transition-all active:scale-95 disabled:opacity-20 flex items-center justify-center gap-2 shadow-2xl"
            >
-             <FiShoppingBag size={14} /> Buy_Instant
+             <FiShoppingBag size={14} /> Buy Now
            </button>
         </div>
       </div>
@@ -140,19 +151,49 @@ export default function ProductCard({ product }: ProductCardProps) {
             </span>
           </div>
           <p className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-zinc-400 dark:text-zinc-600">
-            {product.category} // ARCHIVE_01
+            {product.category} // ARCHIVE 01
           </p>
         </div>
 
-        {/* Scarcity Info */}
-        <div className="mt-auto pt-3 md:pt-4 border-t border-zinc-100 dark:border-white/5 flex items-center justify-between">
-           <div className="flex items-center gap-2 text-[8px] md:text-[9px] font-bold text-zinc-500 uppercase tracking-widest">
-              <span className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse" />
-              12_SOLD_TODAY
-           </div>
-           <Link href={`/product/${product.id}`} className="text-zinc-700 hover:text-white transition-colors">
-              <FiInfo size={14} />
-           </Link>
+        {/* Scarcity Info / High Demand UI */}
+        <div className="mt-auto pt-4 border-t border-zinc-100 dark:border-white/5 space-y-4">
+          {product.is_high_demand ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-[8px] md:text-[9px] font-black uppercase tracking-widest">
+                <div className="flex items-center gap-2 text-red-600">
+                   <div className="w-2 h-2 bg-red-600 rounded-full animate-ping" />
+                   HIGH DEMAND
+                </div>
+                <div className={`flex items-center gap-1 ${product.stock > 0 ? "text-emerald-500" : "text-zinc-500"}`}>
+                   {product.stock > 0 ? "IN STOCK" : "SOLD OUT"}
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-medium text-zinc-500">
+                <span className="text-orange-500">🔥</span> {product.sold_today || 0} units claimed today
+              </div>
+
+              {/* Progress Bar */}
+              <div className="h-1.5 w-full bg-zinc-100 dark:bg-white/5 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  whileInView={{ width: `${Math.min(((product.sold_today || 0) / 100) * 100, 100)}%` }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
+                  className="h-full bg-red-600"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+               <div className="flex items-center gap-2 text-[8px] md:text-[9px] font-bold text-zinc-500 uppercase tracking-widest">
+                  <span className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse" />
+                  {product.sold_today || 0} SOLD TODAY
+               </div>
+               <Link href={`/product/${product.id}`} className="text-zinc-700 hover:text-white transition-colors">
+                  <FiInfo size={14} />
+               </Link>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>

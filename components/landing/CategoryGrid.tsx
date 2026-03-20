@@ -12,14 +12,14 @@ const defaultCategories = [
   { name: "Dark Series", count: "07 Artifacts", img: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800" }
 ];
 
-export default function CategoryGrid() {
+export default function CategoryGrid({ theme = "dark" }: { theme?: "dark" | "light" }) {
   const { settings } = useSettings();
   const categories = settings?.landing_content?.categories || defaultCategories;
   return (
-    <section className="py-24 bg-white dark:bg-[#0B0B0B] text-black dark:text-white">
+    <section className={`py-24 transition-colors duration-500 ${theme === "dark" ? "bg-[#0B0B0B] text-white" : "bg-white text-black"}`}>
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {categories.map((cat, i) => (
+          {categories.map((cat: any, i: number) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, scale: 0.95 }}

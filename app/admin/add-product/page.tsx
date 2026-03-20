@@ -32,9 +32,13 @@ export default function AddProduct() {
     description: "",
     price: "",
     stock: "",
-    category: "UNCASTEGORY",
+    category: "Uncategorized",
     sizes: [] as string[],
     specifications: [{ key: "", value: "" }] as { key: string; value: string }[],
+    is_high_demand: false,
+    sold_today: 0,
+    rating: 4.9,
+    short_description: "",
   });
   
   const [images, setImages] = useState<File[]>([]);
@@ -74,7 +78,7 @@ export default function AddProduct() {
       const selectedFiles = Array.from(e.target.files);
       if (images.length + selectedFiles.length > 5) {
         return Swal.fire({
-          title: "LIMIT_EXCEEDED",
+          title: "Limit Exceeded",
           text: "Maximum 5 visual assets allowed per registry.",
           icon: "warning",
           confirmButtonColor: "#000",
@@ -124,15 +128,20 @@ export default function AddProduct() {
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target as HTMLInputElement;
+    if (type === 'checkbox') {
+        const { checked } = e.target as HTMLInputElement;
+        setFormData(prev => ({ ...prev, [name]: checked }));
+    } else {
+        setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (images.length === 0) {
       return Swal.fire({
-        title: "MISSING_ASSETS",
+        title: "Missing Assets",
         text: "At least one visual artifact is required for registration.",
         icon: "error",
         confirmButtonColor: "#000",
@@ -177,12 +186,16 @@ export default function AddProduct() {
           category: formData.category,
           sizes: formData.sizes,
           specifications: formData.specifications.filter(s => s.key && s.value),
+          is_high_demand: formData.is_high_demand,
+          sold_today: parseInt(formData.sold_today.toString()) || 0,
+          rating: parseFloat(formData.rating.toString()) || 4.9,
+          short_description: formData.short_description,
         });
 
       if (insertError) throw insertError;
 
       await Swal.fire({
-        title: "REGISTRY_COMPLETE",
+        title: "Registry Complete",
         text: "Product artifact successfully synchronized to vault.",
         icon: "success",
         confirmButtonColor: "#000",
@@ -196,13 +209,13 @@ export default function AddProduct() {
       console.error("Error Code/Status:", error.code || error.status || error.statusCode);
       
       let errorMessage = error.message || "Failed to commit changes to the registry.";
-      let errorTitle = "SYNC_FAILURE";
+      let errorTitle = "Sync Failure";
 
       if (error.message?.includes("Bucket not found") || error.statusCode === "404" || error.code === "404") {
-        errorTitle = "STORAGE_CONFIG_REQUIRED";
+        errorTitle = "Storage Configuration Required";
         errorMessage = "The 'products' storage bucket was not found. Please create a public bucket named 'products' in your Supabase Dashboard.";
       } else if (error.message?.includes("row-level security") || error.code === "42501") {
-        errorTitle = "PERMISSION_DENIED";
+        errorTitle = "Permission Denied";
         errorMessage = "Authentication or RLS policy failure. Ensure the 'products' bucket has public upload permissions or appropriate policies.";
       }
 
@@ -248,10 +261,10 @@ export default function AddProduct() {
               className="flex items-center gap-2 text-zinc-400 hover:text-zinc-950 dark:hover:text-white transition-colors mb-4 group"
             >
               <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-              <span className="text-[9px] font-black uppercase tracking-widest">Back_To_Registry</span>
+              <span className="text-[9px] font-black uppercase tracking-widest">Back to Registry</span>
             </button>
             <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-zinc-950 dark:text-white mb-2 italic">
-              New_Artifact<span className="text-cyan-500">.</span>
+              New Product<span className="text-cyan-500">.</span>
             </h1>
             <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-[0.2em]">
               Injecting_New_Product_Into_Vault
@@ -267,8 +280,8 @@ export default function AddProduct() {
               <Zap size={18} />
             </div>
             <div className="pr-6">
-              <p className="text-[8px] font-black uppercase text-zinc-400 leading-none mb-1">Status_Protocol</p>
-              <p className="text-[10px] font-black text-zinc-900 dark:text-white uppercase leading-none italic">Active_Injection</p>
+              <p className="text-[8px] font-black uppercase text-zinc-400 leading-none mb-1">Status</p>
+              <p className="text-[10px] font-black text-zinc-900 dark:text-white uppercase leading-none italic">Active</p>
             </div>
           </motion.div>
         </div>
@@ -283,7 +296,7 @@ export default function AddProduct() {
               className="bg-white dark:bg-zinc-950 p-8 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-900 shadow-sm"
             >
               <div className="flex items-center justify-between mb-8">
-                <label className={labelClass}>Visual_Artifacts_({images.length}/5)</label>
+                <label className={labelClass}>Visual Assets ({images.length}/5)</label>
                 <ImageIcon className="text-zinc-200" size={16} />
               </div>
 
@@ -321,7 +334,7 @@ export default function AddProduct() {
                   >
                     <input type="file" multiple onChange={handleImageChange} className="hidden" accept="image/*" />
                     <Upload size={24} className="text-zinc-300 group-hover:text-cyan-500 transition-all group-hover:-translate-y-1" />
-                    <span className="text-[8px] font-black uppercase text-zinc-400 mt-2 tracking-widest group-hover:text-zinc-600 transition-colors">Attach_Media</span>
+                    <span className="text-[8px] font-black uppercase text-zinc-400 mt-2 tracking-widest group-hover:text-zinc-600 transition-colors">Add Media</span>
                   </label>
                 )}
               </div>
@@ -329,7 +342,7 @@ export default function AddProduct() {
               {images.length === 0 && (
                 <div className="h-40 rounded-[2rem] bg-zinc-50/30 dark:bg-zinc-900/10 border-2 border-dashed border-zinc-100 dark:border-zinc-900 flex flex-col items-center justify-center text-zinc-300">
                   <ImageIcon size={32} strokeWidth={1} />
-                  <span className="text-[9px] font-black uppercase tracking-[0.2em] mt-3">Void_Storage</span>
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] mt-3">No Media</span>
                 </div>
               )}
             </motion.div>
@@ -340,7 +353,7 @@ export default function AddProduct() {
               transition={{ delay: 0.1 }}
               className="bg-cyan-500/5 p-8 rounded-[2.5rem] border border-cyan-500/10"
             >
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-cyan-600 mb-2 italic">Security_Notice</h4>
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-cyan-600 mb-2 italic">Security Notice</h4>
               <p className="text-[9px] font-bold text-zinc-500 leading-relaxed uppercase">
                 All visual assets will be processed and encrypted within the vault storage. Ensure high definition artifacts for optimal display.
               </p>
@@ -357,7 +370,7 @@ export default function AddProduct() {
             >
               <div className="space-y-8">
                 <div>
-                  <label className={labelClass}>Artifact_Identifier</label>
+                  <label className={labelClass}>Product Name</label>
                   <div className="relative">
                     <Package className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-300" size={16} />
                     <input 
@@ -366,14 +379,14 @@ export default function AddProduct() {
                       value={formData.name}
                       onChange={handleInputChange}
                       className={`${inputClass} pl-14`}
-                      placeholder="ENTER_PRODUCT_DESIGNATION"
+                      placeholder="Enter Product Name"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label className={labelClass}>Market_Valuation</label>
+                    <label className={labelClass}>Price</label>
                     <div className="relative">
                       <DollarSign className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-300" size={16} />
                       <input 
@@ -388,7 +401,7 @@ export default function AddProduct() {
                     </div>
                   </div>
                   <div>
-                    <label className={labelClass}>Inventory_Count</label>
+                    <label className={labelClass}>Stock Quantity</label>
                     <div className="relative">
                       <Layers className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-300" size={16} />
                       <input 
@@ -405,7 +418,7 @@ export default function AddProduct() {
                 </div>
 
                 <div>
-                  <label className={labelClass}>Artifact_Classification</label>
+                  <label className={labelClass}>Category</label>
                   <div className="relative">
                     <Tag className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-300" size={16} />
                     <select 
@@ -418,13 +431,13 @@ export default function AddProduct() {
                       <option value="ACCESSORIES">ACCESSORIES</option>
                       <option value="FOOTWEAR">FOOTWEAR</option>
                       <option value="LIFESTYLE">LIFESTYLE</option>
-                      <option value="UNCASTEGORY">UNCASTEGORY</option>
+                      <option value="Uncategorized">Uncategorized</option>
                     </select>
                   </div>
                 </div>
 
                 <div>
-                  <label className={labelClass}>Available_Dimensions</label>
+                  <label className={labelClass}>Sizes</label>
                   <div className="flex flex-wrap gap-3">
                     {["XS", "S", "M", "L", "XL", "XXL"].map((size) => (
                       <button
@@ -444,7 +457,7 @@ export default function AddProduct() {
                 </div>
 
                 <div>
-                  <label className={labelClass}>Technical_Specifications</label>
+                  <label className={labelClass}>Detailed Specifications</label>
                   <div className="space-y-4 mb-6">
                     {formData.specifications.map((spec, index) => (
                       <div key={index} className="flex gap-4 items-center">
@@ -474,13 +487,48 @@ export default function AddProduct() {
                       onClick={addSpecification}
                       className="text-[9px] font-black uppercase tracking-widest text-cyan-500 flex items-center gap-2 hover:gap-3 transition-all"
                     >
-                      <Plus size={14} /> Add_Specification_Entry
+                      <Plus size={14} /> Add Specification
                     </button>
                   </div>
                 </div>
 
+                {/* URGENCY SETTINGS */}
+                <div className="p-6 bg-zinc-50 dark:bg-zinc-900/30 rounded-3xl border border-zinc-100 dark:border-zinc-800 space-y-6">
+                   <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-900 dark:text-white">High Demand Mode</h4>
+                        <p className="text-[8px] text-zinc-400 font-bold uppercase mt-1">Enable urgency UI for this artifact</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_high_demand" checked={formData.is_high_demand} onChange={handleInputChange} className="sr-only peer" />
+                        <div className="w-11 h-6 bg-zinc-200 dark:bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                      </label>
+                   </div>
+
+                   <div>
+                      <label className={labelClass}>Sales Today</label>
+                      <input name="sold_today" type="number" value={formData.sold_today} onChange={handleInputChange} className={inputClass} placeholder="0" />
+                   </div>
+
+                   <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <label className={labelClass}>Product Rating</label>
+                        <input name="rating" type="number" step="0.1" min="0" max="5" value={formData.rating} onChange={handleInputChange} className={inputClass} placeholder="4.9" />
+                      </div>
+                      <div className="flex items-center gap-4 pt-6">
+                        <span className="text-[10px] font-black text-yellow-500">★ ★ ★ ★ ★</span>
+                        <span className="text-[8px] text-zinc-500 font-bold uppercase">Trust Level</span>
+                      </div>
+                   </div>
+
+                   <div>
+                      <label className={labelClass}>Short Description_(Visual Hook)</label>
+                      <textarea name="short_description" value={formData.short_description} onChange={handleInputChange} className={`${inputClass} min-h-[80px] py-4`} placeholder="Tactical silhouette engineered for urban survival..." />
+                   </div>
+                </div>
+
                 <div>
-                  <label className={labelClass}>Abstract_Briefing</label>
+                  <label className={labelClass}>Full Description</label>
                   <div className="relative">
                     <FileText className="absolute left-6 top-8 text-zinc-300" size={16} />
                     <textarea 
@@ -490,7 +538,7 @@ export default function AddProduct() {
                       onChange={handleInputChange}
                       rows={5}
                       className={`${inputClass} pl-14 resize-none`}
-                      placeholder="PROVIDE_TECHNICAL_SPECIFICATIONS_AND_GENERAL_CONTEXT..."
+                      placeholder="PROVIDE_Detailed Specifications_AND_GENERAL_CONTEXT..."
                     />
                   </div>
                 </div>
@@ -501,7 +549,7 @@ export default function AddProduct() {
                   className="w-full py-6 bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 rounded-full font-black uppercase tracking-[0.4em] text-[11px] hover:shadow-2xl hover:shadow-black/20 dark:hover:shadow-white/10 transition-all flex items-center justify-center gap-4 disabled:opacity-50 active:scale-[0.98] group"
                 >
                   <Save size={18} className="group-hover:-translate-y-1 transition-transform" />
-                  {loading ? "INITIALIZING_SYNC..." : "COMMIT_TO_REGISTRY"}
+                  {loading ? "Saving..." : "Save Product"}
                 </button>
               </div>
             </motion.div>

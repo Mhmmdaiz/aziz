@@ -30,6 +30,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     if (data) {
       const mapped = data.reduce((acc: any, item: any) => {
         acc[item.key] = item.value;
+        acc[`${item.key}_id`] = item.id;
         return acc;
       }, {});
       setSettings(mapped as Settings);
@@ -39,6 +40,25 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     fetchSettings();
+
+    const channel = supabase
+      .channel("site_settings_global")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "site_settings",
+        },
+        () => {
+          fetchSettings();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return (

@@ -73,7 +73,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         },
       ];
     });
-    setIsCartOpen(true);
   };
 
   const updateQuantity = (cartId: string, delta: number) => {

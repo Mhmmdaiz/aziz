@@ -24,7 +24,7 @@ export function ProductAccordion({ description, specifications }: ProductAccordi
     },
     ...(specifications?.map((spec, index) => ({
       id: `spec-${index}`,
-      title: spec.key.toUpperCase().replace(/\s+/g, '_'),
+      title: spec.key.toUpperCase(),
       content: spec.value,
     })) || []),
   ];

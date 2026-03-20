@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Swal from "sweetalert2";
 import {
   Store,
@@ -38,7 +38,6 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 import { useSettings } from "@/components/providers/SettingsProvider";
-import { LandingPageSettings } from "./LandingPageSettings";
 
 /* ─── TYPES ────────────────────────────────────────────────── */
 type Section =
@@ -49,7 +48,7 @@ type Section =
   | "notifications"
   | "security"
   | "integrations"
-  | "landing_page"
+  | "integrations"
   | "account";
 
 interface BankAccount {
@@ -110,12 +109,7 @@ const SIDEBAR_ITEMS: {
     icon: <Puzzle size={15} />,
     accent: "from-indigo-500 to-blue-600",
   },
-  {
-    key: "landing_page",
-    label: "Landing Page",
-    icon: <LayoutDashboard size={15} />,
-    accent: "from-fuchsia-500 to-pink-500",
-  },
+
   {
     key: "account",
     label: "Admin Account",
@@ -1488,13 +1482,7 @@ function SectionRenderer({
           onSave={(d) => onUpdateSetting("integrations", d)}
         />
       );
-    case "landing_page":
-      return (
-        <LandingPageSettings
-          data={settings.landing_content}
-          onSave={(d) => onUpdateSetting("landing_content", d)}
-        />
-      );
+
     case "account":
       return <AccountSettings profile={profile} onUpdate={onUpdate} />;
     default:
@@ -1510,8 +1498,18 @@ function SectionRenderer({
 /* ─── ROOT PAGE ─────────────────────────────────────────────── */
 /* ─── ROOT PAGE ─────────────────────────────────────────────── */
 export default function SettingsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SettingsContent />
+    </Suspense>
+  );
+}
+
+function SettingsContent() {
   const router = useRouter();
-  const [active, setActive] = useState<Section>("store");
+  const searchParams = useSearchParams();
+  const initialSection = (searchParams.get("section") as Section) || "store";
+  const [active, setActive] = useState<Section>(initialSection);
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
