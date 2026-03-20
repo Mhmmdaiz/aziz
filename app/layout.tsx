@@ -7,8 +7,8 @@ import Script from "next/script";
 import DynamicStyle from "@/components/DynamicStyle";
 
 export const metadata = {
-  title: "CHCKT.STORE",
-  description: "Premium brutalist streetwear — engineered for the modern silhouette.",
+  title: "DAEMONIUM",
+  description: "Non-conformist streetwear. Architectural precision meets brutalist aesthetics. Engineered for the elite.",
 };
 
 export default function RootLayout({

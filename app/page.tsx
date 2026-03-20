@@ -51,6 +51,7 @@ export default function FashionLandingPage() {
     { id: "categories", visible: true },
     { id: "lookbook", visible: true },
     { id: "preorder", visible: true },
+    { id: "testimonials", visible: true },
     { id: "faq", visible: true },
   ];
 
@@ -103,6 +104,8 @@ export default function FashionLandingPage() {
             return <Lookbook key="lookbook" theme={theme} />;
           case "preorder":
             return <PreOrderSystem key="preorder" theme={theme} />;
+          case "testimonials":
+            return <Testimonials key="testimonials" />;
           case "faq":
             return <FAQSection key="faq" theme={theme} />;
           default:

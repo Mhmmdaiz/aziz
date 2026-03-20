@@ -33,10 +33,17 @@ export default function PreOrderDetailPage() {
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      setLoading(false);
+      return;
+    }
 
     const fetchData = async () => {
       setLoading(true);
+
+      // Safety timeout: jika fetch > 8 detik, stop loading spinner
+      const timeout = setTimeout(() => setLoading(false), 8000);
+
       try {
         let setting: any = null;
 
@@ -60,7 +67,7 @@ export default function PreOrderDetailPage() {
 
         if (setting) {
           setCampaign(setting.value);
-          if (setting.value.product_id) {
+          if (setting.value?.product_id) {
             const { data: pData } = await supabase
               .from("products")
               .select("*")
@@ -72,6 +79,7 @@ export default function PreOrderDetailPage() {
       } catch (err) {
         console.error("Fetch error:", err);
       } finally {
+        clearTimeout(timeout);
         setLoading(false);
       }
     };
