@@ -99,7 +99,7 @@ export default function ShopPage() {
               className="space-y-4"
             >
               <h1 className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter leading-[0.8]">
-                Manifest<span className="text-zinc-800"></span>Shop
+                Katalog <span className="text-zinc-800"></span> Produk
               </h1>
             </motion.div>
 
@@ -108,7 +108,7 @@ export default function ShopPage() {
                 <FiSearch className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-500" />
                 <input
                   type="text"
-                  placeholder="SEARCH"
+                  placeholder="CARI PRODUK"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-white/5 p-6 pl-16 rounded-full text-[10px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-red-600 transition-all text-zinc-900 dark:text-white"
@@ -143,26 +143,26 @@ export default function ShopPage() {
             <div className="flex flex-col sm:flex-row justify-between items-center bg-zinc-50 dark:bg-[#1A1A1A] p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] border border-zinc-200 dark:border-white/5 gap-4">
               <div className="flex items-center gap-4 md:gap-6 w-full sm:w-auto justify-between sm:justify-start">
                 <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase text-zinc-500">
-                  <FiGrid className="text-zinc-900 dark:text-white" /> Grid View
+                  <FiGrid className="text-zinc-900 dark:text-white" /> Tampilan Grid
                 </div>
                 <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 hidden sm:block" />
                 <p className="text-[9px] md:text-[10px] font-black uppercase text-zinc-500 italic">
-                  Showing {displayedProducts.length} Artifacts
+                  Menampilkan {displayedProducts.length} Produk
                 </p>
               </div>
 
               <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start border-t sm:border-t-0 border-zinc-200 dark:border-white/5 pt-4 sm:pt-0">
                 <span className="text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">
-                  Sort By:
+                  Urutkan:
                 </span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
                   className="bg-transparent text-[9px] md:text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer text-zinc-900 dark:text-white hover:text-red-500 transition-colors"
                 >
-                  <option value="newest">Newest First</option>
-                  <option value="price-low">Price Low</option>
-                  <option value="price-high">Price High</option>
+                  <option value="newest">Terbaru</option>
+                  <option value="price-low">Harga Terendah</option>
+                  <option value="price-high">Harga Tertinggi</option>
                 </select>
               </div>
             </div>
@@ -196,10 +196,10 @@ export default function ShopPage() {
             ) : (
               <div className="py-40 text-center space-y-6">
                 <div className="text-8xl font-black italic opacity-5 uppercase tracking-tighter">
-                  Empty Vault
+                  Produk Kosong
                 </div>
                 <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.5em]">
-                  No artifacts match your current filters.
+                  Tidak ada produk yang cocok dengan filter Anda.
                 </p>
                 <button
                   onClick={() => {
@@ -210,7 +210,7 @@ export default function ShopPage() {
                   }}
                   className="px-12 py-5 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-full font-black uppercase text-[10px] tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl"
                 >
-                  Reset All Protocols
+                  Reset Semua Filter
                 </button>
               </div>
             )}
@@ -223,7 +223,7 @@ export default function ShopPage() {
                   className="group relative px-16 py-6 border-2 border-zinc-200 dark:border-zinc-800 rounded-full overflow-hidden transition-all hover:border-zinc-900 dark:hover:border-white"
                 >
                   <span className="relative z-10 text-[10px] font-black uppercase tracking-[0.5em] group-hover:text-white dark:group-hover:text-black transition-colors">
-                    Load More Artifacts
+                    Lihat Lebih Banyak
                   </span>
                   <div className="absolute inset-0 bg-zinc-900 dark:bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
                 </button>

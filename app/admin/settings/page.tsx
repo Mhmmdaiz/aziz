@@ -1635,7 +1635,7 @@ function SettingsContent() {
   return (
     <div className="min-h-screen bg-white dark:bg-black text-zinc-900 dark:text-white pt-24 md:pt-32 pb-12">
       {/* ── PAGE HEADER ── */}
-      <div className="sticky top-[72px] md:top-[96px] z-40 border-b border-zinc-100 dark:border-zinc-900 bg-white/80 dark:bg-black/80 backdrop-blur-xl">
+      <div className=" top-[72px] md:top-[96px] z-40 border-b border-zinc-100 dark:border-zinc-900 bg-white/80 dark:bg-black/80 backdrop-blur-xl">
         <div className="w-full px-4 md:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="w-1 h-1 rounded-full bg-zinc-800" />
@@ -1775,7 +1775,7 @@ function SettingsContent() {
               </span>
             </div>
             <h1 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter text-zinc-900 dark:text-white">
-              {activeItem.label.replace(/ /g, "_")}
+              {activeItem.label}
             </h1>
             <div
               className={`h-0.5 w-12 rounded bg-gradient-to-r ${activeItem.accent} mt-2`}

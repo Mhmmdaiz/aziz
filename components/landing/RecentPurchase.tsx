@@ -5,10 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FiShoppingBag, FiX } from "react-icons/fi";
 
 const PURCHASES = [
-  { name: "Andi", location: "Jakarta", product: "Darkest Oversize Hoodie", time: "2 mins ago" },
-  { name: "Budi", location: "Surabaya", product: "Minimalist Graphic Tee", time: "5 mins ago" },
-  { name: "Citra", location: "Bandung", product: "Limited Edition Black Cap", time: "8 mins ago" },
-  { name: "Deni", location: "Medan", product: "Brutalist Cargo Pants", time: "12 mins ago" },
+  { name: "Andi", location: "Jakarta", product: "Darkest Oversize Hoodie", time: "2 menit yang lalu" },
+  { name: "Budi", location: "Surabaya", product: "Minimalist Graphic Tee", time: "5 menit yang lalu" },
+  { name: "Citra", location: "Bandung", product: "Limited Edition Black Cap", time: "8 menit yang lalu" },
+  { name: "Deni", location: "Medan", product: "Brutalist Cargo Pants", time: "12 menit yang lalu" },
 ];
 
 export default function RecentPurchase() {
@@ -54,12 +54,12 @@ export default function RecentPurchase() {
             </div>
 
             <div className="flex flex-col gap-0.5 min-w-0">
-              <p className="text-[9px] font-black uppercase text-zinc-400 tracking-widest">Recent purchase</p>
+              <p className="text-[9px] font-black uppercase text-zinc-400 tracking-widest">Pembelian terbaru</p>
               <h4 className="text-[10px] font-black uppercase italic truncate text-zinc-900 dark:text-white">
-                {current.name} in {current.location}
+                {current.name} di {current.location}
               </h4>
               <p className="text-[9px] font-bold text-zinc-500 truncate">
-                Bought {current.product} — {current.time}
+                Membeli {current.product} — {current.time}
               </p>
             </div>
           </div>

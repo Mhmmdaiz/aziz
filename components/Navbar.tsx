@@ -5,68 +5,68 @@ import {
   AnimatePresence,
   useScroll,
   useMotionValueEvent,
+  useSpring,
 } from "framer-motion";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useTheme } from "next-themes";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/utils/supabase/client";
 import {
   FiMenu,
   FiX,
   FiLogOut,
-  FiZap,
-  FiHome,
-  FiGrid,
-  FiBookOpen,
-  FiSettings,
-  FiUser,
-  FiSun,
-  FiMoon,
   FiShoppingBag,
-  FiTrash2,
-  FiPlus,
-  FiMinus,
-  FiClock,
-  FiArrowRight,
-  FiEdit,
+  FiZap,
+  FiUser,
 } from "react-icons/fi";
-import { ThemeToggle } from "./ThemeToggle";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import { useCart } from "@/components/providers/CartProvider";
+import { ThemeToggle } from "./ThemeToggle";
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { cartCount } = useCart();
+  const { settings } = useSettings();
 
   const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [user, setUser] = useState<any>(null);
+  
+  // Logo & Content Settings
+  const storeName = settings?.store?.store_name || "DAEMONIUM";
+  const logoUrl = settings?.store?.logo_url;
 
-  const { cart, cartCount, cartTotal } = useCart();
-  const { theme, setTheme } = useTheme();
-  const { settings } = useSettings();
-
-  const [storeName, setStoreName] = useState("DAEMONIUM");
-
-  useEffect(() => {
-    if (settings?.store?.store_name) {
-      setStoreName(settings.store.store_name);
-    }
-  }, [settings]);
-
-  const { scrollY } = useScroll();
-
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    setScrolled(latest > 30);
+  const { scrollY, scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
   });
 
-  const fetchUserAndRole = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+  const lastScrollY = useRef(0);
+  const SCROLL_THRESHOLD = 10;
 
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    const direction = latest > lastScrollY.current ? "down" : "up";
+    const diff = Math.abs(latest - lastScrollY.current);
+
+    if (diff > SCROLL_THRESHOLD) {
+      if (direction === "down" && latest > 150) {
+        setHidden(true);
+      } else {
+        setHidden(false);
+      }
+    }
+
+    setIsScrolled(latest > 30);
+    lastScrollY.current = latest;
+  });
+
+  const fetchUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
       const { data: profile } = await supabase
         .from("profiles")
@@ -81,21 +81,17 @@ export default function Navbar() {
 
   useEffect(() => {
     setMounted(true);
-    fetchUserAndRole();
+    fetchUser();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN") fetchUserAndRole();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN") fetchUser();
       if (event === "SIGNED_OUT") {
         setUser(null);
         router.refresh();
       }
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, [router]);
 
   if (!mounted) return null;
@@ -107,77 +103,80 @@ export default function Navbar() {
     window.location.href = "/auth";
   };
 
-  const handleCheckout = () => {
-    router.push("/cart");
-  };
+  const isAdmin = user?.role?.toLowerCase() === "admin" || user?.role?.toLowerCase() === "superadmin";
 
-  const isAdmin =
-    user?.role?.toLowerCase() === "admin" ||
-    user?.role?.toLowerCase() === "superadmin";
-
-  const activeLinks = isAdmin
+  const navLinks = isAdmin
     ? [
-        { href: "/admin/dashboard", label: "Dashboard", icon: <FiZap /> },
-        { href: "/admin/settings", label: "Settings", icon: <FiSettings /> },
+        { href: "/admin/dashboard", label: "DASHBOARD" },
+        { href: "/admin/settings", label: "SETTINGS" },
       ]
     : [
-        { href: "/", label: "Home", icon: <FiHome /> },
-        { href: "/shop", label: "Shop", icon: <FiGrid /> },
-        { href: "/journal", label: "Journal", icon: <FiBookOpen /> },
+        { href: "/", label: "HOME" },
+        { href: "/shop", label: "SHOP" },
+        { href: "/journal", label: "JOURNAL" },
       ];
 
   return (
     <>
       <motion.nav
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        className="fixed top-0 left-0 right-0 z-[100] py-4 md:py-6"
+        variants={{
+          visible: { y: 0, opacity: 1 },
+          hidden: { y: -100, opacity: 0 },
+        }}
+        animate={hidden ? "hidden" : "visible"}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        className="fixed top-0 left-0 right-0 z-[100] py-4 md:py-6 pointer-events-none"
       >
-        <div className="w-full px-4 md:px-8 lg:px-12">
+        {/* PROGRESS BAR */}
+        <div className="absolute top-0 left-0 right-0 px-4 md:px-12 pointer-events-none">
+           <motion.div
+            className="h-[2px] bg-red-600 origin-left rounded-full"
+            style={{ scaleX }}
+          />
+        </div>
+
+        <div className="w-full px-4 md:px-8 lg:px-12 pointer-events-auto">
           <div
-            className={`relative flex items-center justify-between px-4 md:px-10 h-14 md:h-20 rounded-full border transition-all duration-700 glass shadow-2xl ${
-              scrolled || isAdmin
-                ? "shadow-indigo-500/10 border-indigo-500/20"
-                : "border-white/20 shadow-black/5"
-            }`}
+            className={`relative flex items-center justify-between px-6 md:px-10 h-16 md:h-20 rounded-full border transition-all duration-700 shadow-2xl glass
+              ${isScrolled
+                ? "border-zinc-200/20 dark:border-white/20 bg-white/40 dark:bg-black/40 backdrop-blur-xl scale-[0.98] md:scale-100"
+                : "border-zinc-200/10 dark:border-white/10 bg-white/20 dark:bg-black/20 backdrop-blur-md"
+              }
+            `}
           >
-            {/* LEFT: LOGO & DESKTOP NAV */}
-            <div className="flex items-center gap-4 md:gap-8 min-w-0">
-              <Link
-                href={isAdmin ? "/admin/dashboard" : "/"}
-                className="group shrink-0"
-              >
-                <div className="text-sm md:text-xl font-black tracking-tighter uppercase italic text-zinc-900 dark:text-white flex items-center gap-1.5">
-                  {isAdmin ? "ADMIN" : storeName}
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_10px_indigo]" />
+            {/* LOGO */}
+            <div className="flex items-center gap-8">
+              <Link href={isAdmin ? "/admin/dashboard" : "/"} className="group">
+                <div className="flex items-center gap-2">
+                  {logoUrl ? (
+                    <img src={logoUrl} alt={storeName} className="h-6 md:h-8 w-auto object-contain" />
+                  ) : (
+                    <span className="text-sm md:text-xl font-black tracking-tighter uppercase italic text-zinc-900 dark:text-white flex items-center gap-2">
+                      {isAdmin ? "DAEMON ADMIN" : storeName}
+                    </span>
+                  )}
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
                 </div>
               </Link>
 
-              <div className="hidden lg:flex items-center gap-1 p-1 rounded-2xl bg-zinc-500/10 dark:bg-zinc-800/50">
-                {activeLinks.map((link) => (
+              {/* DESKTOP NAV */}
+              <div className="hidden lg:flex items-center gap-1 p-1 rounded-full bg-white/5 border border-white/5">
+                {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="relative px-5 py-2 group"
+                    className="relative px-6 py-2 group"
                   >
-                    <div
-                      className={`relative z-10 text-[9px] font-black uppercase tracking-widest transition-all ${
-                        pathname === link.href
-                          ? "text-zinc-900 dark:text-white"
-                          : "text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white"
-                      }`}
-                    >
+                    <span className={`relative z-10 text-[10px] font-black uppercase tracking-widest transition-colors
+                      ${pathname === link.href ? "text-zinc-900 dark:text-white" : "text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-zinc-200"}
+                    `}>
                       {link.label}
-                    </div>
+                    </span>
                     {pathname === link.href && (
                       <motion.div
-                        layoutId="nav-pill"
-                        className="absolute inset-0 bg-white/80 dark:bg-zinc-700/80 backdrop-blur-md shadow-lg shadow-indigo-500/10 ring-1 ring-indigo-500/20 rounded-xl z-0"
-                        transition={{
-                          type: "spring",
-                          bounce: 0.15,
-                          duration: 0.5,
-                        }}
+                        layoutId="nav-pill-premium"
+                        className="absolute inset-0 bg-white/10 rounded-full z-0 border border-white/10"
+                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                       />
                     )}
                   </Link>
@@ -185,103 +184,145 @@ export default function Navbar() {
               </div>
             </div>
 
-            {/* RIGHT: ACTIONS */}
-            <div className="flex items-center gap-1.5 md:gap-3">
-              {/* Cart Button */}
+            {/* RIGHT ACTIONS (Desktop) */}
+            <div className="flex items-center gap-3">
+              <div className="hidden lg:flex items-center gap-3">
+                 <ThemeToggle />
+                 {!isAdmin && (
+                  <Link
+                    href="/cart"
+                    className="relative p-3 rounded-full bg-zinc-900/5 dark:bg-white/5 hover:bg-zinc-900/10 dark:hover:bg-white/10 text-zinc-900 dark:text-white transition-all group border border-zinc-200 dark:border-white/5 shadow-xl"
+                  >
+                    <FiShoppingBag size={18} />
+                    {cartCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white text-[8px] font-black rounded-full flex items-center justify-center">
+                        {cartCount}
+                      </span>
+                    )}
+                  </Link>
+                )}
+                {user ? (
+                  <div className="flex items-center gap-3 ml-2">
+                    <Link 
+                      href="/dashboard" 
+                      className="group/profile relative flex items-center transition-all duration-500"
+                    >
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-zinc-200 dark:border-white/10 overflow-hidden group-hover/profile:border-red-600 group-hover/profile:scale-105 transition-all bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center p-0.5 shadow-lg">
+                         {user.user_metadata?.avatar_url || user.avatar_url ? (
+                           <img 
+                            src={user.user_metadata?.avatar_url || user.avatar_url} 
+                            alt="Profile" 
+                            className="w-full h-full object-cover rounded-full"
+                          />
+                         ) : (
+                           <FiZap size={18} className="text-zinc-400 dark:text-zinc-500 group-hover/profile:text-zinc-900 dark:group-hover/profile:text-white" />
+                         )}
+                      </div>
+                      
+                      {/* Tooltip Badge Desktop */}
+                      <div className="hidden lg:block absolute left-full ml-3 opacity-0 group-hover/profile:opacity-100 transition-opacity pointer-events-none">
+                        <div className="bg-black text-[8px] font-black uppercase tracking-[0.3em] text-white px-3 py-1.5 rounded-lg border border-white/10 whitespace-nowrap shadow-2xl">
+                          {user.full_name || "DASHBOARD"}
+                        </div>
+                      </div>
+                    </Link>
+                    
+                    <button
+                      onClick={handleLogout}
+                      className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-zinc-900/5 dark:bg-zinc-900/50 hover:bg-red-600/10 text-zinc-400 dark:text-zinc-500 hover:text-red-500 transition-all border border-zinc-200 dark:border-white/5"
+                      title="Logout"
+                    >
+                      <FiLogOut size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <Link
+                    href="/auth"
+                    className="px-6 py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-full text-[9px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-lg"
+                  >
+                    LOGIN
+                  </Link>
+                )}
+              </div>
+
+              {/* MOBILE BUTTONS (Bag always visible on mobile too maybe?) */}
               {!isAdmin && (
                 <Link
                   href="/cart"
-                  className="relative p-2.5 md:p-3 rounded-full bg-zinc-100/50 dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black transition-all group"
+                  className="lg:hidden relative p-3 rounded-full bg-zinc-900/5 dark:bg-white/10 text-zinc-900 dark:text-white transition-all border border-zinc-200 dark:border-white/5 shadow-xl"
                 >
-                  <FiShoppingBag size={18} className="relative z-10" />
+                  <FiShoppingBag size={18} />
                   {cartCount > 0 && (
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-[8px] font-black rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-zinc-900"
-                    >
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white text-[8px] font-black rounded-full flex items-center justify-center">
                       {cartCount}
-                    </motion.span>
+                    </span>
                   )}
                 </Link>
               )}
 
-              {user ? (
-                <div className="flex items-center gap-3 ml-1 md:ml-2">
-                  <div className="hidden md:flex flex-col items-end leading-none">
-                    <span className="text-[7px] font-black uppercase tracking-[0.2em] text-blue-600 mb-0.5">
-                      {user.role}
-                    </span>
-                    <span className="text-[10px] font-black uppercase italic text-zinc-900 dark:text-zinc-100">
-                      {user.full_name || "Guest"}
-                    </span>
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="p-2.5 md:p-3 rounded-full text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-all bg-zinc-100/50 dark:bg-zinc-800/50"
-                  >
-                    <FiLogOut size={18} />
-                  </button>
-                </div>
-              ) : (
-                <Link
-                  href="/auth"
-                  className="hidden md:flex p-2.5 md:px-6 md:py-3 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-full text-[9px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg items-center justify-center"
-                >
-                  <span className="hidden md:inline">LOGIN</span>
-                </Link>
-              )}
-
-              <ThemeToggle />
-
               <button
-                className="lg:hidden w-10 h-10 flex items-center justify-center bg-zinc-100/50 dark:bg-zinc-800/50 text-zinc-900 dark:text-white rounded-full transition-all active:scale-90"
+                className="lg:hidden w-12 h-12 flex items-center justify-center bg-zinc-900 dark:bg-white/10 text-white dark:text-white bg-zinc-900 rounded-full transition-all active:scale-90 shadow-xl"
                 onClick={() => setIsOpen(!isOpen)}
               >
-                {isOpen ? <FiX size={20} /> : <FiMenu size={20} />}
+                {isOpen ? <FiX size={22} className="text-white" /> : <FiMenu size={22} className="text-white" />}
               </button>
             </div>
           </div>
         </div>
 
-        {/* MOBILE MENU OVERLAY */}
+        {/* MOBILE DRAWER */}
         <AnimatePresence>
           {isOpen && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="absolute top-24 left-4 right-4 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-8 shadow-2xl border border-zinc-100 dark:border-zinc-800 lg:hidden flex flex-col gap-3 md:gap-4"
+              initial={{ opacity: 0, scale: 0.95, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -20 }}
+              className="absolute top-28 left-4 right-4 bg-white dark:bg-[#0B0B0B] rounded-[2.5rem] p-8 shadow-2xl border border-zinc-200 dark:border-white/10 lg:hidden flex flex-col gap-4 pointer-events-auto"
             >
-              {activeLinks.map((link) => (
+              <div className="flex items-center justify-between mb-4 border-b border-zinc-100 dark:border-white/5 pb-4">
+                 <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-[0.5em]">
+                    MENU
+                 </span>
+                 <ThemeToggle />
+              </div>
+              
+              {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
                   onClick={() => setIsOpen(false)}
-                  className="text-xl md:text-2xl font-black italic uppercase tracking-tighter border-b border-zinc-50 dark:border-zinc-800 pb-3 md:pb-4 flex justify-between items-center text-zinc-900 dark:text-white transition-colors"
+                  className="text-3xl font-black italic uppercase tracking-tighter pb-4 border-b border-zinc-50 dark:border-white/5 flex justify-between items-center text-zinc-900 dark:text-white hover:text-red-600 transition-colors"
                 >
-                  {link.label}{" "}
-                  <FiZap className="text-zinc-200 dark:text-zinc-700" />
+                  {link.label}
+                  <FiZap className="text-zinc-200 dark:text-zinc-800" />
                 </Link>
               ))}
 
-              {!user && (
+              {user && (
                 <Link
-                  href="/auth"
+                  href="/dashboard"
                   onClick={() => setIsOpen(false)}
-                  className="mt-4 text-xl md:text-2xl font-black italic uppercase tracking-tighter border-b border-zinc-50 dark:border-zinc-800 pb-3 md:pb-4 flex justify-between items-center text-indigo-500 transition-colors"
+                  className="text-3xl font-black italic uppercase tracking-tighter pb-4 border-b border-zinc-50 dark:border-white/5 flex justify-between items-center text-red-600 hover:text-zinc-900 dark:hover:text-white transition-colors"
                 >
-                  LOGIN <FiUser className="text-zinc-200 dark:text-zinc-700" />
+                  ACCOUNT
+                  <FiUser className="text-red-500/30" />
                 </Link>
               )}
-
-              {user && (
+              
+              {!user ? (
+                 <Link
+                  href="/auth"
+                  onClick={() => setIsOpen(false)}
+                  className="mt-4 py-6 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-full text-center text-sm font-black uppercase tracking-widest"
+                >
+                  LOGIN
+                </Link>
+              ) : (
                 <button
                   onClick={handleLogout}
-                  className="text-xl md:text-2xl font-black italic uppercase tracking-tighter border-b border-zinc-50 dark:border-zinc-800 pb-3 md:pb-4 flex justify-between items-center text-rose-500 transition-colors text-left"
+                  className="mt-4 py-6 border border-red-600/30 text-red-600 rounded-full text-center text-sm font-black uppercase tracking-widest"
                 >
-                  Logout{" "}
-                  <FiLogOut className="text-zinc-200 dark:text-zinc-700" />
+                  LOGOUT
                 </button>
               )}
             </motion.div>

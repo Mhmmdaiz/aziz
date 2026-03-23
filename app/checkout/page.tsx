@@ -5,20 +5,14 @@ import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  FiShield,
-  FiChevronLeft,
-  FiSmartphone,
-  FiHome,
-  FiCheckCircle,
-  FiArrowRight,
   FiLock,
-  FiPackage,
+  FiChevronLeft,
+  FiCheckCircle,
   FiCreditCard,
-  FiExternalLink,
+  FiArrowRight,
 } from "react-icons/fi";
 import { supabase } from "@/utils/supabase/client";
 import { useSettings } from "@/components/providers/SettingsProvider";
-import Script from "next/script";
 import QRISModal from "@/components/checkout/QRISModal";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -27,12 +21,17 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { settings } = useSettings();
 
+  // --- SETTINGS DATA ---
+  const paymentSettings = settings?.payment;
+  const pakasirEnabled = paymentSettings?.gateways?.pakasir?.enabled;
+  const manualBanks = paymentSettings?.manual_banks || [];
+
   // --- STATES ---
   const [fetchingUser, setFetchingUser] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [checkoutItems, setCheckoutItems] = useState<any[]>([]);
-  const [selectedPayment, setSelectedPayment] = useState("pakasir");
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(true); // Default to true for smoother UX
   const [user, setUser] = useState<any>(null);
 
   const [formData, setFormData] = useState({
@@ -42,7 +41,7 @@ export default function CheckoutPage() {
     address: "",
     city: "",
     postalCode: "",
-    notes: "",
+    province: "West Java",
   });
 
   const [qrisData, setQrisData] = useState({
@@ -57,13 +56,14 @@ export default function CheckoutPage() {
     return (
       formData.name.trim().length >= 3 &&
       emailRegex.test(formData.email) &&
-      formData.phone.trim().length >= 10 &&
+      formData.phone.trim().length >= 8 &&
       formData.address.trim().length >= 10 &&
       formData.city.trim() !== "" &&
       formData.postalCode.trim() !== "" &&
-      agreedToTerms
+      agreedToTerms &&
+      selectedPayment !== ""
     );
-  }, [formData, agreedToTerms]);
+  }, [formData, agreedToTerms, selectedPayment]);
 
   // --- INITIALIZATION ---
   useEffect(() => {
@@ -109,6 +109,13 @@ export default function CheckoutPage() {
     initCheckout();
   }, [router]);
 
+  useEffect(() => {
+    if (!selectedPayment) {
+      if (pakasirEnabled) setSelectedPayment("pakasir");
+      else if (manualBanks.length > 0) setSelectedPayment(`manual_${manualBanks[0].id}`);
+    }
+  }, [pakasirEnabled, manualBanks, selectedPayment]);
+
   // --- CALCULATIONS ---
   const subtotal = useMemo(() => {
     return checkoutItems.reduce(
@@ -117,10 +124,11 @@ export default function CheckoutPage() {
     );
   }, [checkoutItems]);
 
-  const grandTotal = subtotal;
+  const shippingCost = 0; // Free for now
+  const grandTotal = subtotal + shippingCost;
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -129,12 +137,9 @@ export default function CheckoutPage() {
     if (!isFormValid) {
       Swal.fire({
         title: "Incomplete Data",
-        text: "Please complete all identity and logistics fields (Real Name, Email, Phone, and Address) to proceed with your acquisition.",
+        text: "Please complete all fields to proceed with your order.",
         icon: "warning",
-        confirmButtonColor: "#000",
-        customClass: {
-          popup: "rounded-[2rem] font-mono border border-zinc-800",
-        },
+        confirmButtonColor: "#1d4ed8",
       });
       return;
     }
@@ -142,13 +147,10 @@ export default function CheckoutPage() {
     setIsSubmitting(true);
 
     Swal.fire({
-      title: "Initializing Bridge",
-      text: "Securing transaction tunnel...",
+      title: "Processing Order",
+      text: "Securing your transaction...",
       allowOutsideClick: false,
-      background: "#000",
-      color: "#fff",
       didOpen: () => Swal.showLoading(),
-      customClass: { popup: "rounded-[2rem] font-mono border border-zinc-800" },
     });
 
     try {
@@ -156,52 +158,86 @@ export default function CheckoutPage() {
         data: { session },
       } = await supabase.auth.getSession();
 
-      const response = await fetch("/api/checkout/pakasir", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.access_token}`,
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          items: checkoutItems,
-          customer_details: formData,
-          is_preorder: localStorage.getItem("is_preorder_session") === "true",
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) throw new Error(data.error || "Deployment failed.");
-
-      Swal.close();
-
-      // CUSTOM QRIS UI MODAL
-      if (data.qrData) {
-        setQrisData({
-          isOpen: true,
-          qrData: data.qrData,
-          orderId: data.orderId,
-          amount: grandTotal,
+      if (selectedPayment === "pakasir") {
+        // PAKASIR CHECKOUT
+        const response = await fetch("/api/checkout/pakasir", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            items: checkoutItems,
+            customer_details: formData,
+            is_preorder: localStorage.getItem("is_preorder_session") === "true",
+          }),
         });
-      } else if (data.paymentUrl) {
-          // Fallback to redirect if no raw QR data
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Payment failed.");
+
+        Swal.close();
+
+        // UI Modals
+        if (data.qrData) {
+          setQrisData({
+            isOpen: true,
+            qrData: data.qrData,
+            orderId: data.orderId,
+            amount: grandTotal,
+          });
+        } else if (data.paymentUrl) {
           localStorage.removeItem("cart");
           localStorage.removeItem("checkout_items");
           window.location.href = data.paymentUrl;
-      } else {
-          throw new Error("Payment data not generated by aggregator.");
+        } else {
+          throw new Error("Payment link not generated.");
+        }
+      } else if (selectedPayment.startsWith("manual_")) {
+        // MANUAL TRANSFER CHECKOUT
+        const bankId = selectedPayment.split("manual_")[1];
+        const selectedBank = manualBanks.find((b: any) => b.id === bankId);
+
+        const response = await fetch("/api/checkout/manual", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            items: checkoutItems,
+            customer_details: formData,
+            bank_id: bankId,
+            is_preorder: localStorage.getItem("is_preorder_session") === "true",
+          }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Order creation failed.");
+
+        Swal.close();
+        localStorage.removeItem("cart");
+        localStorage.removeItem("checkout_items");
+
+        // Show Success and Redirect to order details
+        Swal.fire({
+          title: "Waiting for Payment",
+          html: `Order <b>${data.orderId}</b> has been created.<br><br>Please transfer exactly <b>Rp ${grandTotal.toLocaleString()}</b> to:<br><br><b>${selectedBank?.bank}</b><br>${selectedBank?.number}<br>a/n ${selectedBank?.holder}`,
+          icon: "info",
+          confirmButtonText: "I understand",
+          confirmButtonColor: "#1d4ed8",
+        }).then(() => {
+          router.push(`/orders`);
+        });
       }
+
     } catch (err: any) {
       Swal.fire({
         title: "System Error",
-        text: err.message || "Unknown error in payment bridge.",
+        text: err.message || "Unknown error occurred.",
         icon: "error",
-        background: "#000",
-        color: "#fff",
-        customClass: {
-          popup: "rounded-[2rem] font-mono border border-zinc-800",
-        },
       });
       setIsSubmitting(false);
     }
@@ -209,267 +245,308 @@ export default function CheckoutPage() {
 
   if (fetchingUser) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center font-mono">
-        <div className="text-white text-xs tracking-[0.5em] animate-pulse">
-          SYNCHRONIZING...
-        </div>
+      <div className="min-h-screen bg-white flex items-center justify-center font-sans">
+        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-white dark:bg-black text-zinc-900 dark:text-zinc-100 selection:bg-zinc-900 selection:text-white dark:selection:bg-white dark:selection:text-black transition-colors duration-500 overflow-x-hidden">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 pt-24 md:pt-32 pb-24 w-full">
-        {/* --- HEADER --- */}
-        <div className="mb-20 flex flex-col md:flex-row md:items-end justify-between gap-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-4"
+    <main className="min-h-screen bg-white text-zinc-900 font-sans selection:bg-blue-100 selection:text-blue-900 flex flex-col md:flex-row pt-20 md:pt-0">
+      <div className="w-full md:w-[55%] xl:w-[60%] order-2 md:order-1 flex justify-end bg-white">
+        <div className="w-full max-w-2xl px-6 lg:px-12 pt-10 pb-10 md:pt-32 lg:pb-16">
+          <button 
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-sm text-zinc-500 hover:text-black transition-colors mb-10"
           >
-            <h1 className="text-[clamp(2.5rem,10vw,7rem)] font-black uppercase tracking-tighter leading-[0.9] md:leading-[0.85] italic break-words">
-              Checkout
-            </h1>
-          </motion.div>
+            <FiChevronLeft /> Return to store
+          </button>
 
-          <div className="hidden lg:flex items-center gap-12 border-l border-zinc-100 dark:border-zinc-900 pl-12">
-            <div className="space-y-1">
-              <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">
-                Security Level
-              </p>
-              <div className="flex items-center gap-2 text-xs font-bold italic">
-                <FiLock className="text-emerald-500" />
-                ENCRYPTED
+          <form className="space-y-10" onSubmit={(e) => e.preventDefault()}>
+            
+            {/* Contact Section */}
+            <section className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-medium text-black">Contact</h2>
+                <div className="text-sm">
+                  <span className="text-zinc-500 mr-2">Account email</span>
+                </div>
               </div>
-            </div>
-            <div className="space-y-1">
-              <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">
-                Node Location
-              </p>
-              <div className="flex items-center gap-2 text-xs font-bold italic">
-                <FiExternalLink className="text-blue-500" />
-                SECURE GATEWAY
+              <div className="p-4 border border-zinc-300 bg-zinc-50 rounded-lg flex flex-col gap-1">
+                <span className="text-sm font-medium">{formData.email}</span>
+                <span className="text-xs text-zinc-500">You are securely logged in.</span>
               </div>
-            </div>
-          </div>
-        </div>
+            </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
-          {/* --- LEFT: INFRASTRUCTURE --- */}
-          <div className="lg:col-span-7 space-y-24">
-            {/* 01. IDENTITY */}
-            <section className="space-y-10">
-              <div className="flex items-center gap-4">
-                <span className="text-3xl font-black italic opacity-10">
-                  01
-                </span>
-                <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400">
-                  Identity Verification
-                </h3>
-                <div className="h-px flex-1 bg-zinc-100 dark:bg-zinc-900" />
-              </div>
+            {/* Billing / Shipping Address */}
+            <section className="space-y-4">
+              <h2 className="text-xl font-medium text-black">Delivery</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <div className="relative border border-zinc-300 rounded-lg overflow-hidden bg-white focus-within:ring-2 focus-within:ring-blue-600 transition-shadow">
+                    <label className="text-[11px] text-zinc-500 font-medium absolute top-1.5 left-3">Country/Region</label>
+                    <select disabled className="w-full pt-6 pb-2 px-3 text-sm bg-transparent outline-none appearance-none cursor-not-allowed text-zinc-700">
+                      <option>Indonesia</option>
+                    </select>
+                  </div>
+                </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="group space-y-3">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-4">
-                    Full Identity Name{" "}
-                  </label>
+                <div className="relative border border-zinc-300 rounded-lg overflow-hidden bg-white focus-within:ring-2 focus-within:ring-blue-600 transition-shadow">
+                  <label className="text-[11px] text-zinc-500 font-medium absolute top-1.5 left-3">First & Last name</label>
                   <input
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    placeholder="ENTER REAL NAME"
-                    className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 p-6 rounded-[2rem] font-bold italic focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
+                    className="w-full pt-6 pb-2 px-3 text-sm bg-transparent outline-none"
+                    placeholder="John Doe"
                   />
                 </div>
-                <div className="group space-y-3">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-4">
-                    Communication Hub{" "}
-                  </label>
+
+                <div className="relative border border-zinc-300 rounded-lg overflow-hidden bg-white focus-within:ring-2 focus-within:ring-blue-600 transition-shadow">
+                  <label className="text-[11px] text-zinc-500 font-medium absolute top-1.5 left-3">Phone</label>
                   <input
-                    name="email"
-                    type="email"
-                    value={formData.email}
+                    name="phone"
+                    value={formData.phone}
                     onChange={handleInputChange}
-                    placeholder="GMAIL / PRIMARY EMAIL"
-                    className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 p-6 rounded-[2rem] font-bold italic focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
+                    className="w-full pt-6 pb-2 px-3 text-sm bg-transparent outline-none"
+                    placeholder="0812345678"
                   />
                 </div>
-              </div>
 
-              <div className="group space-y-3 pt-4">
-                <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-4">
-                  Hotline Number{" "}
-                </label>
-                <input
-                  name="phone"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  placeholder="ACTIVE PHONE NUMBER"
-                  className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 p-6 rounded-[2rem] font-bold italic focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
-                />
-              </div>
-            </section>
-
-            {/* 02. LOGISTICS */}
-            <section className="space-y-10">
-              <div className="flex items-center gap-4">
-                <span className="text-3xl font-black italic opacity-10">
-                  02
-                </span>
-                <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400">
-                  Logistics Coordination
-                </h3>
-                <div className="h-px flex-1 bg-zinc-100 dark:bg-zinc-900" />
-              </div>
-
-              <div className="space-y-8">
-                <div className="space-y-3">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-4">
-                    Strategic Delivery Address{" "}
-                  </label>
-                  <textarea
+                <div className="md:col-span-2 relative border border-zinc-300 rounded-lg overflow-hidden bg-white focus-within:ring-2 focus-within:ring-blue-600 transition-shadow">
+                  <label className="text-[11px] text-zinc-500 font-medium absolute top-1.5 left-3">Address</label>
+                  <input
                     name="address"
                     value={formData.address}
                     onChange={handleInputChange}
-                    rows={3}
-                    placeholder="FULL_STREET_LOCATION"
-                    className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 p-6 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] font-bold italic focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all resize-none placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
+                    className="w-full pt-6 pb-2 px-3 text-sm bg-transparent outline-none"
+                    placeholder="Street name, building, apartment"
                   />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+                <div className="relative border border-zinc-300 rounded-lg overflow-hidden bg-white focus-within:ring-2 focus-within:ring-blue-600 transition-shadow">
+                  <label className="text-[11px] text-zinc-500 font-medium absolute top-1.5 left-3">City</label>
                   <input
                     name="city"
                     value={formData.city}
                     onChange={handleInputChange}
-                    placeholder="CITY_ID"
-                    className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 p-6 rounded-[2rem] font-bold italic focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all"
+                    className="w-full pt-6 pb-2 px-3 text-sm bg-transparent outline-none"
+                    placeholder="City"
                   />
-                  <input
-                    name="postalCode"
-                    value={formData.postalCode}
-                    onChange={handleInputChange}
-                    placeholder="ZIP_PROTOCOL"
-                    className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 p-6 rounded-[2rem] font-bold italic focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all"
-                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="relative border border-zinc-300 rounded-lg overflow-hidden bg-white focus-within:ring-2 focus-within:ring-blue-600 transition-shadow">
+                    <label className="text-[11px] text-zinc-500 font-medium absolute top-1.5 left-3">Province</label>
+                    <select
+                      name="province"
+                      value={formData.province}
+                      onChange={handleInputChange}
+                      className="w-full pt-6 pb-2 px-3 text-sm bg-transparent outline-none appearance-none"
+                    >
+                      <option value="West Java">West Java</option>
+                      <option value="Jakarta">Jakarta</option>
+                      <option value="Central Java">Central Java</option>
+                      <option value="East Java">East Java</option>
+                      <option value="Banten">Banten</option>
+                      <option value="Bali">Bali</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div className="relative border border-zinc-300 rounded-lg overflow-hidden bg-white focus-within:ring-2 focus-within:ring-blue-600 transition-shadow">
+                    <label className="text-[11px] text-zinc-500 font-medium absolute top-1.5 left-3">Postal code</label>
+                    <input
+                      name="postalCode"
+                      value={formData.postalCode}
+                      onChange={handleInputChange}
+                      className="w-full pt-6 pb-2 px-3 text-sm bg-transparent outline-none"
+                      placeholder="12345"
+                    />
+                  </div>
                 </div>
               </div>
             </section>
 
-                      </div>
+            {/* Shipping Method */}
+            <section className="space-y-4">
+              <h2 className="text-xl font-medium text-black">Shipping method</h2>
+              <div className="border border-zinc-300 rounded-lg bg-zinc-50 p-4 flex justify-between items-center cursor-pointer hover:border-blue-600 transition-colors">
+                <div className="space-y-1">
+                  <p className="font-medium text-sm text-black">JNE REGULER (Default)</p>
+                  <p className="text-xs text-zinc-500">2 to 5 business days</p>
+                </div>
+                <span className="font-medium text-sm text-black">FREE</span>
+              </div>
+            </section>
 
-          {/* --- RIGHT: MANIFEST --- */}
-          <aside className="lg:col-span-5">
-            <div className="lg:sticky lg:top-32 space-y-8">
-              <div className="bg-black dark:bg-zinc-900 text-white rounded-[3rem] p-10 md:p-12 shadow-2xl space-y-12 border border-zinc-800">
-                <header className="space-y-2">
-                  <p className="text-[9px] font-black uppercase tracking-[0.6em] text-zinc-500 italic">
-                    Order Manifest
-                  </p>
-                  <h2 className="text-4xl font-black italic uppercase tracking-tighter">
-                    Summary<span className="text-zinc-700">.</span>
-                  </h2>
-                </header>
+            {/* Payment Method */}
+            <section className="space-y-4">
+              <div>
+                <h2 className="text-xl font-medium text-black inline-block">Payment</h2>
+                <p className="text-xs text-zinc-500 mt-1">All transactions are secure and encrypted.</p>
+              </div>
 
-                <div className="space-y-6 max-h-[300px] overflow-y-auto pr-4 custom-scrollbar">
-                  {checkoutItems.map((item, idx) => (
-                    <div key={idx} className="flex gap-6 group">
-                      <div className="w-16 h-16 shrink-0 bg-zinc-800 rounded-2xl overflow-hidden p-1 border border-zinc-700 group-hover:border-zinc-500 transition-colors">
-                        <img
-                          src={
-                            item.image?.startsWith("http")
-                              ? item.image
-                              : `${supabaseUrl}/storage/v1/object/public/products/${item.image}`
-                          }
-                          className="w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-500"
-                          alt={item.name}
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0 space-y-1 pt-1">
-                        <h4 className="font-black italic uppercase text-[10px] tracking-tight truncate group-hover:text-emerald-400 transition-colors">
-                          {item.name}
-                        </h4>
-                        <div className="flex items-center gap-3 text-[9px] font-bold text-zinc-500 uppercase tracking-widest">
-                          <span>QTY: {item.quantity}</span>
-                          <span className="w-1 h-1 bg-zinc-700 rounded-full" />
-                          <span>IDR {Number(item.price).toLocaleString()}</span>
+              <div className="border border-zinc-300 rounded-lg overflow-hidden bg-white">
+                
+                {/* Pakasir Toggle */}
+                {pakasirEnabled && (
+                  <div className={`border-b border-zinc-200 last:border-b-0`}>
+                    <label className={`flex items-center gap-4 p-4 cursor-pointer transition-colors ${selectedPayment === "pakasir" ? "bg-blue-50/50" : "hover:bg-zinc-50"}`}>
+                      <input 
+                        type="radio" 
+                        name="payment" 
+                        value="pakasir"
+                        checked={selectedPayment === "pakasir"}
+                        onChange={() => setSelectedPayment("pakasir")}
+                        className="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-600"
+                      />
+                      <div className="flex-1 flex justify-between items-center">
+                        <span className="text-sm font-medium text-black">Online Payment (Cards, E-wallets, QRIS)</span>
+                        <div className="flex gap-1">
+                           {/* Decorative fake icons */}
+                           <div className="w-8 h-5 bg-zinc-200 rounded flex items-center justify-center text-[8px] font-bold text-zinc-500">QRIS</div>
+                           <div className="w-8 h-5 bg-zinc-200 rounded flex items-center justify-center text-[8px] font-bold text-zinc-500">VISA</div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="pt-10 border-t border-zinc-800 space-y-8">
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                      <span>Subtotal Amount</span>
-                      <span className="text-white">
-                        Rp {subtotal.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                      <span>Delivery Fee</span>
-                      <span className="text-emerald-500 italic tracking-tighter">
-                        FREE DELIVERY
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <p className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-600 italic">
-                      Total Amount
-                    </p>
-                    <p className="text-6xl font-black italic tracking-tighter flex items-start">
-                      <span className="text-xs opacity-20 mr-2 pt-2">IDR</span>
-                      {grandTotal.toLocaleString()}
-                    </p>
-                  </div>
-
-                  <div className="space-y-6">
-                    <label className="flex items-center gap-4 cursor-pointer group bg-white/5 p-4 rounded-[1.5rem] border border-zinc-800 hover:border-zinc-700 transition-all">
-                      <div className="relative flex items-center justify-center">
-                        <input
-                          type="checkbox"
-                          checked={agreedToTerms}
-                          onChange={(e) => setAgreedToTerms(e.target.checked)}
-                          className="peer appearance-none w-6 h-6 border-2 border-zinc-700 rounded-lg checked:bg-white checked:border-white transition-all"
-                        />
-                        <FiCheckCircle
-                          className="absolute text-black opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"
-                          size={14}
-                        />
-                      </div>
-                      <span className="text-[9px] font-bold text-zinc-500 group-hover:text-zinc-300 uppercase tracking-widest leading-tight transition-colors">
-                        I AGREE TO THE TERMS AND PRIVACY POLICY
-                      </span>
                     </label>
-
-                    <button
-                      onClick={handleFinalCheckout}
-                      disabled={
-                        fetchingUser ||
-                        checkoutItems.length === 0 ||
-                        isSubmitting ||
-                        !isFormValid
-                      }
-                      className="group relative w-full py-8 bg-white text-black rounded-full font-black uppercase tracking-[0.5em] text-xs hover:bg-zinc-200 transition-all active:scale-[0.98] disabled:opacity-20 disabled:grayscale flex items-center justify-center gap-3 overflow-hidden"
-                    >
-                      <span className="relative z-10 flex items-center gap-3">
-                        {isSubmitting
-                          ? "PROCESSING..."
-                          : !isFormValid
-                            ? "FORM INCOMPLETE"
-                            : "PLACE ORDER"}
-                        <FiArrowRight className="group-hover:translate-x-2 transition-transform duration-500" />
-                      </span>
-                      <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/10 to-emerald-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                    </button>
+                    <AnimatePresence>
+                      {selectedPayment === "pakasir" && (
+                        <motion.div 
+                          initial={{ height: 0 }}
+                          animate={{ height: "auto" }}
+                          exit={{ height: 0 }}
+                          className="overflow-hidden bg-zinc-50 border-t border-zinc-200"
+                        >
+                          <div className="p-8 text-center flex flex-col items-center gap-3">
+                            <FiCreditCard className="w-10 h-10 text-zinc-400" />
+                            <p className="text-sm text-zinc-600">After clicking "Pay now", you will be redirected to complete your purchase securely.</p>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
+                )}
+
+                {/* Manual Bank Transfer Toggle */}
+                {manualBanks.length > 0 && manualBanks.map((bank: any, idx: number) => {
+                  const val = `manual_${bank.id}`;
+                  return (
+                  <div key={bank.id} className={`border-b border-zinc-200 last:border-b-0`}>
+                    <label className={`flex items-center gap-4 p-4 cursor-pointer transition-colors ${selectedPayment === val ? "bg-blue-50/50" : "hover:bg-zinc-50"}`}>
+                      <input 
+                        type="radio" 
+                        name="payment" 
+                        value={val}
+                        checked={selectedPayment === val}
+                        onChange={() => setSelectedPayment(val)}
+                        className="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-600"
+                      />
+                      <div className="flex-1 flex justify-between items-center">
+                        <span className="text-sm font-medium text-black">Bank Transfer ({bank.bank})</span>
+                      </div>
+                    </label>
+                    <AnimatePresence>
+                      {selectedPayment === val && (
+                        <motion.div 
+                          initial={{ height: 0 }}
+                          animate={{ height: "auto" }}
+                          exit={{ height: 0 }}
+                          className="overflow-hidden bg-zinc-50 border-t border-zinc-200"
+                        >
+                          <div className="p-6 text-sm text-zinc-600 space-y-2">
+                             <p>Please transfer the total amount to:</p>
+                             <div className="bg-white p-4 border border-zinc-200 rounded-md">
+                                <p className="font-semibold text-black">{bank.bank}</p>
+                                <p className="font-mono text-black my-1 text-base">{bank.number}</p>
+                                <p>a/n {bank.holder}</p>
+                             </div>
+                             <p className="text-xs mt-2 text-zinc-500">Your order will not be processed until the funds have cleared in our account.</p>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )})}
+
+              </div>
+            </section>
+
+            {/* Action Buttons */}
+            <div className="pt-6">
+              <button
+                onClick={handleFinalCheckout}
+                disabled={isSubmitting || !isFormValid}
+                className="w-full h-14 bg-[#1d4ed8] hover:bg-blue-800 disabled:bg-blue-300 disabled:cursor-not-allowed text-white rounded-lg font-medium text-lg transition-colors flex items-center justify-center"
+              >
+                {isSubmitting ? "Processing..." : "Pay now"}
+              </button>
+            </div>
+
+            <div className="flex justify-start gap-4 text-xs text-blue-600 pt-4 border-t border-zinc-200">
+              <a href="/faq" className="hover:underline">Refund policy</a>
+              <a href="/privacy" className="hover:underline">Privacy policy</a>
+              <a href="/terms" className="hover:underline">Terms of service</a>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+      {/* Right Column: Order Summary */}
+      <div className="w-full md:w-[45%] xl:w-[40%] bg-zinc-50 border-l border-zinc-200 order-1 md:order-2">
+        <div className="w-full max-w-lg px-6 lg:px-12 pt-10 pb-10 md:pt-32 lg:pb-16 sticky top-20 md:top-28">
+          
+          <div className="space-y-6">
+            {checkoutItems.map((item, idx) => (
+              <div key={idx} className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="w-16 h-16 bg-white border border-zinc-200 rounded-lg overflow-hidden flex items-center justify-center">
+                    <img
+                      src={
+                        item.image?.startsWith("http")
+                          ? item.image
+                          : `${supabaseUrl}/storage/v1/object/public/products/${item.image}`
+                      }
+                      className="w-full h-full object-cover"
+                      alt={item.name}
+                    />
+                  </div>
+                  <span className="absolute -top-2 -right-2 w-5 h-5 bg-zinc-500 text-white rounded-full text-[11px] font-medium flex items-center justify-center">
+                    {item.quantity || 1}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-black truncate">{item.name}</p>
+                  <p className="text-xs text-zinc-500 mt-0.5">{item.size !== "null" ? item.size : ""}</p>
+                </div>
+                <div className="text-sm font-medium text-black">
+                  Rp {(item.price * (item.quantity || 1)).toLocaleString()}
                 </div>
               </div>
+            ))}
+          </div>
+
+          <div className="mt-8 space-y-4">
+            <div className="flex justify-between items-center text-sm text-zinc-600">
+              <p>Subtotal</p>
+              <p className="font-medium">Rp {subtotal.toLocaleString()}</p>
             </div>
-          </aside>
+            <div className="flex justify-between items-center text-sm text-zinc-600">
+              <p>Shipping</p>
+              <p className="font-medium text-xs">FREE</p>
+            </div>
+          </div>
+
+          <div className="mt-6 pt-6 border-t border-zinc-200">
+            <div className="flex justify-between items-center">
+              <p className="text-base text-zinc-900">Total</p>
+              <p className="flex items-baseline gap-2">
+                <span className="text-xs text-zinc-500">IDR</span>
+                <span className="text-2xl font-semibold text-black">Rp {grandTotal.toLocaleString()}</span>
+              </p>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -483,19 +560,7 @@ export default function CheckoutPage() {
           localStorage.removeItem("cart");
           localStorage.removeItem("checkout_items");
           setQrisData((prev) => ({ ...prev, isOpen: false }));
-          Swal.fire({
-            title: "Success",
-            text: "Payment verified. Initializing delivery logistics.",
-            icon: "success",
-            background: "#000",
-            color: "#fff",
-            confirmButtonColor: "#fff",
-            confirmButtonText: "View Orders",
-            customClass: {
-              popup: "rounded-[2rem] font-mono border border-zinc-800",
-              confirmButton: "text-black font-black",
-            },
-          }).then(() => router.push(`/admin/orders?order_id=${qrisData.orderId}`));
+          router.push(`/orders`);
         }}
       />
     </main>

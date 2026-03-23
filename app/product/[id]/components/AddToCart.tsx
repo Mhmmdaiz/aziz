@@ -9,16 +9,17 @@ interface AddToCartProps {
   onBuyNow: () => void;
   disabled: boolean;
   price: number;
+  isSoldOut?: boolean;
 }
 
-export function AddToCart({ onAdd, onBuyNow, disabled, price }: AddToCartProps) {
+export function AddToCart({ onAdd, onBuyNow, disabled, price, isSoldOut }: AddToCartProps) {
   const [loadingCart, setLoadingCart] = useState(false);
   const [loadingBuy, setLoadingBuy] = useState(false);
 
   const showError = () => {
     Swal.fire({
-      title: "Access Denied",
-      text: "Please select a size before proceeding.",
+      title: "Akses Ditolak",
+      text: "Silakan pilih ukuran terlebih dahulu sebelum melanjutkan.",
       icon: "error",
       background: "#FBFBFD", // Will be overridden in actual DOM via theme but setting base
       color: "#1D1D1F",
@@ -28,7 +29,7 @@ export function AddToCart({ onAdd, onBuyNow, disabled, price }: AddToCartProps) 
   };
 
   const handleCartClick = async () => {
-    if (disabled) return showError();
+    if (disabled || isSoldOut) return showError();
     setLoadingCart(true);
     await new Promise((r) => setTimeout(r, 600));
     onAdd();
@@ -36,7 +37,7 @@ export function AddToCart({ onAdd, onBuyNow, disabled, price }: AddToCartProps) 
   };
 
   const handleBuyClick = async () => {
-    if (disabled) return showError();
+    if (disabled || isSoldOut) return showError();
     setLoadingBuy(true);
     await new Promise((r) => setTimeout(r, 600));
     onBuyNow();
@@ -49,7 +50,7 @@ export function AddToCart({ onAdd, onBuyNow, disabled, price }: AddToCartProps) 
       <button
         onClick={handleCartClick}
         className={`relative flex-1 py-4 md:py-5 flex items-center justify-center gap-3 text-xs md:text-sm font-black uppercase tracking-[0.2em] transition-all duration-300 overflow-hidden group
-          ${disabled 
+          ${(disabled || isSoldOut)
             ? "bg-zinc-100 dark:bg-[#222] text-zinc-400 dark:text-zinc-600 cursor-not-allowed border border-zinc-200 dark:border-[#333]" 
             : "bg-white dark:bg-[#111] text-zinc-900 dark:text-white hover:bg-zinc-100 dark:hover:bg-[#222] border border-zinc-300 dark:border-[#444] shadow-sm"
           }
@@ -58,10 +59,10 @@ export function AddToCart({ onAdd, onBuyNow, disabled, price }: AddToCartProps) 
         {loadingCart ? (
           <Loader2 size={20} className="animate-spin" />
         ) : (
-          <ShoppingBag size={20} className={disabled ? "opacity-50" : ""} />
+          <ShoppingBag size={20} className={(disabled || isSoldOut) ? "opacity-50" : ""} />
         )}
         <span className="relative z-10 mt-0.5">
-          {loadingCart ? "LOADING..." : disabled ? "SELECT SIZE" : `STASH [ ${Number(price).toLocaleString()} ]`}
+          {loadingCart ? "MEMUAT..." : isSoldOut ? "SOLD OUT" : disabled ? "PILIH UKURAN" : `TAMBAH [ ${Number(price).toLocaleString()} ]`}
         </span>
       </button>
 
@@ -69,7 +70,7 @@ export function AddToCart({ onAdd, onBuyNow, disabled, price }: AddToCartProps) 
       <button
         onClick={handleBuyClick}
         className={`relative flex-1 py-4 md:py-5 flex items-center justify-center gap-3 text-xs md:text-sm font-black uppercase tracking-[0.2em] transition-all duration-300 overflow-hidden group
-          ${disabled 
+          ${(disabled || isSoldOut)
             ? "bg-zinc-100 dark:bg-[#222] text-zinc-400 dark:text-zinc-600 cursor-not-allowed border border-zinc-200 dark:border-[#333]" 
             : "bg-red-600 text-white hover:bg-red-500 border border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.15)] dark:shadow-[0_0_30px_rgba(220,38,38,0.2)] hover:shadow-[0_0_30px_rgba(220,38,38,0.25)] dark:hover:shadow-[0_0_50px_rgba(220,38,38,0.4)]"
           }
@@ -79,15 +80,15 @@ export function AddToCart({ onAdd, onBuyNow, disabled, price }: AddToCartProps) 
         
         {loadingBuy ? (
           <Loader2 size={20} className="animate-spin" />
-        ) : (
+        ) : isSoldOut ? null : (
           <span className="font-mono font-bold">⚡</span>
         )}
         
         <span className="relative z-10 mt-0.5">
-          {loadingBuy ? "PROCESSING..." : disabled ? "SELECT SIZE" : "CHECKOUT"}
+          {loadingBuy ? "MEMPROSES..." : isSoldOut ? "SOLD OUT" : disabled ? "PILIH UKURAN" : "BELI SEKARANG"}
         </span>
 
-        {!disabled && (
+        {!(disabled || isSoldOut) && (
           <>
             <div className="absolute top-1 left-1 w-2 h-2 border-t-2 border-l-2 border-white/50" />
             <div className="absolute bottom-1 right-1 w-2 h-2 border-b-2 border-r-2 border-white/50" />

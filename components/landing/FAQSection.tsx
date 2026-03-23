@@ -16,11 +16,15 @@ export default function FAQSection({ theme = "dark" }: { theme?: "dark" | "light
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <section className={`py-32 transition-colors duration-500 ${theme === "dark" ? "bg-[#0B0B0B] text-white" : "bg-white text-black"}`}>
+    <section 
+      id="faq" 
+      data-theme={theme}
+      className={`py-32 overflow-hidden transition-colors duration-500 ${theme === "dark" ? "bg-[#0B0B0B] text-white" : "!bg-white !text-zinc-900"}`}
+    >
       <div className="container mx-auto px-6 max-w-4xl">
         <div className="text-center mb-24 space-y-4">
-          <span className="text-[10px] font-black uppercase tracking-[0.6em] text-zinc-400 italic block">Information_vault</span>
-          <h2 className={`text-4xl md:text-7xl font-black italic uppercase tracking-tighter leading-none ${theme === "dark" ? "text-white" : "text-black"}`}>FAQS.</h2>
+          <span className="text-[10px] font-black uppercase tracking-[0.6em] text-zinc-400 italic block">Pusat Informasi</span>
+          <h2 className={`text-4xl md:text-7xl font-black italic uppercase tracking-tighter leading-none ${theme === "dark" ? "text-white" : "!text-zinc-900"}`}>FAQS.</h2>
         </div>
 
         <div className="space-y-4">
@@ -31,12 +35,12 @@ export default function FAQSection({ theme = "dark" }: { theme?: "dark" | "light
             >
               <button 
                 onClick={() => setOpen(open === i ? null : i)}
-                className="w-full py-10 flex items-center justify-between text-left group"
+                className="w-full py-10 flex items-center justify-between text-left group gap-4 overflow-hidden"
               >
-                <span className={`text-lg md:text-2xl font-black italic uppercase tracking-tighter group-hover:text-[var(--color-primary-accent)] transition-colors ${theme === "dark" ? "text-white" : "text-black"}`}>
+                <span className={`flex-1 min-w-0 text-lg md:text-2xl font-black italic uppercase tracking-tighter group-hover:text-[var(--color-primary-accent)] transition-colors break-all ${theme === "dark" ? "text-white" : "!text-zinc-900"}`}>
                   {f.q}
                 </span>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${open === i ? 'rotate-45 bg-[var(--color-primary-accent)] text-white' : (theme === "dark" ? 'bg-zinc-900 text-white' : 'bg-zinc-50 text-black')}`}>
+                <div className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center transition-all ${open === i ? 'rotate-45 bg-[var(--color-primary-accent)] text-white' : (theme === "dark" ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-900')}`}>
                   <FiPlus size={20} />
                 </div>
               </button>
@@ -49,7 +53,7 @@ export default function FAQSection({ theme = "dark" }: { theme?: "dark" | "light
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.5, ease: "easeInOut" }}
                   >
-                    <p className={`pb-10 text-sm md:text-lg italic font-medium leading-relaxed max-w-2xl ${theme === "dark" ? "text-zinc-400" : "text-zinc-500"}`}>
+                    <p className={`pb-10 text-sm md:text-lg italic font-medium leading-relaxed max-w-2xl break-all ${theme === "dark" ? "text-zinc-400" : "text-zinc-500"}`}>
                       {f.a}
                     </p>
                   </motion.div>

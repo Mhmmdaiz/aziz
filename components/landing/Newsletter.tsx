@@ -11,7 +11,7 @@ export default function Newsletter({ theme = "dark" }: { theme?: "dark" | "light
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (email) {
-      toast.success("Identity Secured // 10% Discount Code Sent", {
+      toast.success("Berhasil Bergabung // Kode Diskon 10% Telah Dikirim", {
         style: {
           background: theme === "dark" ? '#000' : '#fff',
           color: theme === "dark" ? '#fff' : '#000',
@@ -33,7 +33,7 @@ export default function Newsletter({ theme = "dark" }: { theme?: "dark" | "light
         <div className={`max-w-5xl mx-auto p-12 md:p-24 rounded-[4rem] border relative overflow-hidden text-center space-y-12 transition-all duration-500 ${theme === "dark" ? "bg-zinc-900 border-white/5" : "bg-zinc-50 border-zinc-100 shadow-sm"}`}>
            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-600 via-indigo-500 to-red-600" />
            <div className="space-y-4">
-              <span className="text-[10px] font-black uppercase tracking-[0.5em] text-red-500 italic block">Transmission entry</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.5em] text-red-500 italic block">Daftar Sekarang</span>
                <h2 className={`text-4xl md:text-8xl font-black italic uppercase tracking-tighter leading-[0.8] ${theme === "dark" ? "text-white" : "text-black"}`}>
                   Get 10% <br /> <span className={theme === "dark" ? "text-zinc-800" : "text-zinc-200"}>Off-Grid.</span>
                </h2>
@@ -60,7 +60,7 @@ export default function Newsletter({ theme = "dark" }: { theme?: "dark" | "light
            </form>
 
            <div className="flex items-center justify-center gap-2 text-[8px] font-black uppercase tracking-widest text-zinc-700">
-              <FiShield /> 256-Bit Identity Protocol // No Spam
+              Data Anda Aman // Tanpa Spam
            </div>
         </div>
       </div>

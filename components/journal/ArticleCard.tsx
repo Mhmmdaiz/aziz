@@ -32,17 +32,17 @@ export default function ArticleCard({ article, index }: ArticleCardProps) {
       <Link href={`/journal/${article.slug}`}>
         <div className="space-y-6">
           {/* Image Container */}
-          <div className="relative aspect-[16/10] overflow-hidden rounded-[2rem] bg-zinc-900 border border-white/5">
+          <div className="relative aspect-[16/10] overflow-hidden rounded-[2rem] bg-zinc-100 dark:bg-zinc-900 border border-black/5 dark:border-white/5">
             <img 
               src={article.image_url?.split(',')[0]} 
               alt={article.title}
               className="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-[1.5s] ease-[cubic-bezier(0.25,1,0.5,1)]"
             />
             {/* Overlay Gradient */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            <div className="absolute inset-0 bg-gradient-to-t from-white/80 dark:from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             
             {/* Date Badge */}
-            <div className="absolute top-6 left-6 px-3 py-1 bg-zinc-950/80 backdrop-blur-md text-zinc-500 text-[8px] font-black uppercase tracking-[0.2em] rounded-full border border-white/5">
+            <div className="absolute top-6 left-6 px-3 py-1 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md text-zinc-500 dark:text-zinc-400 text-[8px] font-black uppercase tracking-[0.2em] rounded-full border border-black/5 dark:border-white/5">
               {new Date(article.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </div>
           </div>
@@ -54,7 +54,7 @@ export default function ArticleCard({ article, index }: ArticleCardProps) {
                {article.category}
             </div>
             
-            <h3 className="text-xl md:text-2xl font-black uppercase italic tracking-tighter leading-tight text-white group-hover:text-zinc-400 transition-colors">
+            <h3 className="text-xl md:text-2xl font-black uppercase italic tracking-tighter leading-tight text-zinc-900 dark:text-white group-hover:text-zinc-400 transition-colors">
               {article.title}
             </h3>
             
@@ -63,10 +63,10 @@ export default function ArticleCard({ article, index }: ArticleCardProps) {
             </p>
 
             <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-auto">
-               <div className="flex items-center gap-2 text-[9px] font-bold text-zinc-700 uppercase tracking-widest">
+               <div className="flex items-center gap-2 text-[9px] font-bold text-zinc-700 dark:text-zinc-500 uppercase tracking-widest">
                   <FiClock /> {article.read_time}
                </div>
-               <div className="text-white opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition-all duration-500">
+               <div className="text-black dark:text-white opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition-all duration-500">
                   <FiArrowRight />
                </div>
             </div>

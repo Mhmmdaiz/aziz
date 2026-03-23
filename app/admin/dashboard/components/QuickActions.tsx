@@ -7,16 +7,30 @@ import {
   FiArchive,
   FiSettings,
   FiUserPlus,
+  FiLayout,
+  FiMail,
 } from "react-icons/fi";
 import { motion } from "framer-motion";
 
 export default function QuickActions() {
   const actions = [
     {
-      label: "New",
-      icon: <FiPlus />,
-      href: "/admin/new",
-      color: "hover:bg-emerald-500",
+      label: "Pesan",
+      icon: <FiMail />,
+      href: "/admin/messages",
+      color: "hover:bg-fuchsia-500",
+    },
+    {
+      label: "Situs",
+      icon: <FiLayout />,
+      href: "/admin/preorder",
+      color: "hover:bg-purple-500",
+    },
+    {
+      label: "Setelan",
+      icon: <FiSettings />,
+      href: "/admin/settings",
+      color: "hover:bg-amber-500",
     },
     {
       label: "Orders",
@@ -25,10 +39,10 @@ export default function QuickActions() {
       color: "hover:bg-blue-500",
     },
     {
-      label: "Users",
+      label: "User",
       icon: <FiUserPlus />,
       href: "/admin/users",
-      color: "hover:bg-blue-500",
+      color: "hover:bg-emerald-500",
     },
   ];
 

@@ -20,7 +20,7 @@ export default function ForgotPasswordPage() {
   const handleResetRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !email.includes("@")) {
-      return showToast("Masukkan format email yang valid.");
+      return showToast("Please enter a valid email address.");
     }
 
     setLoading(true);
@@ -86,13 +86,13 @@ export default function ForgotPasswordPage() {
                     href="/auth" 
                     className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black dark:hover:text-white transition-colors mb-4 group"
                   >
-                    <FiChevronLeft className="group-hover:-translate-x-1 transition-transform" /> Kembali Ke Login
+                    <FiChevronLeft className="group-hover:-translate-x-1 transition-transform" /> Back to Login
                   </Link>
                   <h1 className="text-4xl font-black uppercase italic tracking-tighter leading-none">
                     Lock_Recover<span className="text-indigo-500">.</span>
                   </h1>
                   <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-400 leading-relaxed">
-                    KEHILANGAN AKSES? MASUKKAN EMAIL UNTUK MEMULIHKAN IDENTITAS ANDA.
+                    LOST ACCESS? ENTER YOUR EMAIL TO RECOVER YOUR IDENTITY.
                   </p>
                 </div>
 
@@ -116,7 +116,7 @@ export default function ForgotPasswordPage() {
                     disabled={loading}
                     className="w-full h-16 rounded-full bg-black dark:bg-white text-white dark:text-black font-black uppercase tracking-[0.4em] text-[10px] italic hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
                   >
-                    {loading ? <FiLoader className="animate-spin text-lg" /> : "Kirim Tautan →"}
+                    {loading ? <FiLoader className="animate-spin text-lg" /> : "Send Link →"}
                   </button>
                 </form>
               </motion.div>
@@ -135,14 +135,14 @@ export default function ForgotPasswordPage() {
                     Dispatch_Success (200)
                   </h2>
                   <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-zinc-400 leading-relaxed px-4">
-                    Jika email terdaftar, instruksi pemulihan telah dikirim ke <span className="text-indigo-500">{email}</span>. Silakan periksa inbox (atau spam) Anda.
+                    If the email is registered, recovery instructions have been sent to <span className="text-indigo-500">{email}</span>. Please check your inbox (or spam).
                   </p>
                 </div>
                 <Link 
                   href="/auth"
                   className="inline-block mt-8 text-[10px] font-black uppercase tracking-[0.3em] bg-black dark:bg-white text-white dark:text-black px-8 py-5 rounded-full hover:scale-105 transition-all"
                 >
-                  Dimengerti, Ke Login
+                  Got it, Back to Login
                 </Link>
               </motion.div>
             )}

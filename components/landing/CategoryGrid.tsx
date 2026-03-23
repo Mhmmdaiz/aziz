@@ -6,10 +6,10 @@ import { FiArrowUpRight } from "react-icons/fi";
 import { useSettings } from "@/components/providers/SettingsProvider";
 
 const defaultCategories = [
-  { name: "Oversize", count: "12 Artifacts", img: "https://images.unsplash.com/photo-1571945153237-4929e783ee4a?q=80&w=800" },
-  { name: "Graphic", count: "08 Artifacts", img: "https://images.unsplash.com/photo-1554568218-0f1715e72254?q=80&w=800" },
-  { name: "Minimal", count: "05 Artifacts", img: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=800" },
-  { name: "Dark Series", count: "07 Artifacts", img: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800" }
+  { name: "Oversize", count: "12 Produk", img: "https://images.unsplash.com/photo-1571945153237-4929e783ee4a?q=80&w=800" },
+  { name: "Graphic", count: "08 Produk", img: "https://images.unsplash.com/photo-1554568218-0f1715e72254?q=80&w=800" },
+  { name: "Minimal", count: "05 Produk", img: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=800" },
+  { name: "Dark Series", count: "07 Produk", img: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800" }
 ];
 
 export default function CategoryGrid({ theme = "dark" }: { theme?: "dark" | "light" }) {

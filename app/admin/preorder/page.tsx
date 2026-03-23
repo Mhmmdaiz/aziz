@@ -16,6 +16,9 @@ import {
   FiZap,
   FiPlus,
   FiTrash2,
+  FiMail,
+  FiPhone,
+  FiMapPin,
 } from "react-icons/fi";
 import { 
   Plus, 
@@ -32,7 +35,8 @@ import {
   PlusCircle,
   Save,
   Check,
-  X
+  X,
+  Shield
 } from "lucide-react";
 import { useSettings } from "@/components/providers/SettingsProvider";
 import Swal from "sweetalert2";
@@ -80,6 +84,13 @@ interface LandingData {
   };
   categories?: Array<{ name: string; count: string; img: string }>;
   faqs?: Array<{ q: string; a: string }>;
+  contact?: {
+    title?: string;
+    description?: string;
+    email_label?: string;
+    phone_label?: string;
+    address_label?: string;
+  };
   featured_products?: string[];
   sections?: SectionConfig[];
   appearance?: {
@@ -89,6 +100,16 @@ interface LandingData {
       accent: string;
     };
   };
+}
+
+interface PolicySection {
+  title: string;
+  content: string;
+}
+
+interface LegalData {
+  terms: PolicySection[];
+  privacy: PolicySection[];
 }
 
 // --- HELPER COMPONENTS ---
@@ -120,7 +141,7 @@ function Textarea({ className = "", ...props }: React.TextareaHTMLAttributes<HTM
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 rounded-2xl p-6 shadow-sm">
+    <div className="bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 rounded-2xl p-6 shadow-sm overflow-hidden break-words">
       {children}
     </div>
   );
@@ -312,6 +333,13 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
     faqs: [
       { q: "How long is dispatch?", a: "Standard deployment takes 2-4 days." }
     ],
+    contact: {
+      title: "GET IN TOUCH.",
+      description: "Have questions about your order or our latest drops? Our team is ready to assist you.",
+      email_label: "Email Protocol",
+      phone_label: "Secure Line",
+      address_label: "Base HQ"
+    },
     featured_products: [],
     sections: [
       { id: "hero", label: "Hero Section", visible: true, theme: "auto" },
@@ -319,8 +347,9 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
       { id: "value_props", label: "Value Propositions", visible: true, theme: "auto" },
       { id: "categories", label: "Category Grid", visible: true, theme: "auto" },
       { id: "lookbook", label: "Lookbook Showcase", visible: true, theme: "auto" },
-      { id: "preorder", label: "Pre-Order System", visible: true, theme: "auto" },
-      { id: "faq", label: "FAQ Section", visible: true, theme: "auto" },
+      { id: "preorder", label: "Sistem Pre-Order", visible: true, theme: "auto" },
+      { id: "faq", label: "Bagian FAQ", visible: true, theme: "auto" },
+      { id: "contact", label: "Bagian Kontak", visible: true, theme: "auto" },
     ],
     preorder: {
       badge: "PROTOCOL V4: PRE-ORDER SYSTEM",
@@ -360,6 +389,8 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
       lookbook: { ...defaultData.lookbook, ...data?.lookbook }, 
       preorder: { ...defaultData.preorder, ...data?.preorder },
       categories: data?.categories?.length ? data.categories : defaultData.categories,
+      faqs: data?.faqs?.length ? data.faqs : defaultData.faqs,
+      contact: { ...defaultData.contact, ...data?.contact },
       featured_products: data?.featured_products || [],
       sections: data?.sections || defaultData.sections,
       appearance: data?.appearance || defaultData.appearance
@@ -506,12 +537,12 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {formData.sections?.map((s, i) => (
-                <div key={s.id} className="flex items-center justify-between p-3 rounded-xl border border-zinc-100 dark:border-zinc-900 bg-zinc-50 dark:bg-zinc-900/40">
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-black text-zinc-400">0{i+1}</span>
-                    <span className="text-[10px] font-black uppercase tracking-wider">{s.label}</span>
+                <div key={s.id} className="flex items-center justify-between p-3 rounded-xl border border-zinc-100 dark:border-zinc-900 bg-zinc-50 dark:bg-zinc-900/40 overflow-hidden">
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <span className="text-[10px] font-black text-zinc-400 shrink-0">0{i+1}</span>
+                    <span className="text-[10px] font-black uppercase tracking-wider truncate" title={s.label}>{s.label}</span>
                   </div>
-                  <div className="flex items-center gap-1.5 focus-within:ring-0">
+                  <div className="flex items-center flex-wrap gap-1.5 justify-end focus-within:ring-0">
                     <div className="flex bg-zinc-100 dark:bg-zinc-800 rounded-lg p-0.5 mr-1">
                       {(['auto', 'dark', 'light'] as const).map((t) => (
                         <button
@@ -544,16 +575,16 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
 
           if (section.id === "hero") return (
               <Card key="hero">
-                <div className="flex items-center justify-between gap-4 mb-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 text-white">
                       <LayoutDashboard size={14} />
                     </div>
                     <h3 className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-white">
-                      Hero Section
+                      Bagian Hero
                     </h3>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center flex-wrap gap-2 w-full md:w-auto justify-between md:justify-end">
                     <button onClick={() => moveSection(section.id, "up")} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500"><FiPlus className="rotate-45" size={14}/></button>
                     <button onClick={() => moveSection(section.id, "down")} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500"><FiPlus className="-rotate-[135deg]" size={14}/></button>
                     
@@ -574,7 +605,7 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
                     </div>
 
                     <button onClick={() => toggleVisibility(section.id)} className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${section.visible ? "bg-fuchsia-500/10 text-fuchsia-500 border-fuchsia-500/20" : "bg-zinc-100 text-zinc-400 border-zinc-200"}`}>
-                      {section.visible ? "VISIBLE" : "HIDDEN"}
+                      {section.visible ? "TERLIHAT" : "TERSEMBUNYI"}
                     </button>
                   </div>
                 </div>
@@ -679,17 +710,17 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
               if (section.id === "featured_products") return (
                   /* FEATURED PRODUCTS CONFIG */
                   <Card key="featured_products">
-                    <div className="flex items-center justify-between gap-4 mb-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                       <div className="flex items-center gap-3">
                         <div className="p-2 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 text-white">
                           <LayoutGrid size={14} />
                         </div>
                         <h3 className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-white">
-                          Featured Products
+                          Produk Unggulan
                         </h3>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="text-[10px] font-black text-fuchsia-600 bg-fuchsia-50 dark:bg-fuchsia-950/30 px-3 py-1 rounded-full border border-fuchsia-100 dark:border-fuchsia-900/50 mr-2">
+                      <div className="flex items-center flex-wrap gap-2 w-full md:w-auto justify-between md:justify-end">
+                        <div className="text-[10px] font-black text-fuchsia-600 bg-fuchsia-50 dark:bg-fuchsia-950/30 px-3 py-1 rounded-full border border-fuchsia-100 dark:border-fuchsia-900/50">
                           {formData.featured_products?.length || 0} SELECTED
                         </div>
                         <button onClick={() => moveSection("featured_products", "up")} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500"><FiPlus className="rotate-45" size={14}/></button>
@@ -769,16 +800,16 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
               if (section.id === "value_props") return (
                   /* VALUE PROPS */
                   <Card key="value_props">
-                    <div className="flex items-center justify-between gap-4 mb-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                       <div className="flex items-center gap-3">
                         <div className="p-2 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 text-white">
                           <Target size={14} />
                         </div>
                         <h3 className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-white">
-                          Value Propositions
+                          Nilai Proposisi
                         </h3>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center flex-wrap gap-2 w-full md:w-auto justify-between md:justify-end">
                         <button onClick={() => moveSection("value_props", "up")} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500"><FiPlus className="rotate-45" size={14}/></button>
                         <button onClick={() => moveSection("value_props", "down")} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500"><FiPlus className="-rotate-[135deg]" size={14}/></button>
                         
@@ -848,16 +879,16 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
               if (section.id === "categories") return (
                   /* CATEGORY GRID CONFIG */
                   <Card key="categories">
-                    <div className="flex items-center justify-between gap-4 mb-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                       <div className="flex items-center gap-3">
                         <div className="p-2 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 text-white">
                           <LayoutGrid size={14} />
                         </div>
                         <h3 className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-white">
-                          Category Grid
+                          Grid Kategori
                         </h3>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center flex-wrap gap-2 w-full md:w-auto justify-between md:justify-end">
                         <button
                           type="button"
                           onClick={() => {
@@ -956,16 +987,16 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
               if (section.id === "lookbook") return (
                   /* LOOKBOOK CONFIG */
                   <Card key="lookbook">
-                    <div className="flex items-center justify-between gap-4 mb-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                       <div className="flex items-center gap-3">
                         <div className="p-2 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 text-white">
                           <ImageIcon size={14} />
                         </div>
                         <h3 className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-white">
-                          Lookbook Images
+                          Showcase Lookbook
                         </h3>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center flex-wrap gap-2 w-full md:w-auto justify-between md:justify-end">
                         <button onClick={() => moveSection("lookbook", "up")} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500"><FiPlus className="rotate-45" size={14}/></button>
                         <button onClick={() => moveSection("lookbook", "down")} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500"><FiPlus className="-rotate-[135deg]" size={14}/></button>
                         
@@ -1014,16 +1045,16 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
               if (section.id === "preorder") return (
                   /* PRE-ORDER CONFIG */
                   <Card key="preorder">
-                    <div className="flex items-center justify-between gap-4 mb-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                       <div className="flex items-center gap-3">
                         <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-500 text-white">
                           <Clock size={14} />
                         </div>
                         <h3 className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-white">
-                          Pre-Order System
+                          Sistem Pre-Order
                         </h3>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center flex-wrap gap-2 w-full md:w-auto justify-between md:justify-end">
                         <button onClick={() => moveSection("preorder", "up")} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500"><FiPlus className="rotate-45" size={14}/></button>
                         <button onClick={() => moveSection("preorder", "down")} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500"><FiPlus className="-rotate-[135deg]" size={14}/></button>
                         
@@ -1168,7 +1199,7 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
                           <Zap size={14} />
                         </div>
                         <h3 className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-white">
-                          FAQ Section
+                          Bagian FAQ
                         </h3>
                       </div>
                       <div className="flex items-center gap-2">
@@ -1180,7 +1211,7 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
                           }}
                           className="flex w-fit items-center gap-1.5 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-[9px] font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-all"
                         >
-                          <PlusCircle size={11} /> Add FAQ
+                          <PlusCircle size={11} /> Tambah FAQ
                         </button>
                         <button onClick={() => moveSection("faq", "up")} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500"><FiPlus className="rotate-45" size={14}/></button>
                         <button onClick={() => moveSection("faq", "down")} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500"><FiPlus className="-rotate-[135deg]" size={14}/></button>
@@ -1202,7 +1233,7 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
                         </div>
 
                         <button onClick={() => toggleVisibility("faq")} className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${section.visible ? "bg-fuchsia-500/10 text-fuchsia-500 border-fuchsia-500/20" : "bg-zinc-100 text-zinc-400 border-zinc-200"}`}>
-                          {section.visible ? "VISIBLE" : "HIDDEN"}
+                          {section.visible ? "TERLIHAT" : "TERSEMBUNYI"}
                         </button>
                       </div>
                     </div>
@@ -1220,9 +1251,9 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
                           >
                             <Trash2 size={14} />
                           </button>
-                          <div className="grid grid-cols-1 gap-3 w-[90%]">
+                          <div className="grid grid-cols-1 gap-3 w-full overflow-hidden">
                             <div>
-                              <Label>Question</Label>
+                               <Label>Pertanyaan</Label>
                               <Input
                                 value={faq.q}
                                 onChange={(e) => {
@@ -1233,7 +1264,7 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
                               />
                             </div>
                             <div>
-                              <Label>Answer</Label>
+                               <Label>Jawaban</Label>
                               <Textarea
                                 rows={2}
                                 value={faq.a}
@@ -1251,8 +1282,259 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
                   </Card>
               );
 
-              return null;
+            if (section.id === "contact")
+              return (
+                <Card key="contact">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 text-white">
+                        <FiMail size={14} />
+                      </div>
+                      <h3 className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-white">
+                        Bagian Kontak Kami
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => moveSection("contact", "up")}
+                        className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500"
+                      >
+                        <FiPlus className="rotate-45" size={14} />
+                      </button>
+                      <button
+                        onClick={() => moveSection("contact", "down")}
+                        className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500"
+                      >
+                        <FiPlus className="-rotate-[135deg]" size={14} />
+                      </button>
+
+                      <div className="flex bg-zinc-100 dark:bg-zinc-800 rounded-xl p-1 mx-2">
+                        {(["auto", "dark", "light"] as const).map((t) => (
+                          <button
+                            key={t}
+                            onClick={() => setSectionTheme("contact", t)}
+                            className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase transition-all ${
+                              (section.theme || "auto") === t
+                                ? "bg-white dark:bg-zinc-700 text-fuchsia-500 shadow-md"
+                                : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+                            }`}
+                          >
+                            {t}
+                          </button>
+                        ))}
+                      </div>
+
+                      <button
+                        onClick={() => toggleVisibility("contact")}
+                        className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${
+                          section.visible
+                            ? "bg-fuchsia-500/10 text-fuchsia-500 border-fuchsia-500/20"
+                            : "bg-zinc-100 text-zinc-400 border-zinc-200"
+                        }`}
+                      >
+                        {section.visible ? "TERLIHAT" : "TERSEMBUNYI"}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="md:col-span-2">
+                      <Label>Judul Utama (Main Title)</Label>
+                      <Input
+                        value={formData.contact?.title || ""}
+                        onChange={(e) =>
+                          handleChange("contact", {
+                            ...formData.contact,
+                            title: e.target.value,
+                          })
+                        }
+                        placeholder="GET IN TOUCH."
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label>Deskripsi (Description)</Label>
+                      <Textarea
+                        rows={2}
+                        value={formData.contact?.description || ""}
+                        onChange={(e) =>
+                          handleChange("contact", {
+                            ...formData.contact,
+                            description: e.target.value,
+                          })
+                        }
+                        placeholder="Have questions about your order..."
+                      />
+                    </div>
+                    <div>
+                      <Label>Label Email</Label>
+                      <div className="flex gap-3">
+                        <div className="w-10 h-10 shrink-0 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center rounded-xl text-zinc-400">
+                          <FiMail size={14} />
+                        </div>
+                        <Input
+                          value={formData.contact?.email_label || ""}
+                          onChange={(e) =>
+                            handleChange("contact", {
+                              ...formData.contact,
+                              email_label: e.target.value,
+                            })
+                          }
+                          placeholder="Email Protocol"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Label Telepon</Label>
+                      <div className="flex gap-3">
+                        <div className="w-10 h-10 shrink-0 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center rounded-xl text-zinc-400">
+                          <FiPhone size={14} />
+                        </div>
+                        <Input
+                          value={formData.contact?.phone_label || ""}
+                          onChange={(e) =>
+                            handleChange("contact", {
+                              ...formData.contact,
+                              phone_label: e.target.value,
+                            })
+                          }
+                          placeholder="Secure Line"
+                        />
+                      </div>
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label>Label Alamat</Label>
+                      <div className="flex gap-3">
+                        <div className="w-10 h-10 shrink-0 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center rounded-xl text-zinc-400">
+                          <FiMapPin size={14} />
+                        </div>
+                        <Input
+                          value={formData.contact?.address_label || ""}
+                          onChange={(e) =>
+                            handleChange("contact", {
+                              ...formData.contact,
+                              address_label: e.target.value,
+                            })
+                          }
+                          placeholder="Base HQ"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-6 p-4 rounded-xl bg-amber-500/5 border border-amber-500/10">
+                    <p className="text-[10px] text-amber-500 font-bold italic">
+                      Info: Nilai email, telepon, dan alamat sebenarnya diambil
+                      dari &quot;Pengaturan Sistem &gt; Store
+                      Information&quot;.
+                    </p>
+                  </div>
+                </Card>
+              );
+
+            return null;
           })}
+    </div>
+  );
+}
+
+function LegalCMS({ data, onSave }: { data: LegalData; onSave: (d: LegalData) => void }) {
+  const [formData, setFormData] = useState<LegalData>(data);
+  const [activeSubTab, setActiveSubTab] = useState<"terms" | "privacy">("terms");
+
+  useEffect(() => {
+    if (data) setFormData(data);
+  }, [data]);
+
+  const handleChange = (type: "terms" | "privacy", index: number, field: "title" | "content", value: string) => {
+    const newData = { ...formData };
+    newData[type] = [...newData[type]];
+    newData[type][index] = { ...newData[type][index], [field]: value };
+    setFormData(newData);
+  };
+
+  const addSection = (type: "terms" | "privacy") => {
+    const newData = { ...formData };
+    newData[type] = [...newData[type], { title: "Pasal Baru", content: "" }];
+    setFormData(newData);
+  };
+
+  const removeSection = (type: "terms" | "privacy", index: number) => {
+    const newData = { ...formData };
+    newData[type] = newData[type].filter((_, i) => i !== index);
+    setFormData(newData);
+  };
+
+  return (
+    <div className="space-y-8 max-w-5xl mx-auto overflow-hidden">
+      <div className="flex bg-zinc-100 dark:bg-zinc-900 p-1 rounded-2xl w-full md:w-fit border border-zinc-200 dark:border-zinc-800 overflow-x-auto no-scrollbar">
+        <button
+          onClick={() => setActiveSubTab("terms")}
+          className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeSubTab === "terms" ? "bg-white dark:bg-zinc-800 text-fuchsia-500 shadow-sm" : "text-zinc-500"}`}
+        >
+          Terms & Conditions
+        </button>
+        <button
+          onClick={() => setActiveSubTab("privacy")}
+          className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeSubTab === "privacy" ? "bg-white dark:bg-zinc-800 text-fuchsia-500 shadow-sm" : "text-zinc-500"}`}
+        >
+          Privacy Policy
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6">
+        {formData[activeSubTab]?.map((section, idx) => (
+          <Card key={idx}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                 <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center text-[10px] font-black">
+                    {idx + 1}
+                 </div>
+                 <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Section {idx + 1}</h3>
+              </div>
+              <button
+                onClick={() => removeSection(activeSubTab, idx)}
+                className="p-2 text-zinc-400 hover:text-red-500 transition-colors"
+                title="Hapus Pasal"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <Label>Judul Pasal</Label>
+                <Input
+                  value={section.title}
+                  onChange={(e) => handleChange(activeSubTab, idx, "title", e.target.value)}
+                  placeholder="A. Judul Pasal..."
+                />
+              </div>
+              <div>
+                <Label>Konten / Isi Pasal</Label>
+                <Textarea
+                  rows={4}
+                  value={section.content}
+                  onChange={(e) => handleChange(activeSubTab, idx, "content", e.target.value)}
+                  placeholder="Tuliskan isi pasal di sini..."
+                />
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      <div className="flex items-center justify-between pt-8">
+        <button
+          onClick={() => addSection(activeSubTab)}
+          className="flex items-center gap-3 px-8 py-4 bg-zinc-900 dark:bg-zinc-800 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all"
+        >
+          <Plus size={14} /> Tambah Pasal Baru
+        </button>
+        <button
+          onClick={() => onSave(formData)}
+          className="flex items-center gap-3 px-10 py-4 bg-fuchsia-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-fuchsia-700 transition-all shadow-xl shadow-fuchsia-500/20"
+        >
+          <Save size={14} /> Simpan Semua Konten Legal
+        </button>
+      </div>
     </div>
   );
 }
@@ -1260,13 +1542,14 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
 // --- MAIN PAGE ---
 export default function AdminPreorder() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"landing" | "orders" | "product">("landing");
+  const [activeTab, setActiveTab] = useState<"landing" | "orders" | "product" | "legal">("landing");
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(true);
   const [landingData, setLandingData] = useState<LandingData | null>(null);
   const [product, setProduct] = useState<any>(null);
   const [productLoading, setProductLoading] = useState(false);
+  const [legalData, setLegalData] = useState<LegalData | null>(null);
 
   // Auth Check
   useEffect(() => {
@@ -1285,13 +1568,15 @@ export default function AdminPreorder() {
     if (authLoading) return;
     setLoading(true);
 
-    // Fetch site settings (landing_content & preorder)
-    const { data: settings } = await supabase.from("site_settings").select("*").in("key", ["landing_content", "preorder"]);
+    // Fetch site settings (landing_content, preorder, legal_content)
+    const { data: settings } = await supabase.from("site_settings").select("*").in("key", ["landing_content", "preorder", "legal_content"]);
     
     const settingsMap = settings?.reduce((acc: any, curr: any) => {
       acc[curr.key] = curr.value;
       return acc;
     }, {}) || {};
+
+    setLegalData(settingsMap.legal_content || { terms: [], privacy: [] });
 
     const fullLanding = {
         ...(settingsMap.landing_content || {}),
@@ -1411,23 +1696,43 @@ export default function AdminPreorder() {
     }
   };
 
+  const handleSaveLegal = async (newData: LegalData) => {
+    try {
+      setLegalData(newData);
+      const { error } = await supabase.from("site_settings").update({ value: newData }).eq("key", "legal_content");
+      if (error) throw error;
+      Swal.fire({
+          title: "LEGAL SYNCED",
+          text: "Terms & Privacy Policies Updated",
+          icon: "success",
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+      });
+    } catch (err: any) {
+      Swal.fire("Error", err.message, "error");
+    }
+  };
+
   if (authLoading) return null;
 
   return (
-    <main className="min-h-screen bg-[#FBFBFD] dark:bg-black pt-24 pb-20 px-4 md:px-8 font-mono text-zinc-900 dark:text-white">
-      <div className="max-w-7xl mx-auto">
+    <main className="min-h-screen bg-[#FBFBFD] dark:bg-black pt-24 pb-20 px-4 md:px-8 font-mono text-zinc-900 dark:text-white overflow-x-hidden">
+      <div className="max-w-7xl mx-auto overflow-hidden">
         <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter italic">
-              Terminal<span className="text-fuchsia-500">_CMS</span>
+          <div className="overflow-hidden">
+            <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter italic truncate">
+              costumize
             </h1>
-            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-2 px-1">Unified Control Interface</p>
+            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-2 px-1 truncate">Unified Control Interface</p>
           </div>
 
-          <div className="flex bg-zinc-100 dark:bg-zinc-900 p-1 rounded-2xl border border-zinc-200 dark:border-zinc-800">
+          <div className="flex bg-zinc-100 dark:bg-zinc-900 p-1 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-x-auto no-scrollbar">
             {[
-                { id: "landing", label: "Landing Page", icon: <LayoutGrid size={12}/> },
-                { id: "product", label: "New Product", icon: <Plus size={12}/> },
+                { id: "landing", label: "Halaman Landas", icon: <LayoutGrid size={12}/> },
+                { id: "product", label: "Produk Baru", icon: <Plus size={12}/> },
+                { id: "legal", label: "Konten Legal", icon: <Shield size={12}/> },
                 { id: "orders", label: "Live Orders", icon: <Clock size={12}/> }
             ].map(tab => (
                 <button
@@ -1457,6 +1762,23 @@ export default function AdminPreorder() {
                   />
               ) : (
                   <div className="py-20 flex justify-center"><FiRefreshCw className="animate-spin" /></div>
+              )}
+            </motion.div>
+          ) : activeTab === "legal" ? (
+            <motion.div
+              key="legal"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-8"
+            >
+              {legalData ? (
+                <LegalCMS 
+                  data={legalData}
+                  onSave={handleSaveLegal}
+                />
+              ) : (
+                <div className="py-20 flex justify-center"><FiRefreshCw className="animate-spin" /></div>
               )}
             </motion.div>
           ) : activeTab === "product" ? (

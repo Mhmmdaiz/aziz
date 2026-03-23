@@ -107,7 +107,7 @@ export default function JournalPage() {
     .slice(0, visibleCount);
 
   return (
-    <main className="min-h-screen bg-[#0B0B0B] pb-32">
+    <main className="min-h-screen bg-[#FBFBFD] dark:bg-[#0B0B0B] pb-32 transition-colors duration-500">
       <Toaster position="bottom-right" />
 
       {/* Editorial Hero */}
@@ -117,7 +117,7 @@ export default function JournalPage() {
         {/* Filter Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-12 mb-20">
           <div className="space-y-4">
-            <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white">
+            <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-zinc-900 dark:text-white transition-colors duration-500">
               Archive Registry<span className="text-red-600">.</span>
             </h2>
             <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.4em]">
@@ -139,9 +139,9 @@ export default function JournalPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 md:gap-20">
             {[...Array(3)].map((_, i) => (
               <div key={i} className="space-y-6 animate-pulse">
-                <div className="aspect-[16/10] bg-zinc-900 rounded-[2rem]" />
-                <div className="h-4 bg-zinc-900 rounded-full w-2/3" />
-                <div className="h-3 bg-zinc-900 rounded-full w-1/2" />
+                <div className="aspect-[16/10] bg-zinc-200 dark:bg-zinc-900 rounded-[2rem]" />
+                <div className="h-4 bg-zinc-200 dark:bg-zinc-900 rounded-full w-2/3" />
+                <div className="h-3 bg-zinc-200 dark:bg-zinc-900 rounded-full w-1/2" />
               </div>
             ))}
           </div>
@@ -155,7 +155,7 @@ export default function JournalPage() {
           </div>
         ) : (
           <div className="py-40 text-center space-y-8">
-            <div className="text-9xl font-black italic opacity-5 uppercase tracking-tighter text-white">
+            <div className="text-9xl font-black italic opacity-5 uppercase tracking-tighter text-black dark:text-white">
               Null Data
             </div>
             <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.5em]">
@@ -163,7 +163,7 @@ export default function JournalPage() {
             </p>
             <button
               onClick={() => setActiveCategory("All")}
-              className="px-12 py-5 bg-white text-black rounded-full font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-xl"
+              className="px-12 py-5 bg-black dark:bg-white text-white dark:text-black rounded-full font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white dark:hover:bg-red-600 dark:hover:text-white transition-all shadow-xl"
             >
               Reset Timeline
             </button>
@@ -175,12 +175,12 @@ export default function JournalPage() {
           <div className="mt-32 flex justify-center">
             <button
               onClick={() => setVisibleCount((prev) => prev + 3)}
-              className="group relative px-16 py-6 border-2 border-zinc-800 rounded-full overflow-hidden transition-all hover:border-white"
+              className="group relative px-16 py-6 border-2 border-zinc-200 dark:border-zinc-800 rounded-full overflow-hidden transition-all hover:border-black dark:hover:border-white"
             >
-              <span className="relative z-10 text-[10px] font-black uppercase tracking-[0.5em] group-hover:text-black transition-colors duration-500">
+              <span className="relative z-10 text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400 group-hover:text-white dark:group-hover:text-black transition-colors duration-500">
                 Load More Registry
               </span>
-              <div className="absolute inset-0 bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+              <div className="absolute inset-0 bg-black dark:bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
             </button>
           </div>
         )}

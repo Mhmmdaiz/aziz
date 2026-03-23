@@ -68,7 +68,7 @@ export default function ValueProp({ theme = "dark" }: { theme?: "dark" | "light"
           <div className="flex items-center gap-4">
             <div className="h-px w-12 bg-[var(--color-primary-accent)]" />
             <span className="text-[10px] font-black uppercase tracking-[0.6em] text-zinc-600 block italic">
-              Daemonium manifest // 004
+              Manifesto Daemonium
             </span>
           </div>
           <h2 className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter leading-[0.85]">

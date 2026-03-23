@@ -26,7 +26,7 @@ export default function CartEmpty() {
         className="space-y-6"
       >
         <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white">
-          Vault<span className="text-indigo-500">_</span>Empty
+          Vault<span className="text-indigo-500"> </span>Empty
         </h2>
         <p className="max-w-md mx-auto text-[10px] md:text-[12px] font-black uppercase tracking-[0.3em] text-zinc-500 leading-relaxed italic">
           Your digital archive is currently void of artifacts. Access the main grid to secure limited drops.
@@ -37,7 +37,7 @@ export default function CartEmpty() {
             href="/shop"
             className="inline-flex items-center gap-4 px-10 py-5 bg-white text-black rounded-full font-black uppercase tracking-[0.4em] text-[10px] hover:bg-indigo-500 hover:text-white transition-all active:scale-95"
           >
-            Access_Shop_Grid
+            Access Shop Grid
             <FiArrowRight />
           </Link>
         </div>

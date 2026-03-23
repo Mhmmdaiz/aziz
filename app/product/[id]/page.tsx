@@ -133,7 +133,7 @@ export default function DaemoniumProductPage() {
     return (
       <div className="min-h-screen bg-[#FBFBFD] dark:bg-[#0B0B0B] flex items-center justify-center font-mono transition-colors duration-500">
         <h1 className="text-4xl text-red-600 font-black animate-pulse">
-          404 // PRODUCT NOT FOUND
+          404 // PRODUK TIDAK DITEMUKAN
         </h1>
       </div>
     );
@@ -203,6 +203,7 @@ export default function DaemoniumProductPage() {
                     onBuyNow={handleBuyNow}
                     disabled={!selectedSize}
                     price={product.price}
+                    isSoldOut={product.stock <= 0}
                   />
                 </div>
               </div>
@@ -238,11 +239,11 @@ function LoadingSequence() {
       <div className="relative w-24 h-24 border border-zinc-200 dark:border-[#333] flex items-center justify-center bg-white dark:bg-transparent shadow-sm">
         <div className="absolute inset-0 border-t-2 border-red-600 animate-spin" />
         <span className="text-[10px] text-zinc-500 font-bold tracking-widest uppercase animate-pulse">
-          Wait
+          Mohon Tunggu
         </span>
       </div>
       <p className="text-[10px] text-red-600 font-black uppercase tracking-[0.5em] animate-pulse">
-        Establishing Link...
+        Menyiapkan Data...
       </p>
     </div>
   );

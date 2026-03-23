@@ -16,7 +16,7 @@ export default function Lookbook({ theme = "dark" }: { theme?: "dark" | "light" 
          <div className="grid lg:grid-cols-12 gap-12 items-center">
             <div className="lg:col-span-5 space-y-10">
                <div className="space-y-4">
-                  <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--color-primary-accent)] italic block">Visual_manifest</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--color-primary-accent)] italic block">Manifesto Visual</span>
                   <h2 className="text-4xl md:text-7xl font-black italic uppercase tracking-tighter leading-[0.9]">
                     The Dark <br /> <span className={theme === "dark" ? "text-zinc-800" : "text-zinc-100"}>Visions.</span>
                   </h2>

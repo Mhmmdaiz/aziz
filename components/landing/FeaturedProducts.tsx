@@ -77,7 +77,7 @@ export default function FeaturedProducts({ theme = "dark" }: { theme?: "dark" | 
       size: p.sizes?.[0] || "All Size",
       quantity: 1,
     });
-    toast.success(`${p.name} Added to Vault`, {
+    toast.success(`${p.name} Berhasil Ditambahkan`, {
       style: {
         background: theme === "dark" ? "#000" : "#fff",
         color: theme === "dark" ? "#fff" : "#000",
@@ -102,7 +102,7 @@ export default function FeaturedProducts({ theme = "dark" }: { theme?: "dark" | 
             className="space-y-2"
           >
             <h2 className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter leading-[0.85]">
-              The <br /> <span className={theme === "dark" ? "text-zinc-800" : "text-zinc-200"}>New season.</span>
+              Koleksi <br /> <span className={theme === "dark" ? "text-zinc-800" : "text-zinc-200"}>Terbaru.</span>
             </h2>
           </motion.div>
 
@@ -110,7 +110,7 @@ export default function FeaturedProducts({ theme = "dark" }: { theme?: "dark" | 
             href="/shop"
             className={`group flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] transition-all duration-500 ${theme === "dark" ? "text-zinc-500 hover:text-white" : "text-zinc-400 hover:text-black"}`}
           >
-            Explore All Catalog{" "}
+            Lihat Semua Katalog{" "}
             <FiArrowRight className="group-hover:translate-x-2 transition-transform text-[var(--color-primary-accent)]" />
           </Link>
         </div>
@@ -148,7 +148,7 @@ export default function FeaturedProducts({ theme = "dark" }: { theme?: "dark" | 
                     {/* Stock Badge */}
                     {p.stock < 10 && (
                       <div className="absolute top-6 left-6 px-3 py-1 bg-[var(--color-secondary-accent)] text-white text-[8px] font-black uppercase tracking-widest rounded-full italic">
-                        Limit: {p.stock}
+                        Stok: {p.stock}
                       </div>
                     )}
 

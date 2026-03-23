@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { FiInstagram } from "react-icons/fi";
 import { FaTiktok } from "react-icons/fa";
 
@@ -11,33 +12,33 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-center gap-8">
           {/* Left Side: Navigation */}
           <div className="flex flex-wrap justify-center md:justify-start items-center gap-6 md:gap-10 text-[11px] font-black uppercase tracking-widest">
-            <a href="#" className="hover:opacity-50 transition-opacity">
-              Official Retailer
-            </a>
-            <a href="#" className="hover:opacity-50 transition-opacity">
-              FAQ
-            </a>
-            <a href="#" className="hover:opacity-50 transition-opacity">
+            
+            <Link href="/faq" className="hover:opacity-50 transition-opacity">
+              Faq
+            </Link>
+            <Link href="/contact" className="hover:opacity-50 transition-opacity">
               Contact Us
-            </a>
+            </Link>
           </div>
 
           {/* Right Side: Legal & Socials */}
           <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
             {/* Legal */}
             <div className="flex items-center gap-4 text-[10px] text-zinc-400 font-medium tracking-tight">
-              <a
-                href="#"
+              <Link
+                href="/terms"
                 className="hover:text-black dark:hover:text-white transition-colors"
               >
                 Terms & Conditions
-              </a>
-              <a
-                href="#"
+              </Link>
+              <Link
+                href="/privacy"
                 className="hover:text-black dark:hover:text-white transition-colors"
               >
                 Privacy Policy
-              </a>
+              </Link>
+
+              
               <span className="cursor-default">
                 © {new Date().getFullYear()} DAEMONIUM.
               </span>
@@ -48,7 +49,7 @@ export default function Footer() {
                   href="#"
                   className="hover:text-black dark:hover:text-white transition-colors underline underline-offset-2"
                 >
-                  azzzz
+                  AZ
                 </a>
               </div>
             </div>

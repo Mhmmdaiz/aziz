@@ -5,6 +5,7 @@ import { SettingsProvider } from "@/components/providers/SettingsProvider";
 import { CartProvider } from "@/components/providers/CartProvider";
 import Script from "next/script";
 import DynamicStyle from "@/components/DynamicStyle";
+import Footer from "@/components/landing/Footer";
 
 export const metadata = {
   title: "DAEMONIUM",
@@ -35,6 +36,7 @@ export default function RootLayout({
             <main className="flex-1 w-full">
               {children}
             </main>
+            <Footer />
             </ThemeProvider>
           </CartProvider>
         </SettingsProvider>

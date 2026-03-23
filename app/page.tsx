@@ -7,16 +7,17 @@ import ValueProp from "@/components/landing/ValueProp";
 import CategoryGrid from "@/components/landing/CategoryGrid";
 import Lookbook from "@/components/landing/Lookbook";
 import Testimonials from "@/components/landing/Testimonials";
-import FAQSection from "@/components/landing/FAQSection";
 import Newsletter from "@/components/landing/Newsletter";
 import PreOrderSystem from "@/components/landing/PreOrderSystem";
-import Footer from "@/components/landing/Footer";
+import FAQSection from "@/components/landing/FAQSection";
+import ContactSection from "@/components/landing/ContactSection";
 import RecentPurchase from "@/components/landing/RecentPurchase";
 import { Toaster } from "react-hot-toast";
 import { useSettings } from "@/components/providers/SettingsProvider";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, Suspense } from "react";
+import { useEffect, Suspense, useState } from "react";
+import { useTheme } from "next-themes";
 
 function AuthRedirectHandler() {
   const router = useRouter();
@@ -45,35 +46,50 @@ export default function FashionLandingPage() {
   
   // Default sections order if not defined in settings
   const defaultSections = [
-    { id: "hero", visible: true },
-    { id: "featured_products", visible: true },
-    { id: "value_props", visible: true },
-    { id: "categories", visible: true },
-    { id: "lookbook", visible: true },
-    { id: "preorder", visible: true },
-    { id: "testimonials", visible: true },
-    { id: "faq", visible: true },
+    { id: "hero", visible: true, theme: "auto" },
+    { id: "featured_products", visible: true, theme: "auto" },
+    { id: "value_props", visible: true, theme: "auto" },
+    { id: "categories", visible: true, theme: "auto" },
+    { id: "lookbook", visible: true, theme: "auto" },
+    { id: "preorder", visible: true, theme: "auto" },
+    { id: "testimonials", visible: true, theme: "auto" },
+    { id: "faq", visible: true, theme: "auto" },
+    { id: "contact", visible: true, theme: "auto" },
   ];
 
-  const sections = settings?.landing_content?.sections || defaultSections;
-  const visibleSections = sections.filter((s: any) => s.visible);
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
-  // Calculate themes for each section based on their settings or alternating logic
-  let trackingTheme: "dark" | "light" = "light";
+  const cmsSections = settings?.landing_content?.sections;
+  const sections = cmsSections 
+    ? [...cmsSections, ...defaultSections.filter(ds => !cmsSections.some((s: any) => s.id === ds.id))]
+    : defaultSections;
+
+  const visibleSections = sections.filter((s: any) => s.visible !== false);
+  
+  // Logic theme selang-seling (alternating)
+  let trackingTheme: "dark" | "light" = (resolvedTheme as any) || "dark";
+  
   const processedSections = visibleSections.map((section: any) => {
     let theme: "dark" | "light";
     
     if (section.theme && section.theme !== "auto") {
       theme = section.theme as "dark" | "light";
     } else {
-      theme = (trackingTheme as string) === "dark" ? "light" : "dark";
+      theme = trackingTheme === "dark" ? "light" : "dark";
     }
     
     trackingTheme = theme;
     return { ...section, calculatedTheme: theme };
   });
 
-  const newsletterTheme: "dark" | "light" = (trackingTheme as string) === "dark" ? "light" : "dark";
+  const newsletterSection = sections.find((s: any) => s.id === "newsletter");
+  const newsletterTheme = newsletterSection?.theme && newsletterSection.theme !== "auto" 
+    ? newsletterSection.theme 
+    : (trackingTheme === "dark" ? "light" : "dark");
+
+  if (!mounted) return null;
 
   return (
     <main className="selection:bg-[var(--color-primary-accent)] selection:text-white overflow-x-hidden">
@@ -106,15 +122,12 @@ export default function FashionLandingPage() {
             return <PreOrderSystem key="preorder" theme={theme} />;
           case "testimonials":
             return <Testimonials key="testimonials" />;
-          case "faq":
-            return <FAQSection key="faq" theme={theme} />;
           default:
             return null;
         }
       })}
 
       <Newsletter theme={newsletterTheme} />
-      <Footer />
     </main>
   );
 }

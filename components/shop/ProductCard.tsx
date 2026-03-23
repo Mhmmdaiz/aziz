@@ -21,7 +21,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     if (!selectedSize) {
-      toast.error("Please select a size protocol", {
+      toast.error("Silakan pilih ukuran terlebih dahulu", {
         style: { background: '#000', color: '#fff', borderRadius: '2rem', fontSize: '10px', fontWeight: 'bold' }
       });
       return;
@@ -36,7 +36,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       quantity: 1
     });
 
-    toast.success(`${product.name} [${selectedSize}] added to vault`, {
+    toast.success(`${product.name} [${selectedSize}] ditambahkan ke keranjang`, {
       style: {
         background: "#000",
         color: "#fff",
@@ -129,10 +129,10 @@ export default function ProductCard({ product }: ProductCardProps) {
                e.stopPropagation();
                handleAddToCart(e);
              }}
-             disabled={!selectedSize}
+             disabled={!selectedSize || product.stock <= 0}
              className="relative z-10 w-full py-4 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-full font-black uppercase text-[10px] tracking-[0.2em] hover:bg-red-600 dark:hover:bg-red-600 hover:text-white transition-all active:scale-95 disabled:opacity-20 flex items-center justify-center gap-2 shadow-2xl"
            >
-             <FiShoppingBag size={14} /> Buy Now
+             <FiShoppingBag size={14} /> {product.stock <= 0 ? "SOLD OUT" : "Beli Sekarang"}
            </button>
         </div>
       </div>
@@ -151,7 +151,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             </span>
           </div>
           <p className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-zinc-400 dark:text-zinc-600">
-            {product.category} // ARCHIVE 01
+            {product.category} // KOLEKSI 01
           </p>
         </div>
 
@@ -162,10 +162,10 @@ export default function ProductCard({ product }: ProductCardProps) {
               <div className="flex items-center justify-between text-[8px] md:text-[9px] font-black uppercase tracking-widest">
                 <div className="flex items-center gap-2 text-red-600">
                    <div className="w-2 h-2 bg-red-600 rounded-full animate-ping" />
-                   HIGH DEMAND
+                   STOK TERBATAS
                 </div>
                 <div className={`flex items-center gap-1 ${product.stock > 0 ? "text-emerald-500" : "text-zinc-500"}`}>
-                   {product.stock > 0 ? "IN STOCK" : "SOLD OUT"}
+                   {product.stock > 0 ? "TERSEDIA" : "HABIS"}
                 </div>
               </div>
               
@@ -187,7 +187,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             <div className="flex items-center justify-between">
                <div className="flex items-center gap-2 text-[8px] md:text-[9px] font-bold text-zinc-500 uppercase tracking-widest">
                   <span className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse" />
-                  {product.sold_today || 0} SOLD TODAY
+                  {product.sold_today || 0} TERJUAL HARI INI
                </div>
                <Link href={`/product/${product.id}`} className="text-zinc-700 hover:text-white transition-colors">
                   <FiInfo size={14} />
