@@ -659,124 +659,73 @@ function PaymentSettings({
         </CardTitle>
         <div className="space-y-3">
           <GatewayItem
-            name="Pakasir"
-            enabled={formData.gateways?.pakasir?.enabled || false}
+            name="DOKU"
+            enabled={formData.gateways?.doku?.enabled || false}
             onToggle={(v) =>
               handleChange("gateways", {
                 ...formData.gateways,
-                pakasir: { ...formData.gateways.pakasir, enabled: v },
+                doku: { ...formData.gateways.doku, enabled: v },
               })
             }
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <Label>API Key</Label>
+                <Label>Client ID</Label>
                 <Input
-                  type="password"
-                  placeholder="Pakasir API Key"
-                  value={formData.gateways?.pakasir?.api_key || ""}
+                  placeholder="DOKU Client ID"
+                  value={formData.gateways?.doku?.client_id || ""}
                   onChange={(e) =>
                     handleChange("gateways", {
                       ...formData.gateways,
-                      pakasir: {
-                        ...formData.gateways.pakasir,
-                        api_key: e.target.value,
+                      doku: {
+                        ...formData.gateways.doku,
+                        client_id: e.target.value,
                       },
                     })
                   }
                 />
               </div>
               <div>
-                <Label>Project Slug</Label>
+                <Label>Secret Key</Label>
                 <Input
-                  placeholder="daemonium"
-                  value={formData.gateways?.pakasir?.slug || ""}
+                  type="password"
+                  placeholder="DOKU Secret Key"
+                  value={formData.gateways?.doku?.secret_key || ""}
                   onChange={(e) =>
                     handleChange("gateways", {
                       ...formData.gateways,
-                      pakasir: {
-                        ...formData.gateways.pakasir,
-                        slug: e.target.value,
+                      doku: {
+                        ...formData.gateways.doku,
+                        secret_key: e.target.value,
                       },
                     })
                   }
                 />
+              </div>
+              <div className="md:col-span-2">
+                <Label>Environment</Label>
+                <Select
+                  value={formData.gateways?.doku?.environment || "sandbox"}
+                  onChange={(e) =>
+                    handleChange("gateways", {
+                      ...formData.gateways,
+                      doku: {
+                        ...formData.gateways.doku,
+                        environment: e.target.value,
+                      },
+                    })
+                  }
+                >
+                  <option value="sandbox">Sandbox (Testing)</option>
+                  <option value="production">Production (Live)</option>
+                </Select>
               </div>
             </div>
           </GatewayItem>
         </div>
       </Card>
 
-      <Card>
-        <div className="flex items-center justify-between mb-6">
-          <CardTitle
-            icon={<Layers size={14} />}
-            accent="from-violet-500 to-purple-500"
-          >
-            Manual Bank Transfer
-          </CardTitle>
-          <button
-            type="button"
-            onClick={addBank}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-[9px] font-black uppercase tracking-widest text-zinc-400 hover:text-white hover:border-zinc-600 transition-all"
-          >
-            <Plus size={11} /> Add Account
-          </button>
-        </div>
-        <div className="space-y-4">
-          {formData.manual_banks?.map((bank: any, i: number) => (
-            <div
-              key={bank.id}
-              className="p-4 border border-zinc-900 rounded-xl bg-zinc-900/20 relative"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">
-                  Account #{i + 1}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => removeBank(bank.id)}
-                  className="text-zinc-700 hover:text-red-500 transition-colors"
-                >
-                  <Trash2 size={13} />
-                </button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
-                  <Label>Bank Name</Label>
-                  <Input
-                    placeholder="BCA"
-                    value={bank.bank}
-                    onChange={(e) =>
-                      updateBank(bank.id, "bank", e.target.value)
-                    }
-                  />
-                </div>
-                <div>
-                  <Label>Number</Label>
-                  <Input
-                    placeholder="1234567890"
-                    value={bank.number}
-                    onChange={(e) =>
-                      updateBank(bank.id, "number", e.target.value)
-                    }
-                  />
-                </div>
-                <div>
-                  <Label>Holder</Label>
-                  <Input
-                    placeholder="PT CHCKT STORE"
-                    value={bank.holder}
-                    onChange={(e) =>
-                      updateBank(bank.id, "holder", e.target.value)
-                    }
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
+
     </div>
   );
 }

@@ -13,7 +13,6 @@ import {
 } from "react-icons/fi";
 import { supabase } from "@/utils/supabase/client";
 import { useSettings } from "@/components/providers/SettingsProvider";
-import QRISModal from "@/components/checkout/QRISModal";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -23,8 +22,8 @@ export default function CheckoutPage() {
 
   // --- SETTINGS DATA ---
   const paymentSettings = settings?.payment;
-  const pakasirEnabled = paymentSettings?.gateways?.pakasir?.enabled;
-  const manualBanks = paymentSettings?.manual_banks || [];
+  const dokuConfig = paymentSettings?.gateways?.doku;
+  const dokuEnabled = dokuConfig?.enabled;
 
   // --- STATES ---
   const [fetchingUser, setFetchingUser] = useState(true);
@@ -44,12 +43,7 @@ export default function CheckoutPage() {
     province: "West Java",
   });
 
-  const [qrisData, setQrisData] = useState({
-    isOpen: false,
-    qrData: "",
-    orderId: "",
-    amount: 0,
-  });
+
 
   const isFormValid = useMemo(() => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -111,10 +105,9 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (!selectedPayment) {
-      if (pakasirEnabled) setSelectedPayment("pakasir");
-      else if (manualBanks.length > 0) setSelectedPayment(`manual_${manualBanks[0].id}`);
+      if (dokuEnabled) setSelectedPayment("doku");
     }
-  }, [pakasirEnabled, manualBanks, selectedPayment]);
+  }, [dokuEnabled, selectedPayment]);
 
   // --- CALCULATIONS ---
   const subtotal = useMemo(() => {
@@ -158,9 +151,9 @@ export default function CheckoutPage() {
         data: { session },
       } = await supabase.auth.getSession();
 
-      if (selectedPayment === "pakasir") {
-        // PAKASIR CHECKOUT
-        const response = await fetch("/api/checkout/pakasir", {
+      if (selectedPayment === "doku") {
+        // DOKU CHECKOUT
+        const response = await fetch("/api/checkout/doku", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -179,58 +172,13 @@ export default function CheckoutPage() {
 
         Swal.close();
 
-        // UI Modals
-        if (data.qrData) {
-          setQrisData({
-            isOpen: true,
-            qrData: data.qrData,
-            orderId: data.orderId,
-            amount: grandTotal,
-          });
-        } else if (data.paymentUrl) {
+        if (data.paymentUrl) {
           localStorage.removeItem("cart");
           localStorage.removeItem("checkout_items");
           window.location.href = data.paymentUrl;
         } else {
           throw new Error("Payment link not generated.");
         }
-      } else if (selectedPayment.startsWith("manual_")) {
-        // MANUAL TRANSFER CHECKOUT
-        const bankId = selectedPayment.split("manual_")[1];
-        const selectedBank = manualBanks.find((b: any) => b.id === bankId);
-
-        const response = await fetch("/api/checkout/manual", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.access_token}`,
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            items: checkoutItems,
-            customer_details: formData,
-            bank_id: bankId,
-            is_preorder: localStorage.getItem("is_preorder_session") === "true",
-          }),
-        });
-
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Order creation failed.");
-
-        Swal.close();
-        localStorage.removeItem("cart");
-        localStorage.removeItem("checkout_items");
-
-        // Show Success and Redirect to order details
-        Swal.fire({
-          title: "Waiting for Payment",
-          html: `Order <b>${data.orderId}</b> has been created.<br><br>Please transfer exactly <b>Rp ${grandTotal.toLocaleString()}</b> to:<br><br><b>${selectedBank?.bank}</b><br>${selectedBank?.number}<br>a/n ${selectedBank?.holder}`,
-          icon: "info",
-          confirmButtonText: "I understand",
-          confirmButtonColor: "#1d4ed8",
-        }).then(() => {
-          router.push(`/orders`);
-        });
       }
 
     } catch (err: any) {
@@ -388,85 +336,28 @@ export default function CheckoutPage() {
 
               <div className="border border-zinc-300 rounded-lg overflow-hidden bg-white">
                 
-                {/* Pakasir Toggle */}
-                {pakasirEnabled && (
-                  <div className={`border-b border-zinc-200 last:border-b-0`}>
-                    <label className={`flex items-center gap-4 p-4 cursor-pointer transition-colors ${selectedPayment === "pakasir" ? "bg-blue-50/50" : "hover:bg-zinc-50"}`}>
-                      <input 
-                        type="radio" 
-                        name="payment" 
-                        value="pakasir"
-                        checked={selectedPayment === "pakasir"}
-                        onChange={() => setSelectedPayment("pakasir")}
-                        className="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-600"
-                      />
-                      <div className="flex-1 flex justify-between items-center">
-                        <span className="text-sm font-medium text-black">Online Payment (Cards, E-wallets, QRIS)</span>
-                        <div className="flex gap-1">
-                           {/* Decorative fake icons */}
-                           <div className="w-8 h-5 bg-zinc-200 rounded flex items-center justify-center text-[8px] font-bold text-zinc-500">QRIS</div>
-                           <div className="w-8 h-5 bg-zinc-200 rounded flex items-center justify-center text-[8px] font-bold text-zinc-500">VISA</div>
-                        </div>
+                {/* DOKU Information */}
+                {dokuEnabled ? (
+                  <div className="p-8 text-center flex flex-col items-center justify-center gap-4 bg-zinc-50/50">
+                    <div className="flex items-center gap-4 text-zinc-400">
+                      <FiCreditCard className="w-8 h-8" />
+                      <div className="h-8 w-px bg-zinc-300"></div>
+                      <div className="flex gap-2">
+                        <div className="px-2 py-1 border border-zinc-200 bg-white rounded text-[9px] font-bold text-zinc-500 tracking-wide uppercase">QRIS</div>
+                        <div className="px-2 py-1 border border-zinc-200 bg-white rounded text-[9px] font-bold text-zinc-500 tracking-wide uppercase">Virtual Acct</div>
+                        <div className="px-2 py-1 border border-zinc-200 bg-white rounded text-[9px] font-bold text-zinc-500 tracking-wide uppercase">Cards</div>
                       </div>
-                    </label>
-                    <AnimatePresence>
-                      {selectedPayment === "pakasir" && (
-                        <motion.div 
-                          initial={{ height: 0 }}
-                          animate={{ height: "auto" }}
-                          exit={{ height: 0 }}
-                          className="overflow-hidden bg-zinc-50 border-t border-zinc-200"
-                        >
-                          <div className="p-8 text-center flex flex-col items-center gap-3">
-                            <FiCreditCard className="w-10 h-10 text-zinc-400" />
-                            <p className="text-sm text-zinc-600">After clicking "Pay now", you will be redirected to complete your purchase securely.</p>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    </div>
+                    <div className="space-y-1 mt-2 max-w-sm">
+                       <p className="font-medium text-black text-sm">Online Payment via DOKU</p>
+                       <p className="text-sm text-zinc-500">Setelah menekan "Pay now", Anda akan diarahkan ke halaman DOKU untuk menyelesaikan pembayaran dengan aman.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-8 text-center">
+                    <p className="text-sm text-red-500 font-medium">Gateway pembayaran sedang tidak tersedia.</p>
                   </div>
                 )}
-
-                {/* Manual Bank Transfer Toggle */}
-                {manualBanks.length > 0 && manualBanks.map((bank: any, idx: number) => {
-                  const val = `manual_${bank.id}`;
-                  return (
-                  <div key={bank.id} className={`border-b border-zinc-200 last:border-b-0`}>
-                    <label className={`flex items-center gap-4 p-4 cursor-pointer transition-colors ${selectedPayment === val ? "bg-blue-50/50" : "hover:bg-zinc-50"}`}>
-                      <input 
-                        type="radio" 
-                        name="payment" 
-                        value={val}
-                        checked={selectedPayment === val}
-                        onChange={() => setSelectedPayment(val)}
-                        className="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-600"
-                      />
-                      <div className="flex-1 flex justify-between items-center">
-                        <span className="text-sm font-medium text-black">Bank Transfer ({bank.bank})</span>
-                      </div>
-                    </label>
-                    <AnimatePresence>
-                      {selectedPayment === val && (
-                        <motion.div 
-                          initial={{ height: 0 }}
-                          animate={{ height: "auto" }}
-                          exit={{ height: 0 }}
-                          className="overflow-hidden bg-zinc-50 border-t border-zinc-200"
-                        >
-                          <div className="p-6 text-sm text-zinc-600 space-y-2">
-                             <p>Please transfer the total amount to:</p>
-                             <div className="bg-white p-4 border border-zinc-200 rounded-md">
-                                <p className="font-semibold text-black">{bank.bank}</p>
-                                <p className="font-mono text-black my-1 text-base">{bank.number}</p>
-                                <p>a/n {bank.holder}</p>
-                             </div>
-                             <p className="text-xs mt-2 text-zinc-500">Your order will not be processed until the funds have cleared in our account.</p>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                )})}
 
               </div>
             </section>
@@ -549,20 +440,6 @@ export default function CheckoutPage() {
 
         </div>
       </div>
-
-      <QRISModal
-        isOpen={qrisData.isOpen}
-        onClose={() => setQrisData((prev) => ({ ...prev, isOpen: false }))}
-        qrData={qrisData.qrData}
-        orderId={qrisData.orderId}
-        amount={qrisData.amount}
-        onSuccess={() => {
-          localStorage.removeItem("cart");
-          localStorage.removeItem("checkout_items");
-          setQrisData((prev) => ({ ...prev, isOpen: false }));
-          router.push(`/orders`);
-        }}
-      />
     </main>
   );
 }
