@@ -4,7 +4,10 @@ import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { revalidatePath } from "next/cache";
 
-export async function updateOrderStatusAction(orderId: string, newStatus: string) {
+/**
+ * Securely updates site settings by verifying the user's admin role on the server.
+ */
+export async function updateSiteSettingsAction(settings: any) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -13,7 +16,7 @@ export async function updateOrderStatusAction(orderId: string, newStatus: string
       return { success: false, error: "Unauthorized" };
     }
 
-    // Verify admin role
+    // Verify admin role in DB
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
@@ -21,24 +24,27 @@ export async function updateOrderStatusAction(orderId: string, newStatus: string
       .single();
 
     if (profile?.role?.toLowerCase() !== "admin") {
-      return { success: false, error: "Forbidden" };
+      return { success: false, error: "Forbidden: Admin role required" };
     }
 
     const adminSupabase = createAdminClient();
     
+    const upsertData = Object.entries(settings).map(([key, value]) => ({
+      key,
+      value,
+      updated_at: new Date().toISOString(),
+    }));
+
     const { error } = await adminSupabase
-      .from("orders")
-      .update({ status: newStatus })
-      .eq("id", orderId);
+      .from("site_settings")
+      .upsert(upsertData, { onConflict: "key" });
 
-    if (error) {
-      return { success: false, error: error.message };
-    }
+    if (error) throw error;
 
-    // Force Next.js cache to update
-    revalidatePath("/admin/orders");
+    revalidatePath("/admin/settings");
     return { success: true };
   } catch (err: any) {
+    console.error("updateSiteSettingsAction Error:", err);
     return { success: false, error: err.message };
   }
 }

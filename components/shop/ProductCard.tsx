@@ -170,7 +170,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               </div>
               
               <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-medium text-zinc-500">
-                <span className="text-orange-500">🔥</span> {product.sold_today || 0} units claimed today
+                <span className="text-orange-500">🔥</span> {product.sold_today || 0} unit telah diklaim
               </div>
 
               {/* Progress Bar */}
@@ -187,7 +187,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             <div className="flex items-center justify-between">
                <div className="flex items-center gap-2 text-[8px] md:text-[9px] font-bold text-zinc-500 uppercase tracking-widest">
                   <span className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse" />
-                  {product.sold_today || 0} TERJUAL HARI INI
+                  {product.sold_today || 0} TERJUAL
                </div>
                <Link href={`/product/${product.id}`} className="text-zinc-700 hover:text-white transition-colors">
                   <FiInfo size={14} />

@@ -17,7 +17,7 @@ export default function CategoryGrid({ theme = "dark" }: { theme?: "dark" | "lig
   const categories = settings?.landing_content?.categories || defaultCategories;
 
   return (
-    <section className={`py-12 md:py-24 transition-colors duration-500 ${theme === "dark" ? "bg-[#0B0B0B] text-white" : "bg-white text-black"}`}>
+    <section className={`py-12 md:py-24 transition-colors duration-700 ${theme === "dark" ? "bg-[#0B0B0B] text-white" : "bg-white text-zinc-900"}`}>
       <div className="container mx-auto px-4 md:px-6">
         {/* Menggunakan grid-cols-2 secara permanen untuk efek kiri-kanan */}
         <div className="grid grid-cols-2 md:grid-cols-2 gap-3 md:gap-8">
@@ -29,11 +29,11 @@ export default function CategoryGrid({ theme = "dark" }: { theme?: "dark" | "lig
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
               // Tinggi disesuaikan: h-[220px] di mobile agar tidak terlalu panjang
-              className="relative h-[220px] md:h-[500px] rounded-[1.5rem] md:rounded-[3rem] overflow-hidden group cursor-pointer border border-white/5"
+              className={`relative h-[220px] md:h-[500px] rounded-[1.5rem] md:rounded-[3rem] overflow-hidden group cursor-pointer border transition-colors ${theme === "dark" ? "border-white/5" : "border-zinc-200"}`}
             >
               <img 
                 src={cat.img} 
-                className="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-[1.5s] ease-out" 
+                className="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all duration-[1.5s] ease-out" 
                 alt={cat.name} 
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />

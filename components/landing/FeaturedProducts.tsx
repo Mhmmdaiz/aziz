@@ -71,7 +71,7 @@ export default function FeaturedProducts({ theme = "dark" }: { theme?: "dark" | 
   };
 
   return (
-    <section className={`py-12 md:py-32 overflow-hidden transition-colors duration-500 ${theme === "dark" ? "bg-[#0B0B0B] text-white" : "bg-white text-black"}`}>
+    <section className={`py-12 md:py-32 overflow-hidden transition-colors duration-700 ${theme === "dark" ? "bg-[#0B0B0B] text-white" : "bg-white text-zinc-900"}`}>
       <div className="container mx-auto px-4 md:px-6">
         
         {/* HEADER MINIATUR */}
@@ -109,12 +109,12 @@ export default function FeaturedProducts({ theme = "dark" }: { theme?: "dark" | 
                 className="min-w-[55%] md:min-w-0 group snap-center"
               >
                 {/* IMAGE CARD MINI */}
-                <div className="relative aspect-[4/5] overflow-hidden rounded-[1.5rem] md:rounded-[2rem] bg-zinc-900 mb-3 md:mb-6 border border-white/5">
+                <div className={`relative aspect-[4/5] overflow-hidden rounded-[1.5rem] md:rounded-[2rem] mb-3 md:mb-6 border transition-colors ${theme === "dark" ? "bg-zinc-900 border-white/5" : "bg-zinc-100 border-zinc-200"}`}>
                   <Link href={`/product/${p.id}`} className="block w-full h-full">
                     <img
                       src={p.image_url}
                       alt={p.name}
-                      className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
+                      className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
                     />
                   </Link>
 

@@ -7,7 +7,7 @@ import { FaTiktok } from "react-icons/fa";
 
 export default function Footer() {
   return (
-    <footer className="w-full bg-white dark:bg-black text-black dark:text-white py-12 transition-colors duration-300 border-t border-zinc-100 dark:border-zinc-900">
+    <footer className="w-full bg-white dark:bg-[#030303] text-black dark:text-white py-12 transition-colors duration-700 border-t border-zinc-100 dark:border-white/5">
       {/* Container Compact - max-w-5xl agar tidak terlalu lebar */}
       <div className="container mx-auto px-6 max-w-5xl">
         {/* Layout: flex-col (mobile) -> 4 baris, md:flex-row (desktop) -> 1 baris */}

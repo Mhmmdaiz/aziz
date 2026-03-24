@@ -86,7 +86,7 @@ export default function ShopPage() {
   const displayedProducts = filteredProducts.slice(0, visibleCount);
 
   return (
-    <main className="min-h-screen bg-white dark:bg-[#0B0B0B] text-zinc-900 dark:text-white pt-32 pb-24 font-mono overflow-x-hidden transition-colors duration-300">
+    <main className="min-h-screen bg-white dark:bg-[#030303] text-zinc-900 dark:text-white pt-32 pb-24 font-mono overflow-x-hidden transition-colors duration-700">
       <Toaster position="bottom-right" />
 
       <div className="max-w-[1440px] mx-auto px-6 md:px-12">
@@ -168,11 +168,11 @@ export default function ShopPage() {
             </div>
 
             {loading ? (
-              <div className="flex md:grid md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 overflow-x-auto pb-8 no-scrollbar snap-x">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
                 {[...Array(6)].map((_, i) => (
                   <div
                     key={i}
-                    className="min-w-[200px] md:min-w-0 space-y-4 animate-pulse snap-center"
+                    className="space-y-4"
                   >
                     <div className="aspect-[4/5] bg-zinc-100 dark:bg-zinc-900 rounded-[2.5rem]" />
                     <div className="h-4 bg-zinc-100 dark:bg-zinc-900 rounded-full w-2/3" />
@@ -181,12 +181,12 @@ export default function ShopPage() {
                 ))}
               </div>
             ) : filteredProducts.length > 0 ? (
-              <div className="flex md:grid md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 overflow-x-auto pb-8 no-scrollbar snap-x scroll-smooth">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
                 <AnimatePresence mode="popLayout">
                   {displayedProducts.map((product) => (
                     <div
                       key={product.id}
-                      className="min-w-[200px] md:min-w-0 snap-center"
+                      className="w-full"
                     >
                       <ProductCard product={product} />
                     </div>

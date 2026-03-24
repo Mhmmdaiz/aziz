@@ -353,50 +353,71 @@ export default function AdminOrders() {
                           <div className="space-y-8">
                             <div>
                               <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 mb-6 italic">
-                                Customer Details
+                                Logistics & Customer
                               </h3>
-                              <div className="bg-white dark:bg-zinc-900/50 rounded-2xl p-6 border border-zinc-200 dark:border-zinc-800 space-y-4">
-                                <div className="flex gap-4 items-start">
-                                  <FiMail className="text-zinc-400 shrink-0 mt-1" />
-                                  <div>
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-1">
-                                      Email
-                                    </p>
-                                    <p className="text-[11px] font-bold">
-                                      {order.customer_email}
-                                    </p>
-                                  </div>
+                              <div className="bg-white dark:bg-zinc-900/50 rounded-2xl p-6 border border-zinc-200 dark:border-zinc-800 space-y-6">
+                                {/* SHIPPING METHOD HIGHLIGHT */}
+                                <div className="flex gap-4 items-start pb-4 border-b border-zinc-100 dark:border-zinc-800">
+                                   <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-500 shrink-0">
+                                      <FiBox size={20} />
+                                   </div>
+                                   <div>
+                                      <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-1">Shipping Method</p>
+                                      <p className="text-[13px] font-black text-black dark:text-white">
+                                         {order.shipping_address?.match(/\[KURIR: (.*?)\]/)?.[1] || "REGULAR SHIPPING"}
+                                      </p>
+                                   </div>
                                 </div>
-                                <div className="flex gap-4 items-start">
-                                  <FiPhone className="text-zinc-400 shrink-0 mt-1" />
-                                  <div>
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-1">
-                                      Phone
-                                    </p>
-                                    <p className="text-[11px] font-bold">
-                                      {order.customer_phone}
-                                    </p>
-                                  </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="flex gap-4 items-start">
+                                      <FiMail className="text-zinc-400 shrink-0 mt-1" />
+                                      <div>
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-1">Email</p>
+                                        <p className="text-[11px] font-bold">{order.customer_email}</p>
+                                      </div>
+                                    </div>
+                                    <div className="flex gap-4 items-start">
+                                      <FiPhone className="text-zinc-400 shrink-0 mt-1" />
+                                      <div>
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-1">Phone</p>
+                                        <p className="text-[11px] font-bold">{order.customer_phone}</p>
+                                      </div>
+                                    </div>
                                 </div>
+
                                 <div className="flex gap-4 items-start">
                                   <FiMapPin className="text-zinc-400 shrink-0 mt-1" />
                                   <div>
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-1">
-                                      Address
-                                    </p>
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-1">Destination</p>
                                     <p className="text-[11px] font-bold leading-relaxed">
-                                      {order.shipping_address}
+                                      {order.shipping_address?.replace(/\[KURIR: .*?\] /, "")}
                                     </p>
                                   </div>
+                                </div>
+
+                                {/* PAYMENT CHANNEL */}
+                                <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                                    <div>
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-1">Payment Gateway</p>
+                                        <p className="text-[11px] font-black text-cyan-500 uppercase">
+                                            {order.payment_gateway || 'DOKU'}
+                                        </p>
+                                    </div>
+                                    {order.status === 'paid' && (
+                                        <div className="bg-emerald-500/10 text-emerald-500 text-[9px] font-black px-3 py-1 rounded-full border border-emerald-500/20">
+                                            VERIFIED_BY_VAULT
+                                        </div>
+                                    )}
                                 </div>
                               </div>
                             </div>
 
                             <div>
                               <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 mb-6 italic">
-                                Order Status
+                                Action: Migration Status
                               </h3>
-                              <div className="flex flex-wrap gap-3">
+                              <div className="flex flex-wrap gap-2">
                                 {[
                                   "PENDING",
                                   "PAID",
@@ -414,11 +435,11 @@ export default function AdminOrders() {
                                         sts.toLowerCase(),
                                       )
                                     }
-                                    className={`px-6 py-3 rounded-full text-[9px] font-black uppercase tracking-widest transition-all border ${
+                                    className={`px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${
                                       order.status.toLowerCase() ===
                                       sts.toLowerCase()
-                                        ? "bg-black dark:bg-white text-white dark:text-black border-black dark:border-white"
-                                        : "bg-white dark:bg-zinc-900 text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-cyan-500/50"
+                                        ? "bg-black dark:bg-white text-white dark:text-black border-black dark:border-white shadow-xl"
+                                        : "bg-white dark:bg-zinc-900/50 text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-cyan-500/50"
                                     }`}
                                   >
                                     {sts === "PAID" ? "SUDAH BAYAR" : sts}
@@ -434,26 +455,45 @@ export default function AdminOrders() {
                               Order Items ({order.items?.length || 0})
                             </h3>
                             <div className="space-y-4">
-                              {order.items?.map((item: any) => (
-                                <div
-                                  key={item.id}
-                                  className="bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 flex items-center justify-between"
-                                >
-                                  <div>
-                                    <p className="text-[10px] font-black uppercase truncate max-w-[200px] mb-1">
-                                      {item.product_name}
-                                    </p>
-                                    <div className="flex items-center gap-3 text-[9px] font-bold text-zinc-500 tracking-widest uppercase">
-                                      <span>Size: {item.size}</span>
-                                      <span className="w-1 h-1 bg-zinc-300 dark:bg-zinc-700 rounded-full" />
-                                      <span>Qty: {item.quantity}</span>
+                              {order.items?.map((item: any) => {
+                                const isShipping = item.product_id === "shipping";
+                                return (
+                                  <div
+                                    key={item.id}
+                                    className={`relative border rounded-2xl p-4 flex items-center justify-between transition-all ${
+                                      isShipping 
+                                        ? "bg-cyan-500/[0.03] border-dashed border-cyan-500/30" 
+                                        : "bg-white dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800"
+                                    }`}
+                                  >
+                                    {isShipping && (
+                                       <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-1 h-8 bg-cyan-500 rounded-full" />
+                                    )}
+                                    <div className="flex-1 min-w-0 pr-4">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <p className={`text-[10px] font-black uppercase truncate ${isShipping ? "text-cyan-600 dark:text-cyan-400" : "text-black dark:text-white"}`}>
+                                          {item.product_name}
+                                        </p>
+                                        {isShipping && <span className="text-[8px] bg-cyan-500 text-white px-1.5 py-0.5 rounded font-black uppercase">Service</span>}
+                                      </div>
+                                      <div className="flex items-center gap-3 text-[9px] font-bold text-zinc-500 tracking-widest uppercase">
+                                        {isShipping ? (
+                                           <span>Logistics Fee</span>
+                                        ) : (
+                                          <>
+                                            <span>Size: {item.size}</span>
+                                            <span className="w-1 h-1 bg-zinc-300 dark:bg-zinc-700 rounded-full" />
+                                            <span>Qty: {item.quantity}</span>
+                                          </>
+                                        )}
+                                      </div>
                                     </div>
+                                    <p className={`text-[10px] font-black ${isShipping ? "text-cyan-600 dark:text-cyan-400" : ""}`}>
+                                      IDR {Number(item.price).toLocaleString()}
+                                    </p>
                                   </div>
-                                  <p className="text-[10px] font-black">
-                                    IDR {Number(item.price).toLocaleString()}
-                                  </p>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
 
                             <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 flex justify-between items-center">

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/utils/supabase/client";
+import { updateSiteSettingsAction } from "./actions";
 import { useRouter, useSearchParams } from "next/navigation";
 import Swal from "sweetalert2";
 import {
@@ -738,13 +739,36 @@ function ShippingSettings({
   onSave: (newData: any) => void;
 }) {
   const [formData, setFormData] = useState(
-    data || { fee_mode: "dynamic", providers: {} },
+    data || { fee_mode: "flat", providers: {}, custom_methods: [] },
   );
 
   const handleChange = (key: string, value: any) => {
     const updated = { ...formData, [key]: value };
     setFormData(updated);
     onSave(updated);
+  };
+
+  const addCustomMethod = () => {
+    const newMethod = {
+      id: crypto.randomUUID(),
+      name: "New Shipping Method",
+      price: 0,
+      eta: "2-5 Days",
+    };
+    const updatedMethods = [...(formData.custom_methods || []), newMethod];
+    handleChange("custom_methods", updatedMethods);
+  };
+
+  const removeCustomMethod = (id: string) => {
+    const updatedMethods = formData.custom_methods.filter((m: any) => m.id !== id);
+    handleChange("custom_methods", updatedMethods);
+  };
+
+  const updateCustomMethod = (id: string, field: string, value: any) => {
+    const updatedMethods = formData.custom_methods.map((m: any) => 
+      m.id === id ? { ...m, [field]: value } : m
+    );
+    handleChange("custom_methods", updatedMethods);
   };
 
   return (
@@ -812,8 +836,8 @@ function ShippingSettings({
         >
           Shipping Fee Mode
         </CardTitle>
-        <div className="grid grid-cols-2 gap-3 mb-5">
-          {(["dynamic", "flat"] as const).map((m) => (
+        <div className="grid grid-cols-3 gap-3 mb-5">
+          {(["dynamic", "flat", "custom"] as const).map((m) => (
             <button
               key={m}
               type="button"
@@ -824,24 +848,104 @@ function ShippingSettings({
                   : "border-zinc-800 text-zinc-600 hover:text-zinc-400"
               }`}
             >
-              {m === "flat" ? "Flat Rate" : "Dynamic Shipping"}
+              {m === "flat" ? "Flat Rate" : m === "custom" ? "Custom Rates" : "Dynamic"}
             </button>
           ))}
         </div>
-        <AnimatePresence>
+        
+        <AnimatePresence mode="wait">
           {formData.fee_mode === "flat" && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
+              key="flat-mode"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-4"
             >
-              <Label>Flat Rate Price (IDR)</Label>
-              <Input
-                type="number"
-                placeholder="25000"
-                value={formData.flat_rate}
-                onChange={(e) => handleChange("flat_rate", e.target.value)}
-              />
+              <div>
+                <Label>Flat Rate Price (IDR)</Label>
+                <Input 
+                  value={formData.flat_rate}
+                  onChange={(e) => {
+                     const clean = e.target.value.replace(/[^0-9]/g, "");
+                     handleChange("flat_rate", clean ? Number(clean) : 0);
+                  }}
+                  placeholder="Contoh: 25000"
+                />
+              </div>
+            </motion.div>
+          )}
+
+          {formData.fee_mode === "custom" && (
+            <motion.div
+              key="custom-mode"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-4"
+            >
+              <div className="flex justify-between items-center mb-2">
+                <Label className="mb-0">Custom Shipping Methods</Label>
+                <button
+                  type="button"
+                  onClick={addCustomMethod}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500/20 transition-all"
+                >
+                  <Plus size={12} /> Add Method
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {formData.custom_methods?.length === 0 && (
+                  <div className="p-8 border border-dashed border-zinc-800 rounded-xl text-center">
+                    <p className="text-[10px] text-zinc-600 uppercase tracking-widest">No custom methods defined</p>
+                  </div>
+                )}
+                
+                {formData.custom_methods?.map((method: any) => (
+                  <div key={method.id} className="p-4 border border-zinc-800 rounded-xl bg-zinc-900/20 space-y-4">
+                    <div className="flex justify-between gap-4">
+                       <div className="flex-1">
+                          <Label>Method Name</Label>
+                          <Input 
+                            value={method.name}
+                            onChange={(e) => updateCustomMethod(method.id, "name", e.target.value)}
+                            placeholder="e.g. JNE Reguler"
+                          />
+                       </div>
+                       <div className="w-32">
+                          <Label>Price (IDR)</Label>
+                          <Input 
+                            value={method.price}
+                            onChange={(e) => {
+                               // Biarkan hanya angka
+                               const clean = e.target.value.replace(/[^0-9]/g, "");
+                               updateCustomMethod(method.id, "price", clean ? Number(clean) : 0);
+                            }}
+                            placeholder="Contoh: 15000"
+                          />
+                       </div>
+                       <div className="pt-6">
+                          <button
+                            type="button"
+                            onClick={() => removeCustomMethod(method.id)}
+                            className="p-2 text-zinc-600 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                       </div>
+                    </div>
+                    <div>
+                        <Label>EDA / Description</Label>
+                        <Input 
+                          value={method.eta}
+                          onChange={(e) => updateCustomMethod(method.id, "eta", e.target.value)}
+                          placeholder="e.g. 2-5 business days"
+                        />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -1530,16 +1634,8 @@ function SettingsContent() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const upsertData = Object.entries(settings).map(([key, value]) => ({
-        key,
-        value,
-        updated_at: new Date().toISOString(),
-      }));
-
-      const { error } = await supabase
-        .from("site_settings")
-        .upsert(upsertData, { onConflict: "key" });
-      if (error) throw error;
+      const result = await updateSiteSettingsAction(settings);
+      if (!result.success) throw new Error(result.error);
 
       Swal.fire({
         title: "SYSTEM SYNCED",

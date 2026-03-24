@@ -70,6 +70,8 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Missing invoice_number" }, { status: 400 });
     }
 
+    const paymentChannel = payload?.payment?.payment_method || "UNKNOWN";
+    
     let newStatus = "pending";
     if (transactionStatus === "SUCCESS") {
         newStatus = "paid";
@@ -78,9 +80,14 @@ export async function POST(req: Request) {
     }
     
     if (newStatus !== "pending") {
+        const updateData: any = { status: newStatus };
+        if (newStatus === "paid") {
+            updateData.payment_gateway = `doku: ${paymentChannel}`;
+        }
+
         const { error } = await adminSupabase
             .from("orders")
-            .update({ status: newStatus })
+            .update(updateData)
             .eq("order_id", invoiceNumber);
             
         if (error) {

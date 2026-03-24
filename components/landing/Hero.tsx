@@ -4,7 +4,7 @@ import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { useRef, useState, useEffect } from "react";
 import { useSettings } from "@/components/providers/SettingsProvider";
 
-export default function Hero() {
+export default function Hero({ theme = "dark" }: { theme?: "dark" | "light" }) {
   const { settings } = useSettings();
   
   // Mengambil gambar dari CMS atau fallback ke default
@@ -33,7 +33,7 @@ export default function Hero() {
   const y1 = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
 
   return (
-    <section ref={ref} className="relative h-screen w-full overflow-hidden bg-[#0B0B0B]">
+    <section ref={ref} className={`relative h-screen w-full overflow-hidden transition-colors duration-700 ${theme === "dark" ? "bg-[#0B0B0B] text-white" : "bg-white text-zinc-900"}`}>
       {/* Background Slider Container */}
       <motion.div style={{ y: y1 }} className="absolute inset-0 z-0">
         {/* Overlay Gelap agar transisi lebih smooth */}
@@ -43,8 +43,8 @@ export default function Hero() {
           <motion.img
             key={currentIndex}
             src={images[currentIndex]}
-            initial={{ opacity: 0, scale: 1.1, filter: "grayscale(100%)" }}
-            animate={{ opacity: 1, scale: 1, filter: "grayscale(100%)" }}
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ 
                 duration: 1.8, 

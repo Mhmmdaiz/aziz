@@ -30,8 +30,7 @@ export function SizeSelector({
 
       <div className="flex flex-wrap gap-3">
         {sizes.map((s) => {
-          // Dummy simulation: let's pretend one size is almost always out of stock to show brutalist disabled state
-          const isOutOfStock = false; // We can set this dynamically if data allows
+          const isOutOfStock = false; 
 
           return (
             <button
@@ -39,19 +38,19 @@ export function SizeSelector({
               onClick={() => !isOutOfStock && onSelectSize(s)}
               disabled={isOutOfStock}
               className={`
-                relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center font-black text-sm md:text-base border-2 transition-all duration-300
+                relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center font-black text-sm md:text-base border transition-all duration-500 rounded-2xl
                 ${isOutOfStock ? "opacity-30 border-red-900 cursor-not-allowed text-red-900 line-through" : ""}
                 ${
                   selectedSize === s
-                    ? "bg-red-600 text-white border-red-500 shadow-[0_0_10px_rgba(220,38,38,0.2)] dark:shadow-[0_0_15px_rgba(220,38,38,0.3)] scale-110 z-10"
-                    : "bg-white dark:bg-[#111] text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-[#333] hover:border-zinc-400 dark:hover:border-zinc-500 hover:text-zinc-900 dark:hover:text-white shadow-sm dark:shadow-none"
+                    ? "bg-zinc-900 dark:bg-white text-white dark:text-black border-zinc-900 dark:border-white shadow-xl scale-105 z-10"
+                    : "bg-white dark:bg-[#111] text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-white/5 hover:border-zinc-400 dark:hover:border-zinc-500 hover:text-zinc-900 dark:hover:text-white"
                 }
               `}
             >
               {s}
               {/* Corner accent for selected */}
               {selectedSize === s && (
-                <div className="absolute top-0 right-0 w-2 h-2 bg-white" />
+                <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse" />
               )}
             </button>
           );

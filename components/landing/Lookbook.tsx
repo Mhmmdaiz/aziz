@@ -4,11 +4,7 @@ import { motion } from "framer-motion";
 import { FiPlayCircle } from "react-icons/fi";
 import { useSettings } from "@/components/providers/SettingsProvider";
 
-export default function Lookbook({
-  theme = "dark",
-}: {
-  theme?: "dark" | "light";
-}) {
+export default function Lookbook({ theme = "dark" }: { theme?: "dark" | "light" }) {
   const { settings } = useSettings();
   const lookbook = settings?.landing_content?.lookbook || {
     image_1:
@@ -19,7 +15,7 @@ export default function Lookbook({
 
   return (
     <section
-      className={`py-20 md:py-32 transition-colors duration-500 ${theme === "dark" ? "bg-[#0B0B0B] text-white" : "bg-white text-black"}`}
+      className={`py-20 md:py-32 transition-colors duration-700 ${theme === "dark" ? "bg-[#0B0B0B] text-white" : "bg-white text-zinc-900"}`}
     >
       <div className="container mx-auto px-6 max-w-6xl">
         {/* Layout: Stack di Mobile (col), Grid di Desktop (lg:grid-cols-12) */}
@@ -33,9 +29,7 @@ export default function Lookbook({
               <h2 className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter leading-[0.85]">
                 The Dark <br />
                 <span
-                  className={
-                    theme === "dark" ? "text-zinc-800" : "text-zinc-200"
-                  }
+                  className="text-zinc-200 dark:text-zinc-800 transition-colors"
                 >
                   Visions.
                 </span>
@@ -49,7 +43,7 @@ export default function Lookbook({
 
             <div className="flex justify-center lg:justify-start">
               <button
-                className={`flex items-center gap-3 md:gap-4 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] border-b-2 pb-2 hover:border-red-500 transition-all duration-500 group ${theme === "dark" ? "border-zinc-900" : "border-zinc-300"}`}
+                className="flex items-center gap-3 md:gap-4 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] border-b-2 border-zinc-200 dark:border-zinc-900 pb-2 hover:border-red-500 transition-all duration-500 group"
               >
                 Watch Film{" "}
                 <FiPlayCircle className="group-hover:scale-125 transition-transform" />
@@ -63,11 +57,11 @@ export default function Lookbook({
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="aspect-[3/4.5] rounded-[1.5rem] md:rounded-[3rem] overflow-hidden bg-zinc-900 mt-6 md:mt-16 shadow-2xl"
+              className={`aspect-[3/4.5] rounded-[1.5rem] md:rounded-[3rem] overflow-hidden mt-6 md:mt-16 shadow-2xl transition-colors ${theme === "dark" ? "bg-zinc-900" : "bg-zinc-100"}`}
             >
               <img
                 src={lookbook.image_1}
-                className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000 scale-105 hover:scale-100"
+                className="w-full h-full object-cover transition-all duration-1000 scale-105 hover:scale-100"
                 alt="Lookbook 1"
               />
             </motion.div>
@@ -75,11 +69,11 @@ export default function Lookbook({
               initial={{ opacity: 0, y: -20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="aspect-[3/4.5] rounded-[1.5rem] md:rounded-[3rem] overflow-hidden bg-zinc-900 shadow-2xl"
+              className={`aspect-[3/4.5] rounded-[1.5rem] md:rounded-[3rem] overflow-hidden shadow-2xl transition-colors ${theme === "dark" ? "bg-zinc-900" : "bg-zinc-100"}`}
             >
               <img
                 src={lookbook.image_2}
-                className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000 scale-105 hover:scale-100"
+                className="w-full h-full object-cover transition-all duration-1000 scale-105 hover:scale-100"
                 alt="Lookbook 2"
               />
             </motion.div>

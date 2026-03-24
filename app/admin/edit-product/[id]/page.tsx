@@ -412,7 +412,7 @@ export default function EditProductPage() {
                    </div>
 
                    <div>
-                      <label className={labelClass}>Units_Claimed_Today</label>
+                      <label className={labelClass}>Total Terjual</label>
                       <input name="sold_today" type="number" value={formData.sold_today} onChange={handleInputChange} className={inputClass} placeholder="0" />
                    </div>
 

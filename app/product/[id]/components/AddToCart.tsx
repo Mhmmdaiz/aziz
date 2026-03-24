@@ -49,50 +49,49 @@ export function AddToCart({ onAdd, onBuyNow, disabled, price, isSoldOut }: AddTo
       {/* ADD TO CART BUTTON */}
       <button
         onClick={handleCartClick}
-        className={`relative flex-1 py-4 md:py-5 flex items-center justify-center gap-3 text-xs md:text-sm font-black uppercase tracking-[0.2em] transition-all duration-300 overflow-hidden group
+        className={`relative flex-1 py-5 flex items-center justify-center gap-3 text-[11px] font-black uppercase tracking-[0.3em] transition-all duration-500 overflow-hidden group rounded-full
           ${(disabled || isSoldOut)
-            ? "bg-zinc-100 dark:bg-[#222] text-zinc-400 dark:text-zinc-600 cursor-not-allowed border border-zinc-200 dark:border-[#333]" 
-            : "bg-white dark:bg-[#111] text-zinc-900 dark:text-white hover:bg-zinc-100 dark:hover:bg-[#222] border border-zinc-300 dark:border-[#444] shadow-sm"
+            ? "bg-zinc-100 dark:bg-[#111] text-zinc-400 dark:text-zinc-700 cursor-not-allowed border border-zinc-200 dark:border-white/5" 
+            : "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-white/10 shadow-sm"
           }
         `}
       >
         {loadingCart ? (
-          <Loader2 size={20} className="animate-spin" />
+          <Loader2 size={18} className="animate-spin" />
         ) : (
-          <ShoppingBag size={20} className={(disabled || isSoldOut) ? "opacity-50" : ""} />
+          <ShoppingBag size={18} className={(disabled || isSoldOut) ? "opacity-30" : ""} />
         )}
-        <span className="relative z-10 mt-0.5">
-          {loadingCart ? "MEMUAT..." : isSoldOut ? "SOLD OUT" : disabled ? "PILIH UKURAN" : `TAMBAH [ ${Number(price).toLocaleString()} ]`}
+        <span className="relative z-10">
+          {loadingCart ? "LOADING_VAULT..." : isSoldOut ? "SOLD OUT" : disabled ? "SELECT_SIZE" : "ADD_TO_BAG"}
         </span>
       </button>
 
       {/* BUY NOW BUTTON */}
       <button
         onClick={handleBuyClick}
-        className={`relative flex-1 py-4 md:py-5 flex items-center justify-center gap-3 text-xs md:text-sm font-black uppercase tracking-[0.2em] transition-all duration-300 overflow-hidden group
+        className={`relative flex-1 py-5 flex items-center justify-center gap-3 text-[11px] font-black uppercase tracking-[0.3em] transition-all duration-500 overflow-hidden group rounded-full
           ${(disabled || isSoldOut)
-            ? "bg-zinc-100 dark:bg-[#222] text-zinc-400 dark:text-zinc-600 cursor-not-allowed border border-zinc-200 dark:border-[#333]" 
-            : "bg-red-600 text-white hover:bg-red-500 border border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.15)] dark:shadow-[0_0_30px_rgba(220,38,38,0.2)] hover:shadow-[0_0_30px_rgba(220,38,38,0.25)] dark:hover:shadow-[0_0_50px_rgba(220,38,38,0.4)]"
+            ? "bg-zinc-100 dark:bg-[#111] text-zinc-400 dark:text-zinc-700 cursor-not-allowed border border-zinc-200 dark:border-white/5" 
+            : "bg-red-600 text-white hover:bg-red-500 border border-red-500 shadow-xl"
           }
         `}
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-[1.5s]" />
         
         {loadingBuy ? (
-          <Loader2 size={20} className="animate-spin" />
+          <Loader2 size={18} className="animate-spin" />
         ) : isSoldOut ? null : (
-          <span className="font-mono font-bold">⚡</span>
+          <span className="font-mono font-bold text-lg">⚡</span>
         )}
         
-        <span className="relative z-10 mt-0.5">
-          {loadingBuy ? "MEMPROSES..." : isSoldOut ? "SOLD OUT" : disabled ? "PILIH UKURAN" : "BELI SEKARANG"}
+        <span className="relative z-10">
+          {loadingBuy ? "EXECUTING..." : isSoldOut ? "SOLD OUT" : disabled ? "SELECT_SIZE" : "BUY_INSTANT"}
         </span>
 
         {!(disabled || isSoldOut) && (
-          <>
-            <div className="absolute top-1 left-1 w-2 h-2 border-t-2 border-l-2 border-white/50" />
-            <div className="absolute bottom-1 right-1 w-2 h-2 border-b-2 border-r-2 border-white/50" />
-          </>
+          <div className="absolute top-0 right-0 p-1 opacity-20">
+             <div className="w-1 h-1 bg-white rounded-full" />
+          </div>
         )}
       </button>
     </div>

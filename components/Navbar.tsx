@@ -139,8 +139,8 @@ export default function Navbar() {
           <div
             className={`relative flex items-center justify-between px-6 md:px-10 h-16 md:h-20 rounded-full border transition-all duration-700 shadow-2xl glass
               ${isScrolled
-                ? "border-zinc-200/20 dark:border-white/20 bg-white/40 dark:bg-black/40 backdrop-blur-xl scale-[0.98] md:scale-100"
-                : "border-zinc-200/10 dark:border-white/10 bg-white/20 dark:bg-black/20 backdrop-blur-md"
+                ? "border-zinc-200/20 dark:border-white/20 bg-white/40 dark:bg-black/60 backdrop-blur-xl scale-[0.98] md:scale-100"
+                : "border-zinc-200/10 dark:border-white/10 bg-white/20 dark:bg-black/30 backdrop-blur-md"
               }
             `}
           >
@@ -160,14 +160,14 @@ export default function Navbar() {
               </Link>
 
               {/* DESKTOP NAV */}
-              <div className="hidden lg:flex items-center gap-1 p-1 rounded-full bg-white/5 border border-white/5">
+              <div className="hidden lg:flex items-center gap-1 p-1 rounded-full bg-zinc-900/5 dark:bg-white/5 border border-zinc-200/10 dark:border-white/5">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="relative px-6 py-2 group"
+                    className="relative px-6 py-2 group overflow-hidden rounded-full"
                   >
-                    <span className={`relative z-10 text-[10px] font-black uppercase tracking-widest transition-colors
+                    <span className={`relative z-10 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500
                       ${pathname === link.href ? "text-zinc-900 dark:text-white" : "text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-zinc-200"}
                     `}>
                       {link.label}
@@ -175,7 +175,7 @@ export default function Navbar() {
                     {pathname === link.href && (
                       <motion.div
                         layoutId="nav-pill-premium"
-                        className="absolute inset-0 bg-white/10 rounded-full z-0 border border-white/10"
+                        className="absolute inset-0 bg-white dark:bg-zinc-800 shadow-sm z-0"
                         transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                       />
                     )}

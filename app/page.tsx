@@ -63,7 +63,7 @@ export default function FashionLandingPage() {
   if (!mounted) return null;
 
   return (
-    <main className="selection:bg-[var(--color-primary-accent)] selection:text-white overflow-x-hidden bg-black">
+    <main className="selection:bg-[var(--color-primary-accent)] selection:text-white overflow-x-hidden bg-white dark:bg-[#030303] transition-colors duration-500">
       <Suspense fallback={null}>
         <AuthRedirectHandler />
       </Suspense>

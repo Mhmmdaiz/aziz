@@ -35,7 +35,7 @@ export default function PreOrderSystem({ data: propData, theme = "dark" }: any) 
   const carouselImages = data?.carousel_images || ["https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?q=80&w=800"];
 
   return (
-    <section className={`relative py-12 md:py-36 transition-colors duration-500 ${theme === "dark" ? "bg-black text-white" : "bg-white text-black"}`}>
+    <section className={`relative py-12 md:py-36 transition-colors duration-700 ${theme === "dark" ? "bg-[#0B0B0B] text-white" : "bg-white text-zinc-900"}`}>
       <div className="container mx-auto px-4 md:px-8">
         
         {/* GRID UTAMA: Selalu 2 Kolom (Kiri-Kanan) bahkan di Mobile */}
@@ -55,13 +55,13 @@ export default function PreOrderSystem({ data: propData, theme = "dark" }: any) 
                 {data?.headline || "CRITICAL BATCH."}
               </h2>
               
-              <p className={`mt-2 md:mt-8 text-[8px] md:text-base font-medium leading-tight md:leading-relaxed ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>
+              <p className={`mt-2 md:mt-8 text-[8px] md:text-base font-medium leading-tight md:leading-relaxed transition-colors ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>
                 {data?.description || "Architected specifically for its owner."}
               </p>
             </div>
 
             {/* Deployment Card Mini */}
-            <div className={`p-3 md:p-8 rounded-xl md:rounded-[2.5rem] border ${theme === "dark" ? "bg-zinc-900/40 border-white/5" : "bg-zinc-50 border-zinc-100"}`}>
+            <div className={`p-3 md:p-8 rounded-xl md:rounded-[2.5rem] border transition-colors ${theme === "dark" ? "bg-zinc-900/40 border-white/5" : "bg-zinc-50 border-zinc-100"}`}>
               <div className="flex items-center gap-2 md:gap-4">
                 <FiClock className="text-[var(--color-primary-accent)] w-3 h-3 md:w-8 md:h-8" />
                 <div>
@@ -75,7 +75,7 @@ export default function PreOrderSystem({ data: propData, theme = "dark" }: any) 
             {timeLeft && (
               <div className="flex gap-1 md:gap-4">
                 {[{l: "D", v: timeLeft.d}, {l: "H", v: timeLeft.h}, {l: "M", v: timeLeft.m}, {l: "S", v: timeLeft.s}].map((u, i) => (
-                  <div key={i} className={`flex-1 py-1 md:py-4 rounded-lg md:rounded-2xl text-center border ${theme === "dark" ? "bg-zinc-900/60 border-white/5" : "bg-white border-zinc-100"}`}>
+                  <div key={i} className={`flex-1 py-1 md:py-4 rounded-lg md:rounded-2xl text-center border transition-colors ${theme === "dark" ? "bg-zinc-900/60 border-white/5" : "bg-zinc-50 border-zinc-100"}`}>
                     <p className="text-[9px] md:text-3xl font-black italic tracking-tighter">{u.v.toString().padStart(2, "0")}</p>
                     <p className="text-[5px] md:text-[8px] font-black text-zinc-500">{u.l}</p>
                   </div>
@@ -85,7 +85,7 @@ export default function PreOrderSystem({ data: propData, theme = "dark" }: any) 
 
             <Link
               href={`/preOrder/default`}
-              className={`inline-flex items-center justify-center gap-2 md:gap-6 py-3 md:py-6 rounded-full font-black uppercase tracking-widest text-[7px] md:text-[11px] transition-all ${theme === "dark" ? "bg-white text-black" : "bg-black text-white"}`}
+              className="inline-flex items-center justify-center gap-2 md:gap-6 py-3 md:py-6 rounded-full font-black uppercase tracking-widest text-[7px] md:text-[11px] transition-all bg-zinc-900 dark:bg-white text-white dark:text-black hover:bg-red-600 dark:hover:bg-red-600 hover:text-white"
             >
               {data?.cta || "AMANKAN SLOT"}
               <FiArrowRight className="w-2 h-2 md:w-4 md:h-4" />
@@ -101,7 +101,7 @@ export default function PreOrderSystem({ data: propData, theme = "dark" }: any) 
                   src={carouselImages[currentImageIndex]}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="absolute inset-0 w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
+                  className="absolute inset-0 w-full h-full object-cover transition-all duration-700 hover:scale-105"
                 />
               </AnimatePresence>
               

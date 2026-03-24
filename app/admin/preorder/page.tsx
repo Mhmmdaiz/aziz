@@ -31,6 +31,12 @@ import {
   Shield,
 } from "lucide-react";
 import { useSettings } from "@/components/providers/SettingsProvider";
+import { 
+  createPreorderProductAction, 
+  updatePreorderProductAction, 
+  updateLandingContentAction, 
+  updateLegalContentAction 
+} from "./actions";
 import Swal from "sweetalert2";
 
 // --- TYPES & INTERFACES ---
@@ -1658,34 +1664,26 @@ export default function AdminPreorder() {
     setProductLoading(true);
 
     try {
-      // 1. Update Product Table
-      const { error: pError } = await supabase
-        .from("products")
-        .update({
-          name: product.name,
-          price: product.price,
-          stock: product.stock,
-          description: product.description,
-          image_url: product.image_url,
-          image_urls: product.image_urls || [product.image_url],
-          show_in_shop: product.show_in_shop,
-          sizes: product.sizes || [],
-        })
-        .eq("id", product.id);
+      const productUpdate = {
+        name: product.name,
+        price: product.price,
+        stock: product.stock,
+        description: product.description,
+        image_url: product.image_url,
+        image_urls: product.image_urls || [product.image_url],
+        show_in_shop: product.show_in_shop,
+        sizes: product.sizes || [],
+      };
 
-      // 2. Update Site Settings (Overlay Texts & Image sync)
-      const newPreorder = {
+      const preorderUpdate = {
         ...landingData?.preorder,
         featured_badge: product.featured_badge,
         cta_secondary: product.cta_secondary,
         image_url: product.image_url,
       };
-      const { error: sError } = await supabase
-        .from("site_settings")
-        .update({ value: newPreorder })
-        .eq("key", "preorder");
 
-      if (pError || sError) throw pError || sError;
+      const result = await updatePreorderProductAction(product.id, productUpdate, preorderUpdate);
+      if (!result.success) throw new Error(result.error);
 
       Swal.fire("Success", "Product & Visuals synchronized", "success");
       fetchData();
@@ -1714,10 +1712,7 @@ export default function AdminPreorder() {
 
   const handleSaveLanding = async (newData: LandingData) => {
     try {
-      // Update local parent state immediately for tab switching sync
       setLandingData(newData);
-
-      // Split data into landing_content, preorder, and appearance
       const { preorder, appearance, ...rest } = newData;
 
       const updates = [
@@ -1726,10 +1721,8 @@ export default function AdminPreorder() {
         { key: "appearance", value: appearance },
       ];
 
-      const { error } = await supabase
-        .from("site_settings")
-        .upsert(updates, { onConflict: "key" });
-      if (error) throw error;
+      const result = await updateLandingContentAction(updates);
+      if (!result.success) throw new Error(result.error);
 
       Swal.fire({
         title: "SYSTEM SYNCED",
@@ -1740,9 +1733,6 @@ export default function AdminPreorder() {
         showConfirmButton: false,
         timer: 3000,
       });
-
-      // No need to fetchData again as local state is already updated (if managed by LandingCMS)
-      // actually LandingCMS manages local formData.
     } catch (err: any) {
       Swal.fire("Sync Error", err.message, "error");
     }
@@ -1751,11 +1741,9 @@ export default function AdminPreorder() {
   const handleSaveLegal = async (newData: LegalData) => {
     try {
       setLegalData(newData);
-      const { error } = await supabase
-        .from("site_settings")
-        .update({ value: newData })
-        .eq("key", "legal_content");
-      if (error) throw error;
+      const result = await updateLegalContentAction(newData);
+      if (!result.success) throw new Error(result.error);
+      
       Swal.fire({
         title: "LEGAL SYNCED",
         text: "Terms & Privacy Policies Updated",
@@ -1871,38 +1859,23 @@ export default function AdminPreorder() {
                     <button
                       onClick={async () => {
                         setProductLoading(true);
-                        const { data, error } = await supabase
-                          .from("products")
-                          .insert({
-                            name: "New Pre-Order Product",
-                            price: 0,
-                            stock: 100,
-                            description: "New limited edition artifact...",
-                            category: "APPAREL",
-                            show_in_shop: false,
-                            image_url:
-                              "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=800",
-                          })
-                          .select()
-                          .single();
+                        const productData = {
+                          name: "New Pre-Order Product",
+                          price: 0,
+                          stock: 100,
+                          description: "New limited edition artifact...",
+                          category: "APPAREL",
+                          show_in_shop: false,
+                          image_url: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=800",
+                        };
 
-                        if (data) {
-                          const newPreorder = {
-                            ...landingData?.preorder,
-                            product_id: data.id,
-                          };
-                          await supabase
-                            .from("site_settings")
-                            .upsert(
-                              { key: "preorder", value: newPreorder },
-                              { onConflict: "key" },
-                            );
+                        const result = await createPreorderProductAction(productData, landingData?.preorder);
+                        
+                        if (result.success) {
                           fetchData();
-                          Swal.fire(
-                            "Success",
-                            "New product placeholder created and linked",
-                            "success",
-                          );
+                          Swal.fire("Success", "New product placeholder created and linked", "success");
+                        } else {
+                          Swal.fire("Error", result.error, "error");
                         }
                         setProductLoading(false);
                       }}

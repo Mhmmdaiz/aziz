@@ -89,7 +89,7 @@ export function ProductInfo({
           )}
           
           <div className="flex items-center justify-between text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
-            {sold_today > 0 && <span>🔥 {sold_today} unit terjual hari ini</span>}
+            {sold_today > 0 && <span>🔥 {sold_today} unit telah diklaim</span>}
             {stock <= 0 ? (
                <span className="text-red-500 font-bold">SOLD OUT</span>
             ) : isLowStock ? (
