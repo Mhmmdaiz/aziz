@@ -5,32 +5,24 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  FiClock,
   FiShoppingBag,
   FiUsers,
   FiSettings,
   FiRefreshCw,
   FiCheckCircle,
-  FiArrowRight,
   FiBox,
   FiZap,
   FiPlus,
   FiTrash2,
-  FiMail,
-  FiPhone,
-  FiMapPin,
 } from "react-icons/fi";
 import { 
   Plus, 
   Trash2, 
   LayoutDashboard, 
-  Zap, 
-  Target, 
   Upload, 
   Image as ImageIcon, 
   LayoutGrid, 
   Clock, 
-  Users, 
   Activity,
   PlusCircle,
   Save,
@@ -78,19 +70,7 @@ interface LandingData {
     sizes?: string[];
     steps?: Array<{ title: string; desc: string }>;
   };
-  value_props?: {
-    title?: string;
-    items?: Array<{ icon: string; title: string; desc: string }>;
-  };
   categories?: Array<{ name: string; count: string; img: string }>;
-  faqs?: Array<{ q: string; a: string }>;
-  contact?: {
-    title?: string;
-    description?: string;
-    email_label?: string;
-    phone_label?: string;
-    address_label?: string;
-  };
   featured_products?: string[];
   sections?: SectionConfig[];
   appearance?: {
@@ -315,41 +295,19 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
       image_1: "https://images.unsplash.com/photo-1544441893-675973e31985?q=80&w=800",
       image_2: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800",
     },
-    value_props: {
-        title: "Why be anything but elite?",
-        items: [
-          { icon: "FiZap", title: "Premium Material", desc: "Heavyweight 100% Cotton" },
-          { icon: "FiHexagon", title: "Limited Drop", desc: "No restocks, ever." },
-          { icon: "FiTarget", title: "Unique Design", desc: "Brutalist aesthetics." },
-          { icon: "FiBox", title: "Eco Packaging", desc: "Sustainable unboxing." },
-        ],
-    },
     categories: [
       { name: "Oversize", count: "12 Artifacts", img: "https://images.unsplash.com/photo-1571945153237-4929e783ee4a?q=80&w=800" },
       { name: "Graphic", count: "08 Artifacts", img: "https://images.unsplash.com/photo-1554568218-0f1715e72254?q=80&w=800" },
       { name: "Minimal", count: "05 Artifacts", img: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=800" },
       { name: "Dark Series", count: "07 Artifacts", img: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800" }
     ],
-    faqs: [
-      { q: "How long is dispatch?", a: "Standard deployment takes 2-4 days." }
-    ],
-    contact: {
-      title: "GET IN TOUCH.",
-      description: "Have questions about your order or our latest drops? Our team is ready to assist you.",
-      email_label: "Email Protocol",
-      phone_label: "Secure Line",
-      address_label: "Base HQ"
-    },
     featured_products: [],
     sections: [
       { id: "hero", label: "Hero Section", visible: true, theme: "auto" },
+      { id: "preorder", label: "Sistem Pre-Order", visible: true, theme: "auto" },
       { id: "featured_products", label: "Featured Products", visible: true, theme: "auto" },
-      { id: "value_props", label: "Value Propositions", visible: true, theme: "auto" },
       { id: "categories", label: "Category Grid", visible: true, theme: "auto" },
       { id: "lookbook", label: "Lookbook Showcase", visible: true, theme: "auto" },
-      { id: "preorder", label: "Sistem Pre-Order", visible: true, theme: "auto" },
-      { id: "faq", label: "Bagian FAQ", visible: true, theme: "auto" },
-      { id: "contact", label: "Bagian Kontak", visible: true, theme: "auto" },
     ],
     preorder: {
       badge: "PROTOCOL V4: PRE-ORDER SYSTEM",
@@ -389,10 +347,17 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
       lookbook: { ...defaultData.lookbook, ...data?.lookbook }, 
       preorder: { ...defaultData.preorder, ...data?.preorder },
       categories: data?.categories?.length ? data.categories : defaultData.categories,
-      faqs: data?.faqs?.length ? data.faqs : defaultData.faqs,
-      contact: { ...defaultData.contact, ...data?.contact },
       featured_products: data?.featured_products || [],
-      sections: data?.sections || defaultData.sections,
+      sections: (() => {
+        const validOrder = ["hero", "preorder", "featured_products", "categories", "lookbook"];
+        // Merge saved sections (for visibility/theme prefs) with the canonical default list
+        const base = validOrder.map(id => {
+          const saved = (data?.sections || []).find((s: any) => s.id === id);
+          const def = defaultData.sections?.find(s => s.id === id);
+          return saved ? { ...def, ...saved } : def!;
+        });
+        return base;
+      })(),
       appearance: data?.appearance || defaultData.appearance
     }
   );
@@ -797,84 +762,6 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
                   </Card>
               );
 
-              if (section.id === "value_props") return (
-                  /* VALUE PROPS */
-                  <Card key="value_props">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 text-white">
-                          <Target size={14} />
-                        </div>
-                        <h3 className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-white">
-                          Nilai Proposisi
-                        </h3>
-                      </div>
-                      <div className="flex items-center flex-wrap gap-2 w-full md:w-auto justify-between md:justify-end">
-                        <button onClick={() => moveSection("value_props", "up")} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500"><FiPlus className="rotate-45" size={14}/></button>
-                        <button onClick={() => moveSection("value_props", "down")} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500"><FiPlus className="-rotate-[135deg]" size={14}/></button>
-                        
-                        <div className="flex bg-zinc-100 dark:bg-zinc-800 rounded-xl p-1 mx-2">
-                          {(['auto', 'dark', 'light'] as const).map((t) => (
-                            <button
-                              key={t}
-                              onClick={() => setSectionTheme("value_props", t)}
-                              className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase transition-all ${
-                                (section.theme || 'auto') === t 
-                                  ? 'bg-white dark:bg-zinc-700 text-fuchsia-500 shadow-md' 
-                                  : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200'
-                              }`}
-                            >
-                              {t}
-                            </button>
-                          ))}
-                        </div>
-
-                        <button onClick={() => toggleVisibility("value_props")} className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${section.visible ? "bg-fuchsia-500/10 text-fuchsia-500 border-fuchsia-500/20" : "bg-zinc-100 text-zinc-400 border-zinc-200"}`}>
-                          {section.visible ? "VISIBLE" : "HIDDEN"}
-                        </button>
-                      </div>
-                    </div>
-            <div className="mb-4">
-              <Label>Title Section</Label>
-              <Input
-                value={formData.value_props?.title || ""}
-                onChange={(e) => handleChange("value_props", { ...formData.value_props, title: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-3">
-              {formData.value_props?.items?.map((vp: any, idx: number) => (
-                <div key={idx} className="p-4 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-900/40">
-                  <span className="text-[9px] font-black uppercase text-zinc-500 block mb-2">Item 0{idx + 1}</span>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <Label>Title</Label>
-                      <Input
-                        value={vp.title}
-                        onChange={(e) => {
-                          const newItems = [...(formData.value_props?.items || [])];
-                          newItems[idx] = { ...newItems[idx], title: e.target.value };
-                          handleChange("value_props", { ...formData.value_props, items: newItems });
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Label>Description</Label>
-                      <Input
-                        value={vp.desc}
-                        onChange={(e) => {
-                          const newItems = [...(formData.value_props?.items || [])];
-                          newItems[idx] = { ...newItems[idx], desc: e.target.value };
-                          handleChange("value_props", { ...formData.value_props, items: newItems });
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-              );
 
               if (section.id === "categories") return (
                   /* CATEGORY GRID CONFIG */
@@ -1190,245 +1077,7 @@ function LandingCMS({ data, onSave, preorderOnly = false }: { data?: LandingData
                   </Card>
               );
 
-              if (section.id === "faq") return (
-                  /* FAQ CONFIG */
-                  <Card key="faq">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 text-white">
-                          <Zap size={14} />
-                        </div>
-                        <h3 className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-white">
-                          Bagian FAQ
-                        </h3>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newFaqs = [...(formData.faqs || []), { q: "", a: "" }];
-                            handleChange("faqs", newFaqs);
-                          }}
-                          className="flex w-fit items-center gap-1.5 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-[9px] font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-all"
-                        >
-                          <PlusCircle size={11} /> Tambah FAQ
-                        </button>
-                        <button onClick={() => moveSection("faq", "up")} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500"><FiPlus className="rotate-45" size={14}/></button>
-                        <button onClick={() => moveSection("faq", "down")} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500"><FiPlus className="-rotate-[135deg]" size={14}/></button>
-                        
-                        <div className="flex bg-zinc-100 dark:bg-zinc-800 rounded-xl p-1 mx-2">
-                          {(['auto', 'dark', 'light'] as const).map((t) => (
-                            <button
-                              key={t}
-                              onClick={() => setSectionTheme("faq", t)}
-                              className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase transition-all ${
-                                (section.theme || 'auto') === t 
-                                  ? 'bg-white dark:bg-zinc-700 text-fuchsia-500 shadow-md' 
-                                  : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200'
-                              }`}
-                            >
-                              {t}
-                            </button>
-                          ))}
-                        </div>
 
-                        <button onClick={() => toggleVisibility("faq")} className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${section.visible ? "bg-fuchsia-500/10 text-fuchsia-500 border-fuchsia-500/20" : "bg-zinc-100 text-zinc-400 border-zinc-200"}`}>
-                          {section.visible ? "TERLIHAT" : "TERSEMBUNYI"}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      {formData.faqs?.map((faq: any, i: number) => (
-                        <div key={i} className="p-4 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-900/40 relative">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newFaqs = formData.faqs?.filter((_, idx) => idx !== i);
-                              handleChange("faqs", newFaqs);
-                            }}
-                            className="absolute top-4 right-4 text-zinc-400 hover:text-red-500"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                          <div className="grid grid-cols-1 gap-3 w-full overflow-hidden">
-                            <div>
-                               <Label>Pertanyaan</Label>
-                              <Input
-                                value={faq.q}
-                                onChange={(e) => {
-                                  const newFaqs = [...(formData.faqs || [])];
-                                  newFaqs[i] = { ...newFaqs[i], q: e.target.value };
-                                  handleChange("faqs", newFaqs);
-                                }}
-                              />
-                            </div>
-                            <div>
-                               <Label>Jawaban</Label>
-                              <Textarea
-                                rows={2}
-                                value={faq.a}
-                                onChange={(e) => {
-                                  const newFaqs = [...(formData.faqs || [])];
-                                  newFaqs[i] = { ...newFaqs[i], a: e.target.value };
-                                  handleChange("faqs", newFaqs);
-                                }}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </Card>
-              );
-
-            if (section.id === "contact")
-              return (
-                <Card key="contact">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 text-white">
-                        <FiMail size={14} />
-                      </div>
-                      <h3 className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-white">
-                        Bagian Kontak Kami
-                      </h3>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => moveSection("contact", "up")}
-                        className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500"
-                      >
-                        <FiPlus className="rotate-45" size={14} />
-                      </button>
-                      <button
-                        onClick={() => moveSection("contact", "down")}
-                        className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-zinc-500"
-                      >
-                        <FiPlus className="-rotate-[135deg]" size={14} />
-                      </button>
-
-                      <div className="flex bg-zinc-100 dark:bg-zinc-800 rounded-xl p-1 mx-2">
-                        {(["auto", "dark", "light"] as const).map((t) => (
-                          <button
-                            key={t}
-                            onClick={() => setSectionTheme("contact", t)}
-                            className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase transition-all ${
-                              (section.theme || "auto") === t
-                                ? "bg-white dark:bg-zinc-700 text-fuchsia-500 shadow-md"
-                                : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
-                            }`}
-                          >
-                            {t}
-                          </button>
-                        ))}
-                      </div>
-
-                      <button
-                        onClick={() => toggleVisibility("contact")}
-                        className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${
-                          section.visible
-                            ? "bg-fuchsia-500/10 text-fuchsia-500 border-fuchsia-500/20"
-                            : "bg-zinc-100 text-zinc-400 border-zinc-200"
-                        }`}
-                      >
-                        {section.visible ? "TERLIHAT" : "TERSEMBUNYI"}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="md:col-span-2">
-                      <Label>Judul Utama (Main Title)</Label>
-                      <Input
-                        value={formData.contact?.title || ""}
-                        onChange={(e) =>
-                          handleChange("contact", {
-                            ...formData.contact,
-                            title: e.target.value,
-                          })
-                        }
-                        placeholder="GET IN TOUCH."
-                      />
-                    </div>
-                    <div className="md:col-span-2">
-                      <Label>Deskripsi (Description)</Label>
-                      <Textarea
-                        rows={2}
-                        value={formData.contact?.description || ""}
-                        onChange={(e) =>
-                          handleChange("contact", {
-                            ...formData.contact,
-                            description: e.target.value,
-                          })
-                        }
-                        placeholder="Have questions about your order..."
-                      />
-                    </div>
-                    <div>
-                      <Label>Label Email</Label>
-                      <div className="flex gap-3">
-                        <div className="w-10 h-10 shrink-0 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center rounded-xl text-zinc-400">
-                          <FiMail size={14} />
-                        </div>
-                        <Input
-                          value={formData.contact?.email_label || ""}
-                          onChange={(e) =>
-                            handleChange("contact", {
-                              ...formData.contact,
-                              email_label: e.target.value,
-                            })
-                          }
-                          placeholder="Email Protocol"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label>Label Telepon</Label>
-                      <div className="flex gap-3">
-                        <div className="w-10 h-10 shrink-0 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center rounded-xl text-zinc-400">
-                          <FiPhone size={14} />
-                        </div>
-                        <Input
-                          value={formData.contact?.phone_label || ""}
-                          onChange={(e) =>
-                            handleChange("contact", {
-                              ...formData.contact,
-                              phone_label: e.target.value,
-                            })
-                          }
-                          placeholder="Secure Line"
-                        />
-                      </div>
-                    </div>
-                    <div className="md:col-span-2">
-                      <Label>Label Alamat</Label>
-                      <div className="flex gap-3">
-                        <div className="w-10 h-10 shrink-0 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center rounded-xl text-zinc-400">
-                          <FiMapPin size={14} />
-                        </div>
-                        <Input
-                          value={formData.contact?.address_label || ""}
-                          onChange={(e) =>
-                            handleChange("contact", {
-                              ...formData.contact,
-                              address_label: e.target.value,
-                            })
-                          }
-                          placeholder="Base HQ"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-6 p-4 rounded-xl bg-amber-500/5 border border-amber-500/10">
-                    <p className="text-[10px] text-amber-500 font-bold italic">
-                      Info: Nilai email, telepon, dan alamat sebenarnya diambil
-                      dari &quot;Pengaturan Sistem &gt; Store
-                      Information&quot;.
-                    </p>
-                  </div>
-                </Card>
-              );
 
             return null;
           })}
