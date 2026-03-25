@@ -5,26 +5,31 @@ import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
 
-export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return (
-      <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
-    );
-  }
-
-  return (
-    <button
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="relative w-10 h-10 md:w-11 md:h-11 flex items-center justify-center rounded-full bg-zinc-100/80 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-zinc-900 dark:text-white transition-all duration-500 hover:scale-110 active:scale-90 shadow-sm overflow-hidden group outline-none"
-      title="Toggle Theme"
-    >
+export function ThemeToggle({ isTransparent = false }: { isTransparent?: boolean }) {
+   const { theme, setTheme } = useTheme();
+   const [mounted, setMounted] = React.useState(false);
+ 
+   React.useEffect(() => {
+     setMounted(true);
+   }, []);
+ 
+   if (!mounted) {
+     return (
+       <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
+     );
+   }
+ 
+   return (
+     <button
+       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+       className={`relative w-10 h-10 md:w-11 md:h-11 flex items-center justify-center rounded-full transition-all duration-500 hover:scale-110 active:scale-90 outline-none group
+         ${isTransparent 
+           ? "bg-transparent border-transparent text-white" 
+           : "bg-zinc-100/80 dark:bg-white/5 border border-zinc-200 dark:border-white/10 text-zinc-900 dark:text-white shadow-sm shadow-black/5"
+         }
+       `}
+       title="Toggle Theme"
+     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={theme === "dark" ? "dark" : "light"}

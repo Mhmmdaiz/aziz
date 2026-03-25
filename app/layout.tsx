@@ -1,5 +1,7 @@
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import SideCart from "@/components/cart/SideCart";
+import SearchDrawer from "@/components/search/SearchDrawer";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { SettingsProvider } from "@/components/providers/SettingsProvider";
 import { CartProvider } from "@/components/providers/CartProvider";
@@ -33,6 +35,8 @@ export default function RootLayout({
               enableSystem
             >
             <Navbar />
+            <SideCart />
+            <SearchDrawer />
             <main className="flex-1 w-full">
               {children}
             </main>

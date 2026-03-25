@@ -19,7 +19,7 @@ export default function StatsCard({ label, value, icon, trend, color = "text-zin
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
       whileHover={{ y: -5 }}
-      className="bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 p-8 rounded-[2rem] shadow-sm dark:shadow-none hover:shadow-2xl hover:shadow-indigo-500/10 transition-all group relative overflow-hidden mesh-gradient"
+      className="bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 p-5 md:p-8 rounded-[1.5rem] md:rounded-[2rem] shadow-sm dark:shadow-none hover:shadow-2xl hover:shadow-indigo-500/10 transition-all group relative overflow-hidden mesh-gradient"
     >
       {/* Decorative Glow */}
       <div className="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/10 blur-[60px] rounded-full group-hover:bg-indigo-500/20 transition-all duration-700" />

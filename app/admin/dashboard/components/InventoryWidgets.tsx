@@ -21,7 +21,7 @@ export default function InventoryWidgets({
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white dark:bg-zinc-950 p-8 border border-zinc-100 dark:border-zinc-900 rounded-[2.5rem] shadow-sm dark:shadow-none relative overflow-hidden group"
+        className="bg-white dark:bg-zinc-950 p-5 md:p-8 border border-zinc-100 dark:border-zinc-900 rounded-[1.5rem] md:rounded-[2.5rem] shadow-sm dark:shadow-none relative overflow-hidden group"
       >
         <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 blur-[50px] -mr-16 -mt-16 group-hover:bg-rose-500/10 transition-all duration-700" />
 
@@ -75,7 +75,7 @@ export default function InventoryWidgets({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="bg-white dark:bg-zinc-950 p-8 border border-zinc-100 dark:border-zinc-900 rounded-[2.5rem] shadow-sm dark:shadow-none relative overflow-hidden group"
+        className="bg-white dark:bg-zinc-950 p-5 md:p-8 border border-zinc-100 dark:border-zinc-900 rounded-[1.5rem] md:rounded-[2.5rem] shadow-sm dark:shadow-none relative overflow-hidden group"
       >
         <div className="absolute bottom-0 right-0 w-40 h-40 bg-indigo-500/5 blur-[60px] -mr-20 -mb-20 group-hover:bg-indigo-500/10 transition-all duration-700" />
 

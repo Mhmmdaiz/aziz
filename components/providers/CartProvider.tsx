@@ -18,6 +18,8 @@ interface CartContextType {
   cartTotal: number;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
+  isSearchOpen: boolean;
+  setIsSearchOpen: (open: boolean) => void;
   addToCart: (item: any) => void;
   updateQuantity: (cartId: string, delta: number) => void;
   removeItem: (cartId: string) => void;
@@ -29,6 +31,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -102,6 +105,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         cartTotal,
         isCartOpen,
         setIsCartOpen,
+        isSearchOpen,
+        setIsSearchOpen,
         addToCart,
         updateQuantity,
         removeItem,

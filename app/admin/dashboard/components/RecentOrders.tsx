@@ -13,10 +13,10 @@ export default function RecentOrders({ orders }: RecentOrdersProps) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 rounded-[2rem] md:rounded-[2.5rem] shadow-sm overflow-hidden h-full"
+      className="bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 rounded-[1.5rem] md:rounded-[2.5rem] shadow-sm overflow-hidden h-full"
     >
       {/* Header */}
-      <div className="p-6 md:p-8 border-b border-zinc-100 dark:border-zinc-900 flex justify-between items-center bg-zinc-50 dark:bg-zinc-900/50">
+      <div className="p-5 md:p-8 border-b border-zinc-100 dark:border-zinc-900 flex justify-between items-center bg-zinc-50 dark:bg-zinc-900/50">
         <div>
           <h3 className="text-xs md:text-sm font-black italic uppercase tracking-[0.2em] text-zinc-900 dark:text-white">
             Transaksi Baru

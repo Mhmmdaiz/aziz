@@ -41,7 +41,7 @@ export default function SalesChart({ data }: SalesChartProps) {
     <motion.div
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 p-8 rounded-[2.5rem] shadow-sm dark:shadow-none h-full min-h-[400px]"
+      className="bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 p-5 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] shadow-sm dark:shadow-none h-full min-h-[400px]"
     >
       <header className="flex justify-between items-center mb-10">
         <div>
