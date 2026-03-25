@@ -33,7 +33,7 @@ export default function CategoryGrid({ theme = "dark" }: { theme?: "dark" | "lig
             >
               <img 
                 src={cat.img} 
-                className="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all duration-[1.5s] ease-out" 
+                className="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-110 transition duration-[1.5s] ease-out" 
                 alt={cat.name} 
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
@@ -50,7 +50,7 @@ export default function CategoryGrid({ theme = "dark" }: { theme?: "dark" | "lig
                 {/* Button Arrow: Diperkecil di mobile agar tidak menutupi teks */}
                 <Link 
                   href={`/shop?category=${cat.name}`}
-                  className="mt-2 md:mt-4 w-6 h-6 md:w-14 md:h-14 rounded-full bg-white text-black flex items-center justify-center -translate-x-2 md:-translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-500 shadow-xl"
+                  className="mt-2 md:mt-4 w-6 h-6 md:w-14 md:h-14 rounded-full bg-white text-black flex items-center justify-center -translate-x-2 md:-translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition duration-500 shadow-xl"
                 >
                   <FiArrowUpRight className="w-3 h-3 md:w-6 md:h-6" />
                 </Link>

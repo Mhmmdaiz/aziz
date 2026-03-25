@@ -8,6 +8,18 @@ import ArticleCard from "@/components/journal/ArticleCard";
 import CategoryFilter from "@/components/journal/CategoryFilter";
 import { Toaster } from "react-hot-toast";
 
+// 1. Tipe Data Eksplisit (Standar Profesional)
+interface Article {
+  id: string;
+  title: string;
+  excerpt: string;
+  image_url: string;
+  category: string;
+  read_time: string;
+  slug: string;
+  created_at: string;
+}
+
 const CATEGORIES = [
   "All",
   "Style",
@@ -16,48 +28,8 @@ const CATEGORIES = [
   "Behind The Design",
 ];
 
-// Fallback data if table is empty or while developing
-const MOCK_ARTICLES = [
-  {
-    id: "1",
-    title: "Shadows in the Threads: The Brutalist Aesthetic",
-    excerpt:
-      "Exploring the intersection of raw architecture and streetwear silhouettes in our latest dark drop.",
-    image_url:
-      "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop",
-    category: "Style",
-    read_time: "5 min read",
-    slug: "shadows-threads-brutalist",
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    title: "Visions of Nihilism: Street Culture 2026",
-    excerpt:
-      "The shift from neon brightness to archival darkness in the modern city center.",
-    image_url:
-      "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop",
-    category: "Culture",
-    read_time: "8 min read",
-    slug: "visions-nihilism-2026",
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-  },
-  {
-    id: "3",
-    title: "Unseen Horror: Influences Behind Daemonium",
-    excerpt:
-      "How classic gothic literature shaped the typographic choices of our 'Phantom' series.",
-    image_url:
-      "https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=2076&auto=format&fit=crop",
-    category: "Horror Inspiration",
-    read_time: "4 min read",
-    slug: "unseen-horror-influences",
-    created_at: new Date(Date.now() - 172800000).toISOString(),
-  },
-];
-
 export default function JournalPage() {
-  const [articles, setArticles] = useState<any[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("All");
   const [visibleCount, setVisibleCount] = useState(6);
@@ -87,11 +59,11 @@ export default function JournalPage() {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (error || !data || data.length === 0) {
-      console.log("Using mock articles for development");
-      setArticles(MOCK_ARTICLES);
+    if (error) {
+      console.error("Error fetching articles:", error);
+      setArticles([]);
     } else {
-      setArticles(data);
+      setArticles(data as Article[] || []);
     }
     setLoading(false);
   };
@@ -101,19 +73,21 @@ export default function JournalPage() {
       ? articles
       : articles.filter((a) => a.category === activeCategory);
 
-  const featured = articles[0] || MOCK_ARTICLES[0];
-  const gridArticles = filteredArticles
-    .filter((a) => a.id !== featured.id)
-    .slice(0, visibleCount);
+  const featured = articles.length > 0 ? articles[0] : null;
+
+  // Pastikan grid tidak memunculkan artikel featured
+  const gridArticles = featured
+    ? filteredArticles.filter((a) => a.id !== featured.id).slice(0, visibleCount)
+    : filteredArticles.slice(0, visibleCount);
 
   return (
     <main className="min-h-screen bg-[#FBFBFD] dark:bg-[#0B0B0B] pb-32 transition-colors duration-500">
       <Toaster position="bottom-right" />
 
-      {/* Editorial Hero */}
-      <JournalHero featuredArticle={featured} />
+      {/* Editorial Hero. Hanya muncul jika featured ada */}
+      {featured && <JournalHero featuredArticle={featured} />}
 
-      <div className="container mx-auto px-6 mt-20">
+      <div className={`container mx-auto px-6 ${featured ? 'mt-20' : 'pt-40'}`}>
         {/* Filter Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-12 mb-20">
           <div className="space-y-4">
@@ -136,12 +110,15 @@ export default function JournalPage() {
 
         {/* Article Grid */}
         {loading ? (
+          // Skeleton Loader: aspect proporsi ke 4/5 disamakan dengan ArticleCard aslinya
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 md:gap-20">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="space-y-6 animate-pulse">
-                <div className="aspect-[16/10] bg-zinc-200 dark:bg-zinc-900 rounded-[2rem]" />
-                <div className="h-4 bg-zinc-200 dark:bg-zinc-900 rounded-full w-2/3" />
-                <div className="h-3 bg-zinc-200 dark:bg-zinc-900 rounded-full w-1/2" />
+              <div key={i} className="space-y-6">
+                <div className="aspect-[4/5] bg-zinc-200/50 dark:bg-zinc-900/50 rounded-[2rem] animate-pulse" />
+                <div className="space-y-3">
+                  <div className="h-5 bg-zinc-200/50 dark:bg-zinc-900/50 rounded-md w-3/4 animate-pulse" />
+                  <div className="h-3 bg-zinc-200/50 dark:bg-zinc-900/50 rounded-md w-1/2 animate-pulse" />
+                </div>
               </div>
             ))}
           </div>
@@ -154,24 +131,34 @@ export default function JournalPage() {
             </AnimatePresence>
           </div>
         ) : (
-          <div className="py-40 text-center space-y-8">
-            <div className="text-9xl font-black italic opacity-5 uppercase tracking-tighter text-black dark:text-white">
-              Null Data
+          // Empty State Premium
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="py-32 flex flex-col items-center justify-center space-y-8 border-2 border-dashed border-zinc-200 dark:border-white/5 rounded-[3rem] mx-4 lg:mx-0"
+          >
+            <div className="w-20 h-20 rounded-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center mb-4 border border-zinc-200 dark:border-white/10 shadow-inner">
+              <span className="text-3xl font-black text-zinc-300 dark:text-zinc-700 uppercase italic">∅</span>
             </div>
-            <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.5em]">
-              No stories found in this timeline.
+            <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.5em] text-center max-w-sm px-6">
+              The archive is currently empty. No artifacts found in this timeline.
             </p>
-            <button
-              onClick={() => setActiveCategory("All")}
-              className="px-12 py-5 bg-black dark:bg-white text-white dark:text-black rounded-full font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white dark:hover:bg-red-600 dark:hover:text-white transition-all shadow-xl"
-            >
-              Reset Timeline
-            </button>
-          </div>
+            {activeCategory !== "All" && (
+              <button
+                onClick={() => setActiveCategory("All")}
+                className="group relative px-10 py-5 border-2 border-zinc-200 dark:border-zinc-800 rounded-full overflow-hidden transition-all hover:border-black dark:hover:border-white"
+              >
+                 <span className="relative z-10 text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400 group-hover:text-white dark:group-hover:text-black transition-colors duration-500">
+                  Reset Timeline
+                 </span>
+                 <div className="absolute inset-0 bg-black dark:bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+              </button>
+            )}
+          </motion.div>
         )}
 
         {/* Load More */}
-        {filteredArticles.length > gridArticles.length + 1 && (
+        {filteredArticles.filter((a) => a.id !== featured?.id).length > gridArticles.length && (
           <div className="mt-32 flex justify-center">
             <button
               onClick={() => setVisibleCount((prev) => prev + 3)}

@@ -114,7 +114,7 @@ export default function FeaturedProducts({ theme = "dark" }: { theme?: "dark" | 
                     <img
                       src={p.image_url}
                       alt={p.name}
-                      className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
+                      className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-110 transition duration-700"
                     />
                   </Link>
 
@@ -128,7 +128,7 @@ export default function FeaturedProducts({ theme = "dark" }: { theme?: "dark" | 
                   {/* Quick Add Button Mini */}
                   <button
                     onClick={() => handleQuickAdd(p)}
-                    className="absolute bottom-3 right-3 p-3 md:p-5 bg-white text-black rounded-full shadow-2xl active:scale-90 md:opacity-0 md:group-hover:opacity-100 transition-all"
+                    className="absolute bottom-3 right-3 p-3 md:p-5 bg-white text-black rounded-full shadow-2xl active:scale-90 md:opacity-0 md:group-hover:opacity-100 transition"
                   >
                     <FiPlus size={14} className="md:w-6 md:h-6" />
                   </button>

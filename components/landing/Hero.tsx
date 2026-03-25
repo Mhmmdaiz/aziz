@@ -10,7 +10,7 @@ export default function Hero({ theme = "dark" }: { theme?: "dark" | "light" }) {
   // Mengambil gambar dari CMS atau fallback ke default
   const images = settings?.landing_content?.hero?.image_urls?.length > 0 
     ? settings?.landing_content?.hero?.image_urls 
-    : ["https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2000"];
+    : [];
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -36,25 +36,27 @@ export default function Hero({ theme = "dark" }: { theme?: "dark" | "light" }) {
   return (
     <section ref={ref} className={`relative h-screen w-full overflow-hidden transition-colors duration-700 ${theme === "dark" ? "bg-[#0B0B0B] text-white" : "bg-white text-zinc-900"}`}>
       {/* Background Slider Container */}
-      <motion.div style={{ y: y1 }} className="absolute inset-0 z-0">
-        {/* Overlay Gelap agar transisi lebih smooth & teks terbaca */}
-        <div className="absolute inset-0 bg-black/40 z-10" />
-        
-        <AnimatePresence mode="wait">
-          <motion.img
-            key={currentIndex}
-            src={images[currentIndex]}
-            initial={{ opacity: 0, scale: 1.2 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ 
-                duration: 2.5, 
-                ease: [0.4, 0, 0.2, 1] 
-            }}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        </AnimatePresence>
-      </motion.div>
+      {images.length > 0 && (
+        <motion.div style={{ y: y1 }} className="absolute inset-0 z-0">
+          {/* Overlay Gelap agar transisi lebih smooth & teks terbaca */}
+          <div className="absolute inset-0 bg-black/40 z-10" />
+          
+          <AnimatePresence mode="wait">
+            <motion.img
+              key={currentIndex}
+              src={images[currentIndex]}
+              initial={{ opacity: 0, scale: 1.2 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ 
+                  duration: 2.5, 
+                  ease: [0.4, 0, 0.2, 1] 
+              }}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          </AnimatePresence>
+        </motion.div>
+      )}
 
       {/* MAIN CONTENT OVERLAY */}
       <motion.div 

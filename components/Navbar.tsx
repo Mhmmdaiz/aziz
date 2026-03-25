@@ -34,7 +34,8 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [_isScrolled, _setIsScrolled] = useState(false);
+  const isScrolled = _isScrolled || pathname !== "/";
   const [user, setUser] = useState<any>(null);
   
   // Logo & Content Settings
@@ -63,7 +64,7 @@ export default function Navbar() {
       }
     }
 
-    setIsScrolled(latest > 30);
+    _setIsScrolled(latest > 30);
     lastScrollY.current = latest;
   });
 

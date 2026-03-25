@@ -85,7 +85,7 @@ export default function PreOrderSystem({ data: propData, theme = "dark" }: any) 
 
             <Link
               href={`/preOrder/default`}
-              className="inline-flex items-center justify-center gap-2 md:gap-6 py-3 md:py-6 rounded-full font-black uppercase tracking-widest text-[7px] md:text-[11px] transition-all bg-zinc-900 dark:bg-white text-white dark:text-black hover:bg-red-600 dark:hover:bg-red-600 hover:text-white"
+              className="inline-flex items-center justify-center gap-2 md:gap-6 py-3 md:py-6 rounded-full font-black uppercase tracking-widest text-[7px] md:text-[11px] transition-colors bg-zinc-900 dark:bg-white text-white dark:text-black hover:bg-red-600 dark:hover:bg-red-600 hover:text-white"
             >
               {data?.cta || "AMANKAN SLOT"}
               <FiArrowRight className="w-2 h-2 md:w-4 md:h-4" />
@@ -101,7 +101,7 @@ export default function PreOrderSystem({ data: propData, theme = "dark" }: any) 
                   src={carouselImages[currentImageIndex]}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="absolute inset-0 w-full h-full object-cover transition-all duration-700 hover:scale-105"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
                 />
               </AnimatePresence>
               

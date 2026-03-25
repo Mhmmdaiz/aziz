@@ -46,8 +46,8 @@ export default function Footer() {
             <span>© {new Date().getFullYear()} DAEMONIUM®.</span>
             <span className="ml-1">Site by</span>
             <a
-              href="#"
-              className="hover:text-white dark:hover:text-black transition-colors underline underline-offset-2"
+              href="https://www.instagram.com/mhmmdazziizz_/"
+              className="hover:text-white dark:hover:text-black transition-colors"
             >
               AZ
             </a>

@@ -43,7 +43,7 @@ export default function Lookbook({ theme = "dark" }: { theme?: "dark" | "light" 
 
             <div className="flex justify-center lg:justify-start">
               <button
-                className="flex items-center gap-3 md:gap-4 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] border-b-2 border-zinc-200 dark:border-zinc-900 pb-2 hover:border-red-500 transition-all duration-500 group"
+                className="flex items-center gap-3 md:gap-4 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] border-b-2 border-zinc-200 dark:border-zinc-900 pb-2 hover:border-red-500 transition-colors duration-500 group"
               >
                 Watch Film{" "}
                 <FiPlayCircle className="group-hover:scale-125 transition-transform" />
@@ -61,7 +61,7 @@ export default function Lookbook({ theme = "dark" }: { theme?: "dark" | "light" 
             >
               <img
                 src={lookbook.image_1}
-                className="w-full h-full object-cover transition-all duration-1000 scale-105 hover:scale-100"
+                className="w-full h-full object-cover transition-transform duration-1000 scale-105 hover:scale-100"
                 alt="Lookbook 1"
               />
             </motion.div>
@@ -73,7 +73,7 @@ export default function Lookbook({ theme = "dark" }: { theme?: "dark" | "light" 
             >
               <img
                 src={lookbook.image_2}
-                className="w-full h-full object-cover transition-all duration-1000 scale-105 hover:scale-100"
+                className="w-full h-full object-cover transition-transform duration-1000 scale-105 hover:scale-100"
                 alt="Lookbook 2"
               />
             </motion.div>

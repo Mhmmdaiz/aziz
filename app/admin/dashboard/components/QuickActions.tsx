@@ -15,22 +15,16 @@ import { motion } from "framer-motion";
 export default function QuickActions() {
   const actions = [
     {
+      label: "New",
+      icon: <FiPlus />,
+      href: "/admin/new",
+      color: "hover:bg-fuchsia-500",
+    },
+    {
       label: "Pesan",
       icon: <FiMail />,
       href: "/admin/messages",
       color: "hover:bg-fuchsia-500",
-    },
-    {
-      label: "Situs",
-      icon: <FiLayout />,
-      href: "/admin/preorder",
-      color: "hover:bg-purple-500",
-    },
-    {
-      label: "Setelan",
-      icon: <FiSettings />,
-      href: "/admin/settings",
-      color: "hover:bg-amber-500",
     },
     {
       label: "Orders",
