@@ -10,8 +10,39 @@ import DynamicStyle from "@/components/DynamicStyle";
 import Footer from "@/components/landing/Footer";
 
 export const metadata = {
-  title: "DAEMONIUM",
-  description: "Non-conformist streetwear. Architectural precision meets brutalist aesthetics. Engineered for the elite.",
+  title: {
+    default: "DAEMONIUM | Art of Streetwear",
+    template: "%s | DAEMONIUM"
+  },
+  description: "Non-conformist streetwear. Architectural precision meets brutalist aesthetics. Engineered for the elite by CHCKT.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://chckt-store.vercel.app'),
+  openGraph: {
+    title: "DAEMONIUM | Art of Streetwear",
+    description: "Architectural precision meets brutalist aesthetics. Engineered for the elite.",
+    url: "/",
+    siteName: "DAEMONIUM",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "DAEMONIUM Premium Streetwear",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DAEMONIUM | Brutalist Streetwear",
+    description: "Engineered for the elite.",
+    images: ["/og-image.jpg"],
+  },
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon-16x16.png",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({

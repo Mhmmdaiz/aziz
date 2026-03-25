@@ -3,25 +3,32 @@
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
 import { useSettings } from "@/components/providers/SettingsProvider";
+import Link from "next/link";
 
-export default function Hero({ theme = "dark" }: { theme?: "dark" | "light" }) {
+export default function Hero({ theme = "dark", data }: { theme?: "dark" | "light", data?: any }) {
   const { settings } = useSettings();
   
-  // Mengambil gambar dari CMS atau fallback ke default
-  const images = settings?.landing_content?.hero?.image_urls?.length > 0 
-    ? settings?.landing_content?.hero?.image_urls 
-    : [];
+  // Content from CMS
+  const content = data || settings?.landing_content?.hero?.content || {};
+  const title = content.title || "CRAFTING THE FUTURE.";
+  const subtitle = content.subtitle || "The ultimate destination for premium digital artifacts and physical collectibles.";
+  const ctaText = content.cta_text || "SHOP NOW";
+  const ctaLink = content.cta_link || "/shop";
 
-  const [currentIndex, setCurrentIndex] = useState(0);
+  // Multi-media support (Up to 6)
+  const mediaList = content.media_list || (content.media_url ? [{ url: content.media_url }] : [{ url: "https://v1.coveredby.id/chckt/hero-v1.mp4" }]);
+  const [index, setIndex] = useState(0);
 
-  // Timer untuk auto-slide
   useEffect(() => {
-    if (images.length <= 1) return;
+    if (mediaList.length <= 1) return;
     const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % images.length);
-    }, 5000);
+      setIndex((prev) => (prev + 1) % mediaList.length);
+    }, 5000); // 5s transition
     return () => clearInterval(timer);
-  }, [images.length]);
+  }, [mediaList]);
+
+  const currentMedia = mediaList[index]?.url || "";
+  const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(currentMedia) || currentMedia.includes("video/"); 
 
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -29,50 +36,86 @@ export default function Hero({ theme = "dark" }: { theme?: "dark" | "light" }) {
     offset: ["start start", "end start"],
   });
 
-  // Efek parallax & fade out saat scroll
   const y1 = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
   return (
     <section ref={ref} className={`relative h-screen w-full overflow-hidden transition-colors duration-700 ${theme === "dark" ? "bg-[#0B0B0B] text-white" : "bg-white text-zinc-900"}`}>
-      {/* Background Slider Container */}
-      {images.length > 0 && (
-        <motion.div style={{ y: y1 }} className="absolute inset-0 z-0">
-          {/* Overlay Gelap agar transisi lebih smooth & teks terbaca */}
-          <div className="absolute inset-0 bg-black/40 z-10" />
-          
-          <AnimatePresence mode="wait">
-            <motion.img
-              key={currentIndex}
-              src={images[currentIndex]}
-              initial={{ opacity: 0, scale: 1.2 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ 
-                  duration: 2.5, 
-                  ease: [0.4, 0, 0.2, 1] 
-              }}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          </AnimatePresence>
-        </motion.div>
-      )}
+      
+      {/* Background Media Carousel */}
+      <motion.div style={{ y: y1 }} className="absolute inset-0 z-0 select-none">
+        <div className="absolute inset-0 bg-black/40 z-10" />
+        
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.5, ease: "easeInOut" }}
+            className="absolute inset-0"
+          >
+            {isVideo ? (
+              <video
+                src={currentMedia}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            ) : (
+              <img
+                src={currentMedia}
+                className="absolute inset-0 w-full h-full object-cover"
+                alt=""
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Carousel Indicators */}
+        {mediaList.length > 1 && (
+          <div className="absolute bottom-12 left-6 md:left-12 z-20 flex gap-3">
+            {mediaList.map((_: any, i: number) => (
+              <button
+                key={i}
+                onClick={() => setIndex(i)}
+                className={`h-1 transition-all duration-500 rounded-full ${i === index ? "w-8 bg-white" : "w-4 bg-white/20 hover:bg-white/40"}`}
+              />
+            ))}
+          </div>
+        )}
+      </motion.div>
 
       {/* MAIN CONTENT OVERLAY */}
       <motion.div 
         style={{ opacity }}
         className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-6"
       >
-        {/* SHOP NOW BUTTON WITH SCRIBBLE */}
+        <motion.div
+           initial={{ opacity: 0, y: 30 }}
+           animate={{ opacity: 1, y: 0 }}
+           className="max-w-4xl space-y-6"
+        >
+           <h1 className="text-5xl md:text-9xl font-black italic uppercase tracking-tighter leading-[0.85] break-words max-w-full">
+             {title}
+           </h1>
+           <p className="text-sm md:text-xl font-medium tracking-wide max-w-2xl mx-auto opacity-70 leading-relaxed uppercase">
+             {subtitle}
+           </p>
+        </motion.div>
+
+        {/* CTA BUTTON */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1, duration: 1 }}
-          className="relative mt-8 md:mt-20 group cursor-pointer"
+          transition={{ delay: 0.5 }}
+          className="relative mt-12 md:mt-20 group cursor-pointer"
         >
-          <button className="relative z-10 px-8 py-3 text-[11px] font-black uppercase tracking-[0.4em] text-white hover:text-white/80 transition-colors">
-            SHOP NOW
-          </button>
+          <Link href={ctaLink} className="relative z-10 px-12 py-5 bg-white text-black dark:bg-zinc-900 dark:text-white rounded-full text-[10px] font-black uppercase tracking-[0.4em] hover:scale-110 transition-all block">
+             {ctaText}
+          </Link>
           
           {/* Scribble Effect */}
           <svg 
@@ -82,35 +125,12 @@ export default function Hero({ theme = "dark" }: { theme?: "dark" | "light" }) {
             <motion.path
               d="M10,30 Q50,5 100,30 T190,30 T100,55 T10,30"
               fill="none"
-              stroke="white"
+              stroke={theme === "dark" ? "white" : "black"}
               strokeWidth="1.5"
               strokeLinecap="round"
               initial={{ pathLength: 0, opacity: 0 }}
-              animate={{ pathLength: 1, opacity: 0.6 }}
-              transition={{ 
-                duration: 2, 
-                delay: 1.5,
-                ease: "easeInOut",
-                repeat: Infinity,
-                repeatType: "reverse",
-                repeatDelay: 1
-              }}
-            />
-            <motion.path
-              d="M15,35 Q55,10 105,35 T185,35 T105,50 T15,35"
-              fill="none"
-              stroke="white"
-              strokeWidth="1"
-              strokeLinecap="round"
-              initial={{ pathLength: 0, opacity: 0 }}
-              animate={{ pathLength: 1, opacity: 0.3 }}
-              transition={{ 
-                duration: 2.5, 
-                delay: 1.8,
-                ease: "easeInOut",
-                repeat: Infinity,
-                repeatType: "reverse"
-              }}
+              animate={{ pathLength: 1, opacity: 0.4 }}
+              transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
             />
           </svg>
         </motion.div>
@@ -140,32 +160,6 @@ export default function Hero({ theme = "dark" }: { theme?: "dark" | "light" }) {
           />
         </motion.div>
       </div>
-
-      {/* Image Count / Progress */}
-      {images.length > 1 && (
-        <div className="absolute bottom-10 left-6 md:left-12 z-20 flex flex-col gap-4">
-           <span className="text-[10px] font-black tabular-nums text-white/60">
-             0{currentIndex + 1} // 0{images.length}
-           </span>
-           <div className="flex gap-2">
-             {images.map((_, i) => (
-               <div 
-                 key={i} 
-                 className="h-[1px] overflow-hidden bg-white/20 w-8 rounded-full"
-               >
-                 {i === currentIndex && (
-                   <motion.div 
-                     initial={{ width: 0 }}
-                     animate={{ width: "100%" }}
-                     transition={{ duration: 5, ease: "linear" }}
-                     className="h-full bg-white"
-                   />
-                 )}
-               </div>
-             ))}
-           </div>
-        </div>
-      )}
 
       {/* Noise Texture Overlay */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.05] z-30 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />

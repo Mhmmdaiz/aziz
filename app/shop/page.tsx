@@ -6,22 +6,33 @@ import { supabase } from "@/utils/supabase/client";
 import {
   FiFilter,
   FiSearch,
-  FiChevronDown,
   FiGrid,
-  FiList,
 } from "react-icons/fi";
 import ProductCard from "@/components/shop/ProductCard";
 import FilterSidebar from "@/components/shop/FilterSidebar";
 import MobileFilter from "@/components/shop/MobileFilter";
 import { Toaster } from "react-hot-toast";
 
+// 1. Tipe Data Eksplisit (Standar Profesional)
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  image_url: string;
+  category: string;
+  sizes?: string[];
+  show_in_shop: boolean;
+  created_at: string;
+  stock: number;
+}
+
 export default function ShopPage() {
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [activeSize, setActiveSize] = useState("All");
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000000]); // Dinaikkan batas atasnya
   const [sortBy, setSortBy] = useState("newest");
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(8);
@@ -29,12 +40,12 @@ export default function ShopPage() {
   useEffect(() => {
     fetchProducts();
 
-    // Subscribe to stock updates
+    // Subscribe to stock/product updates
     const channel = supabase
       .channel("store_stock")
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "products" },
+        { event: "*", schema: "public", table: "products" },
         () => fetchProducts(),
       )
       .subscribe();
@@ -52,12 +63,17 @@ export default function ShopPage() {
       .eq("show_in_shop", true)
       .order("created_at", { ascending: false });
 
-    if (data) setProducts(data);
+    if (error) {
+      console.error("Error fetching products:", error);
+      setProducts([]);
+    } else {
+      setProducts((data as Product[]) || []);
+    }
     setLoading(false);
   };
 
   const filteredProducts = useMemo(() => {
-    let result = products;
+    let result = [...products];
 
     if (activeCategory !== "All") {
       result = result.filter((p) => p.category === activeCategory);
@@ -76,12 +92,12 @@ export default function ShopPage() {
     result = result.filter((p) => p.price <= priceRange[1]);
 
     if (sortBy === "price-low")
-      result = [...result].sort((a, b) => a.price - b.price);
+      result.sort((a, b) => a.price - b.price);
     if (sortBy === "price-high")
-      result = [...result].sort((a, b) => b.price - a.price);
+      result.sort((a, b) => b.price - a.price);
 
     return result;
-  }, [products, activeCategory, searchQuery, priceRange, sortBy]);
+  }, [products, activeCategory, searchQuery, activeSize, priceRange, sortBy]);
 
   const displayedProducts = filteredProducts.slice(0, visibleCount);
 
@@ -99,8 +115,11 @@ export default function ShopPage() {
               className="space-y-4"
             >
               <h1 className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter leading-[0.8]">
-                Katalog <span className="text-zinc-800"></span> Produk
+                Katalog <br /> <span className="text-zinc-300 dark:text-zinc-800 italic">Produk.</span>
               </h1>
+              <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.4em]">
+                Registry of dark architectural artifacts
+              </p>
             </motion.div>
 
             <div className="flex items-center gap-4 w-full md:w-auto">
@@ -108,10 +127,10 @@ export default function ShopPage() {
                 <FiSearch className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-500" />
                 <input
                   type="text"
-                  placeholder="CARI PRODUK"
+                  placeholder="CARI ARTIFAK"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-white/5 p-6 pl-16 rounded-full text-[10px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-red-600 transition-all text-zinc-900 dark:text-white"
+                  className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-white/5 p-6 pl-16 rounded-full text-[10px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-red-600 transition-all text-zinc-900 dark:text-white backdrop-blur-xl"
                 />
               </div>
               <button
@@ -140,7 +159,7 @@ export default function ShopPage() {
           {/* --- PRODUCT GRID --- */}
           <div className="lg:col-span-9 space-y-12">
             {/* SORT BAR */}
-            <div className="flex flex-col sm:flex-row justify-between items-center bg-zinc-50 dark:bg-[#1A1A1A] p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] border border-zinc-200 dark:border-white/5 gap-4">
+            <div className="flex flex-col sm:flex-row justify-between items-center bg-zinc-50/50 dark:bg-[#0A0A0A] p-4 md:p-6 rounded-[2rem] border border-zinc-200 dark:border-white/5 gap-4 backdrop-blur-md">
               <div className="flex items-center gap-4 md:gap-6 w-full sm:w-auto justify-between sm:justify-start">
                 <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase text-zinc-500">
                   <FiGrid className="text-zinc-900 dark:text-white" /> Tampilan Grid
@@ -168,15 +187,15 @@ export default function ShopPage() {
             </div>
 
             {loading ? (
+              // Skeleton Loader: aspect 4/5 disamakan dengan ProductCard asli
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
-                {[...Array(6)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="space-y-4"
-                  >
-                    <div className="aspect-[4/5] bg-zinc-100 dark:bg-zinc-900 rounded-[2.5rem]" />
-                    <div className="h-4 bg-zinc-100 dark:bg-zinc-900 rounded-full w-2/3" />
-                    <div className="h-3 bg-zinc-100 dark:bg-zinc-900 rounded-full w-1/2" />
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="space-y-4">
+                    <div className="aspect-[4/5] bg-zinc-100 dark:bg-zinc-900 rounded-[2rem] animate-pulse" />
+                    <div className="space-y-2">
+                       <div className="h-4 bg-zinc-100 dark:bg-zinc-900 rounded-md w-3/4 animate-pulse" />
+                       <div className="h-3 bg-zinc-100 dark:bg-zinc-900 rounded-md w-1/2 animate-pulse" />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -184,48 +203,65 @@ export default function ShopPage() {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
                 <AnimatePresence mode="popLayout">
                   {displayedProducts.map((product) => (
-                    <div
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
                       key={product.id}
                       className="w-full"
                     >
                       <ProductCard product={product} />
-                    </div>
+                    </motion.div>
                   ))}
                 </AnimatePresence>
               </div>
             ) : (
-              <div className="py-40 text-center space-y-6">
-                <div className="text-8xl font-black italic opacity-5 uppercase tracking-tighter">
-                  Produk Kosong
+              // Empty State Premium (Estetika Brutalist)
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="py-32 flex flex-col items-center justify-center space-y-8 border-2 border-dashed border-zinc-200 dark:border-white/5 rounded-[3rem]"
+              >
+                <div className="w-20 h-20 rounded-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center mb-4 border border-zinc-200 dark:border-white/10 shadow-inner">
+                  <span className="text-3xl font-black text-zinc-300 dark:text-zinc-700 uppercase italic">∅</span>
                 </div>
-                <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.5em]">
-                  Tidak ada produk yang cocok dengan filter Anda.
-                </p>
+                <div className="text-center space-y-2 px-6">
+                  <p className="text-zinc-900 dark:text-white text-xs font-black uppercase tracking-[0.2em]">
+                    Tidak ada produk ditemukan
+                  </p>
+                  <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.5em] max-w-sm">
+                    Kombinasi filter Anda tidak menghasilkan artifak di garis waktu ini.
+                  </p>
+                </div>
                 <button
                   onClick={() => {
                     setActiveCategory("All");
                     setActiveSize("All");
-                    setPriceRange([0, 1000000]);
+                    setPriceRange([0, 10000000]);
                     setSearchQuery("");
                   }}
-                  className="px-12 py-5 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-full font-black uppercase text-[10px] tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl"
+                  className="group relative px-10 py-5 border-2 border-zinc-200 dark:border-zinc-800 rounded-full overflow-hidden transition-all hover:border-black dark:hover:border-white"
                 >
-                  Reset Semua Filter
+                  <span className="relative z-10 text-[10px] font-black uppercase tracking-[0.5em] text-zinc-500 group-hover:text-white dark:group-hover:text-black transition-colors duration-500">
+                    Reset Semua Filter
+                  </span>
+                  <div className="absolute inset-0 bg-black dark:bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
                 </button>
-              </div>
+              </motion.div>
             )}
 
             {/* LOAD MORE */}
             {displayedProducts.length < filteredProducts.length && (
               <div className="pt-20 flex justify-center">
                 <button
-                  onClick={() => setVisibleCount((prev) => prev + 6)}
+                  onClick={() => setVisibleCount((prev) => prev + 4)}
                   className="group relative px-16 py-6 border-2 border-zinc-200 dark:border-zinc-800 rounded-full overflow-hidden transition-all hover:border-zinc-900 dark:hover:border-white"
                 >
-                  <span className="relative z-10 text-[10px] font-black uppercase tracking-[0.5em] group-hover:text-white dark:group-hover:text-black transition-colors">
-                    Lihat Lebih Banyak
+                  <span className="relative z-10 text-[10px] font-black uppercase tracking-[0.5em] text-zinc-500 group-hover:text-white dark:group-hover:text-black transition-colors duration-500">
+                    Muat Lebih Banyak
                   </span>
-                  <div className="absolute inset-0 bg-zinc-900 dark:bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-black dark:bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
                 </button>
               </div>
             )}

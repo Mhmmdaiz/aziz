@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { FiArrowRight, FiClock } from "react-icons/fi";
 
 interface Article {
@@ -33,10 +34,12 @@ export default function ArticleCard({ article, index }: ArticleCardProps) {
         <div className="space-y-6">
           {/* Image Container */}
           <div className="relative aspect-[16/10] overflow-hidden rounded-[2rem] bg-zinc-100 dark:bg-zinc-900 border border-black/5 dark:border-white/5">
-            <img 
+            <Image 
               src={article.image_url?.split(',')[0]} 
               alt={article.title}
-              className="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-[1.5s] ease-[cubic-bezier(0.25,1,0.5,1)]"
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-[1.5s] ease-[cubic-bezier(0.25,1,0.5,1)]"
             />
             {/* Overlay Gradient */}
             <div className="absolute inset-0 bg-gradient-to-t from-white/80 dark:from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />

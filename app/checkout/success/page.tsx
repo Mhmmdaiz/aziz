@@ -1,0 +1,127 @@
+"use client";
+
+import { useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { FiCheckCircle, FiArrowRight, FiPackage, FiZap } from "react-icons/fi";
+import confetti from "canvas-confetti";
+
+function SuccessContent() {
+  const searchParams = useSearchParams();
+  const orderId = searchParams.get("order_id") || "CHCKT-XXXXX";
+
+  useEffect(() => {
+    // Premium celebration
+    const duration = 3 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+    const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+    const interval: any = setInterval(function() {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+    }, 250);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <main className="min-h-screen bg-white dark:bg-[#030303] text-black dark:text-white flex flex-col items-center justify-center px-6 py-20 font-mono overflow-hidden transition-colors duration-500">
+      {/* Noise Texture */}
+      <div className="fixed inset-0 pointer-events-none opacity-[0.03] mix-blend-overlay z-50 dark:opacity-[0.05]"
+        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}
+      />
+
+      <div className="max-w-3xl w-full text-center space-y-12 relative z-10">
+        {/* Animated Badge */}
+        <motion.div
+          initial={{ scale: 0, rotate: -20 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: "spring", damping: 12 }}
+          className="inline-flex items-center gap-3 px-6 py-2 bg-emerald-500 text-white rounded-full text-[10px] font-black uppercase tracking-[0.3em] shadow-2xl shadow-emerald-500/20"
+        >
+          <FiZap className="animate-pulse" /> Transaksi Berhasil
+        </motion.div>
+
+        {/* Hero Text */}
+        <div className="space-y-4">
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-6xl md:text-9xl font-black italic uppercase tracking-tighter leading-[0.8] mb-8"
+          >
+            Order <br /> <span className="text-zinc-300 dark:text-zinc-800">Secured.</span>
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-[11px] md:text-xs font-black uppercase tracking-[0.5em] text-zinc-500 max-w-lg mx-auto leading-relaxed"
+          >
+            Artifak Anda telah diamankan dalam garis waktu ini. Logistik sedang menyiapkan pengiriman.
+          </motion.p>
+        </div>
+
+        {/* Order Details Board */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.6 }}
+          className="bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-white/10 rounded-[3rem] p-10 md:p-16 space-y-8 backdrop-blur-xl"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
+            <div className="space-y-1">
+              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Order_ID</p>
+              <p className="text-xl font-black italic text-red-600">{orderId}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Status</p>
+              <div className="flex items-center gap-2 text-emerald-500 font-black italic">
+                <FiCheckCircle /> PAID & VERIFIED
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-8 border-t border-zinc-200 dark:border-white/5">
+             <div className="flex flex-col md:flex-row gap-4">
+                <Link 
+                  href="/orders" 
+                  className="flex-1 px-8 py-5 bg-black dark:bg-white text-white dark:text-black rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-red-600 dark:hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3"
+                >
+                  <FiPackage /> Pantau Pengiriman <FiArrowRight />
+                </Link>
+                <Link 
+                  href="/shop" 
+                  className="flex-1 px-8 py-5 border-2 border-zinc-200 dark:border-zinc-800 text-zinc-500 rounded-full text-[10px] font-black uppercase tracking-widest hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white transition-all flex items-center justify-center"
+                >
+                  Kembali Belanja
+                </Link>
+             </div>
+          </div>
+        </motion.div>
+
+        {/* Footer Credit */}
+        <div className="pt-10 opacity-20">
+          <p className="text-[9px] font-black uppercase tracking-[0.4em]">Proprietary Technology by CHCKT-STORE</p>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={null}>
+      <SuccessContent />
+    </Suspense>
+  );
+}

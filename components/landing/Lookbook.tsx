@@ -4,14 +4,16 @@ import { motion } from "framer-motion";
 import { FiPlayCircle } from "react-icons/fi";
 import { useSettings } from "@/components/providers/SettingsProvider";
 
-export default function Lookbook({ theme = "dark" }: { theme?: "dark" | "light" }) {
+export default function Lookbook({ theme = "dark", data }: { theme?: "dark" | "light", data?: any }) {
   const { settings } = useSettings();
-  const lookbook = settings?.landing_content?.lookbook || {
-    image_1:
-      "https://images.unsplash.com/photo-1544441893-675973e31985?q=80&w=800",
-    image_2:
-      "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800",
-  };
+  const content = data || settings?.landing_content?.lookbook?.content || {};
+  
+  const title = content.title || "The Dark Visions.";
+  const subtitle = content.subtitle || "Every shadow tells a story of rebellion and refined silence. Architected for those who walk the void.";
+  const images = content.images || [
+    { url: "https://images.unsplash.com/photo-1544441893-675973e31985?q=80&w=800", caption: "" },
+    { url: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800", caption: "" }
+  ];
 
   return (
     <section
@@ -26,19 +28,16 @@ export default function Lookbook({ theme = "dark" }: { theme?: "dark" | "light" 
               <span className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.4em] text-[var(--color-primary-accent)] italic block">
                 Manifesto Visual
               </span>
-              <h2 className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter leading-[0.85]">
-                The Dark <br />
-                <span
-                  className="text-zinc-200 dark:text-zinc-800 transition-colors"
-                >
-                  Visions.
+              <h2 className="text-4xl md:text-8xl font-black italic uppercase tracking-tighter leading-[0.85] break-words max-w-full">
+                {title.split(" ").slice(0, 2).join(" ")} <br />
+                <span className="text-zinc-200 dark:text-zinc-800 transition-colors">
+                  {title.split(" ").slice(2).join(" ")}
                 </span>
               </h2>
             </div>
 
             <p className="text-zinc-500 text-xs md:text-lg italic leading-relaxed font-medium mx-auto lg:mx-0 max-w-xs md:max-w-md text-center lg:text-left">
-              Every shadow tells a story of rebellion and refined silence.
-              Architected for those who walk the void.
+              {subtitle}
             </p>
 
             <div className="flex justify-center lg:justify-start">
@@ -53,30 +52,21 @@ export default function Lookbook({ theme = "dark" }: { theme?: "dark" | "light" 
 
           {/* SISI BAWAH/KANAN: IMAGES */}
           <div className="w-full lg:col-span-7 grid grid-cols-2 gap-3 md:gap-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className={`aspect-[3/4.5] rounded-[1.5rem] md:rounded-[3rem] overflow-hidden mt-6 md:mt-16 shadow-2xl transition-colors ${theme === "dark" ? "bg-zinc-900" : "bg-zinc-100"}`}
-            >
-              <img
-                src={lookbook.image_1}
-                className="w-full h-full object-cover transition-transform duration-1000 scale-105 hover:scale-100"
-                alt="Lookbook 1"
-              />
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className={`aspect-[3/4.5] rounded-[1.5rem] md:rounded-[3rem] overflow-hidden shadow-2xl transition-colors ${theme === "dark" ? "bg-zinc-900" : "bg-zinc-100"}`}
-            >
-              <img
-                src={lookbook.image_2}
-                className="w-full h-full object-cover transition-transform duration-1000 scale-105 hover:scale-100"
-                alt="Lookbook 2"
-              />
-            </motion.div>
+            {images.slice(0, 2).map((img: any, i: number) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: i % 2 === 0 ? 20 : -20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className={`aspect-[3/4.5] rounded-[1.5rem] md:rounded-[3rem] overflow-hidden shadow-2xl transition-colors ${i % 2 === 0 ? "mt-6 md:mt-16" : ""} ${theme === "dark" ? "bg-zinc-900" : "bg-zinc-100"}`}
+              >
+                <img
+                  src={img.url}
+                  className="w-full h-full object-cover transition-transform duration-1000 scale-105 hover:scale-100"
+                  alt={img.caption || `Lookbook ${i+1}`}
+                />
+              </motion.div>
+            ))}
           </div>
         </div>
       </div>

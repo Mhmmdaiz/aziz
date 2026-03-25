@@ -19,6 +19,12 @@ const nextConfig: NextConfig = {
   },
   // Tambahkan dua baris ini:
   typescript: { ignoreBuildErrors: true },
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production",
+  },
+  // Ensure we use the latest features
+  reactStrictMode: true,
+  poweredByHeader: false,
 };
 
 export default nextConfig;

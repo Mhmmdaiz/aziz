@@ -160,7 +160,7 @@ export async function POST(req: Request) {
         invoice_number: orderId,
         amount: totalAmount,
         line_items: lineItems,
-        callback_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/orders`,
+        callback_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/checkout/success?order_id=${orderId}`,
       },
       payment: {
         payment_due_date: 60, // 60 minutes

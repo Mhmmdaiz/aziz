@@ -51,7 +51,6 @@ export function RelatedProducts({ products }: RelatedProductsProps) {
                 fill
                 className="object-cover transition-transform duration-700 group-hover:scale-110 grayscale group-hover:grayscale-0 opacity-90 group-hover:opacity-100"
                 alt={p.name}
-                unoptimized
               />
 
               {/* Overlay on Hover */}

@@ -1,14 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { FiPlus, FiShoppingBag, FiZap, FiInfo } from "react-icons/fi";
+import { motion } from "framer-motion";
+import Image from "next/image";
+import { FiPlus, FiShoppingBag, FiZap, FiInfo, FiArrowRight, FiClock } from "react-icons/fi";
 import { useCart } from "@/components/providers/CartProvider";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
 
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  image_url: string;
+  category: string;
+  stock: number;
+  created_at: string;
+  is_high_demand?: boolean;
+  sold_today?: number;
+}
+
 interface ProductCardProps {
-  product: any;
+  product: Product;
 }
 
 const SIZES = ["S", "M", "L", "XL"];
@@ -62,12 +75,14 @@ export default function ProductCard({ product }: ProductCardProps) {
       <div className="relative aspect-[4/5] overflow-hidden bg-zinc-100 dark:bg-zinc-900 group">
         <Link 
           href={`/product/${product.id}`}
-          className="block w-full h-full"
+          className="block w-full h-full relative"
         >
-          <img
+          <Image
             src={product.image_url}
             alt={product.name}
-            className="w-full h-full object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-[1.5s] ease-out"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+            className="object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-[1.5s] ease-out"
           />
         </Link>
         

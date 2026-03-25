@@ -17,16 +17,20 @@ const formatPrice = (price: number) => {
   }).format(price);
 };
 
-export default function FeaturedProducts({ theme = "dark" }: { theme?: "dark" | "light" }) {
+export default function FeaturedProducts({ theme = "dark", data }: { theme?: "dark" | "light", data?: any }) {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
   const { settings, loading: settingsLoading } = useSettings();
 
+  const content = data || settings?.landing_content?.featured_products?.content || {};
+  const sectionTitle = content.title || "Koleksi Terbaru.";
+  const sectionSubtitle = content.subtitle || "";
+  const featuredIds = content.product_ids || [];
+
   const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
-      const featuredIds = settings?.landing_content?.featured_products;
       let query = supabase.from("products").select("*").eq("show_in_shop", true);
 
       if (featuredIds && featuredIds.length > 0) {
@@ -35,12 +39,12 @@ export default function FeaturedProducts({ theme = "dark" }: { theme?: "dark" | 
         query = query.order("created_at", { ascending: false }).limit(8);
       }
 
-      const { data, error } = await query;
+      const { data: pData, error } = await query;
       if (error) throw error;
-      if (data) {
+      if (pData) {
         const finalData = featuredIds?.length 
-          ? [...data].sort((a, b) => featuredIds.indexOf(a.id) - featuredIds.indexOf(b.id))
-          : data;
+          ? [...pData].sort((a, b) => featuredIds.indexOf(a.id) - featuredIds.indexOf(b.id))
+          : pData;
         setProducts(finalData);
       }
     } catch (error) {
@@ -48,11 +52,11 @@ export default function FeaturedProducts({ theme = "dark" }: { theme?: "dark" | 
     } finally {
       setLoading(false);
     }
-  }, [settings?.landing_content?.featured_products]);
+  }, [featuredIds]);
 
   useEffect(() => {
-    if (!settingsLoading) fetchProducts();
-  }, [settingsLoading, fetchProducts]);
+    fetchProducts();
+  }, [fetchProducts]);
 
   const handleQuickAdd = (p: any) => {
     if (p.stock <= 0) {
@@ -78,8 +82,8 @@ export default function FeaturedProducts({ theme = "dark" }: { theme?: "dark" | 
         <div className="flex flex-row justify-between items-end gap-4 mb-8 md:mb-16">
           <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
             <h2 className="text-3xl md:text-9xl font-black italic uppercase tracking-tighter leading-[0.8]">
-              Koleksi <br /> 
-              <span className="text-zinc-500">Terbaru.</span>
+              {sectionTitle.split(" ")[0]} <br /> 
+              <span className="text-zinc-500">{sectionTitle.split(" ").slice(1).join(" ")}</span>
             </h2>
           </motion.div>
 

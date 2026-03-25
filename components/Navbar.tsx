@@ -173,9 +173,12 @@ export default function Navbar() {
                     className="relative px-6 py-2 group overflow-hidden rounded-full"
                   >
                     <span className={`relative z-10 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500
-                      ${!isScrolled 
-                        ? (pathname === link.href ? "text-white" : "text-white/60 group-hover:text-white")
-                        : (pathname === link.href ? "text-zinc-900 dark:text-white" : "text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-zinc-200")
+                      ${pathname === link.href 
+                        ? "text-zinc-50 dark:text-zinc-900" 
+                        : (isScrolled 
+                            ? "text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200" 
+                            : "text-white/60 hover:text-white"
+                          )
                       }
                     `}>
                       {link.label}

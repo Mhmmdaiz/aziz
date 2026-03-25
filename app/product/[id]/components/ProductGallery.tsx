@@ -109,7 +109,6 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
               className="object-cover transition-transform duration-[1.5s] group-hover:scale-105"
               alt={`${productName} view`}
               priority
-              unoptimized
             />
           </motion.div>
         </AnimatePresence>
@@ -140,7 +139,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
               className={`relative w-20 h-24 shrink-0 rounded-xl overflow-hidden border-2 transition-all duration-300
                 ${activeIndex === i ? "border-red-600 shadow-[0_0_10px_rgba(220,38,38,0.2)] dark:shadow-[0_0_15px_rgba(220,38,38,0.3)] filter brightness-110" : "border-zinc-200 dark:border-[#222] opacity-50 hover:opacity-100 grayscale hover:grayscale-0"}`}
             >
-              <Image src={img} fill className="object-cover" alt={`Thumbnail ${i}`} unoptimized />
+              <Image src={img} fill className="object-cover" alt={`Thumbnail ${i}`} />
             </button>
           ))}
         </div>

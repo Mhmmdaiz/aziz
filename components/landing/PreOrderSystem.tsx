@@ -17,6 +17,15 @@ export default function PreOrderSystem({ data: propData, theme = "dark" }: any) 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
+    if (!data?.product_id) return;
+    const fetchProduct = async () => {
+      const { data: p } = await supabase.from("products").select("name, price").eq("id", data.product_id).single();
+      if (p) setProductData(p);
+    };
+    fetchProduct();
+  }, [data?.product_id]);
+
+  useEffect(() => {
     // Countdown logic
     if (!data?.countdown_target) return;
     const timer = setInterval(() => {
@@ -58,6 +67,12 @@ export default function PreOrderSystem({ data: propData, theme = "dark" }: any) 
               <p className={`mt-2 md:mt-8 text-[8px] md:text-base font-medium leading-tight md:leading-relaxed transition-colors ${theme === "dark" ? "text-zinc-500" : "text-zinc-400"}`}>
                 {data?.description || "Architected specifically for its owner."}
               </p>
+
+              {(data?.price_override || productData?.price) && (
+                <p className="mt-2 text-lg md:text-4xl font-black italic text-fuchsia-500">
+                  Rp {(data?.price_override || productData?.price)?.toLocaleString()}
+                </p>
+              )}
             </div>
 
             {/* Deployment Card Mini */}

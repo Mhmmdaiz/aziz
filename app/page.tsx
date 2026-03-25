@@ -52,13 +52,7 @@ export default function FashionLandingPage() {
     ? [...cmsSections, ...defaultSections.filter(ds => !cmsSections.some((s: any) => s.id === ds.id))]
     : defaultSections;
 
-  // Pastikan urutan mengikuti array defaultSections jika tidak diatur manual di CMS
-  const sortedSections = [...sections].sort((a, b) => {
-    const order = ["hero", "preorder", "featured_products", "categories", "lookbook"];
-    return order.indexOf(a.id) - order.indexOf(b.id);
-  });
-
-  const visibleSections = sortedSections.filter((s: any) => s.visible !== false);
+  const visibleSections = sections.filter((s: any) => s.visible !== false);
 
   if (!mounted) return null;
 
@@ -77,15 +71,15 @@ export default function FashionLandingPage() {
 
         switch (section.id) {
           case "hero":
-            return <Hero key="hero" theme={theme} />;
+            return <Hero key="hero" theme={theme} data={section.content} />;
           case "preorder":
-            return <PreOrderSystem key="preorder" theme={theme} />;
+            return <PreOrderSystem key="preorder" theme={theme} data={section.content} />;
           case "featured_products":
-            return <FeaturedProducts key="featured_products" theme={theme} />;
+            return <FeaturedProducts key="featured_products" theme={theme} data={section.content} />;
           case "categories":
-            return <CategoryGrid key="categories" theme={theme} />;
+            return <CategoryGrid key="categories" theme={theme} data={section.content} />;
           case "lookbook":
-            return <Lookbook key="lookbook" theme={theme} />;
+            return <Lookbook key="lookbook" theme={theme} data={section.content} />;
           default:
             return null;
         }

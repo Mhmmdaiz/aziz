@@ -184,7 +184,7 @@ export default function PreOrderDetailPage() {
     addToCart({
       id: product.id,
       name: product.name,
-      price: product.price,
+      price: campaign.price_override || product.price,
       image: product.image_url,
       size: selectedSize || "Default",
       quantity: 1,
@@ -199,7 +199,7 @@ export default function PreOrderDetailPage() {
     const checkoutItem = {
       id: product.id,
       name: product.name,
-      price: product.price,
+      price: campaign.price_override || product.price,
       image: product.image_url,
       size: selectedSize || "Default",
       quantity: 1,
@@ -216,105 +216,157 @@ export default function PreOrderDetailPage() {
   if (!product)
     return <NotFound campaignStatus={!!campaign} productStatus={!!product} />;
 
-  const images = product.image_urls?.length
-    ? product.image_urls
-    : [product.image_url];
+  const images = campaign?.carousel_images?.length 
+    ? campaign.carousel_images 
+    : (product.image_urls?.length ? product.image_urls : [product.image_url]);
 
   return (
-    <div className="min-h-screen  pt-24 pb-20 selection:bg-fuchsia-500 relative overflow-hidden mt-5">
+    <div className="min-h-screen pt-24 pb-20 selection:bg-fuchsia-500 relative overflow-hidden bg-white dark:bg-[#030303] transition-colors duration-500">
+      {/* Decorative Elements */}
       <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-fuchsia-500/5 blur-[120px] rounded-full -mr-64 -mt-32 pointer-events-none" />
+      <div className="fixed bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/5 blur-[120px] rounded-full -ml-64 -mb-32 pointer-events-none" />
 
-      <div className="max-w-[1400px] mx-auto px-4 md:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
+      <div className="max-w-[1400px] mx-auto px-4 md:px-8 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-20">
+          
+          {/* LEFT: GALLERY */}
           <div className="lg:col-span-7">
-            <ProductGallery images={images} productName={product.name} />
+            <div className="sticky top-28">
+               <ProductGallery images={images} productName={product.name} />
+               
+               {/* Campaign Highlight (Deskripsi Tambahan dari CMS) */}
+               {campaign?.description && (
+                 <motion.div 
+                   initial={{ opacity: 0, y: 20 }}
+                   whileInView={{ opacity: 1, y: 0 }}
+                   className="mt-12 p-10 rounded-[3rem] bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-100 dark:border-zinc-800"
+                 >
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-6">Campaign_Manifesto</h4>
+                    <p className="text-lg md:text-2xl font-medium leading-relaxed italic text-zinc-600 dark:text-zinc-300">
+                      "{campaign.description}"
+                    </p>
+                 </motion.div>
+               )}
+            </div>
           </div>
 
+          {/* RIGHT: CONTENT */}
           <div className="lg:col-span-5">
-            <div className="sticky top-28 space-y-8">
-              <div className="flex items-center gap-3">
-                <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">
-                  {campaign?.badge || "Protocol V4"}
-                </span>
-              </div>
-
-              <div>
-                <h1 className="text-5xl md:text-6xl font-black italic uppercase tracking-tighter leading-none mb-4">
-                  {product.name}
-                </h1>
-                <p className="text-zinc-400 text-sm leading-relaxed max-w-md">
-                  {product.description}
-                </p>
-              </div>
-
-              <div className="p-8 bg-zinc-900/5 border border-white/5 rounded-[2.5rem] backdrop-blur-xl space-y-6">
+            <div className="space-y-12">
+              
+              {/* Header Info */}
+              <div className="space-y-4">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-fuchsia-500/10 rounded-2xl">
-                    <Clock size={20} />
+                  <span className="px-3 py-1 rounded-full bg-fuchsia-100 dark:bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 text-[9px] font-black uppercase tracking-widest border border-fuchsia-200 dark:border-fuchsia-500/20">
+                    {campaign?.badge || "LTD EDITION"}
+                  </span>
+                  <span className="w-12 h-px bg-zinc-200 dark:bg-zinc-800" />
+                </div>
+
+                <div className="space-y-2">
+                  <h2 className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400">
+                    {campaign?.headline || "PRE-ORDER_PROTOCOL"}
+                  </h2>
+                  <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none text-zinc-900 dark:text-white">
+                    {product.name}
+                  </h1>
+                </div>
+
+                <div className="flex items-baseline gap-4 pt-2">
+                   <p className="text-4xl font-black italic tracking-tight text-fuchsia-600 dark:text-fuchsia-400">
+                     Rp {(campaign.price_override || product.price)?.toLocaleString()}
+                   </p>
+                   {(product.stock <= 5 || campaign.urgency) && (
+                     <span className="text-[10px] font-bold text-red-500 uppercase animate-pulse">
+                       {campaign.urgency || "Low Stock Alert"}
+                     </span>
+                   )}
+                </div>
+              </div>
+
+              {/* Deployment & Countdown Card */}
+              <div className="p-10 rounded-[3rem] bg-white dark:bg-zinc-900/60 border border-zinc-100 dark:border-zinc-800 shadow-xl shadow-black/5 backdrop-blur-3xl space-y-8">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-fuchsia-500/10 flex items-center justify-center text-fuchsia-500">
+                      <Clock size={24} />
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black uppercase text-zinc-500 tracking-widest">Est. Deployment</p>
+                      <p className="text-xl font-black italic uppercase">{campaign?.estimation || "14 Days"}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">
-                      Est. Deployment
-                    </p>
-                    <p className="font-bold text-lg">
-                      {campaign?.estimation || "14 Days"}
-                    </p>
-                  </div>
+                  <Zap className="text-amber-500 animate-pulse" size={20} />
                 </div>
 
                 {timeLeft && (
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-4 gap-3">
                     {[
-                      { label: "D", val: timeLeft.d },
-                      { label: "H", val: timeLeft.h },
-                      { label: "M", val: timeLeft.m },
-                      { label: "S", val: timeLeft.s },
+                      { label: "DAYS", val: timeLeft.d },
+                      { label: "HOURS", val: timeLeft.h },
+                      { label: "MINS", val: timeLeft.m },
+                      { label: "SECS", val: timeLeft.s },
                     ].map((u, i) => (
-                      <div
-                        key={i}
-                        className="bg-white/5 p-3 rounded-xl text-center"
-                      >
-                        <p className="text-xl font-black italic leading-none">
-                          {u.val.toString().padStart(2, "0")}
-                        </p>
-                        <p className="text-[8px] font-black text-zinc-600 mt-1">
-                          {u.label}
-                        </p>
+                      <div key={i} className="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl text-center border border-zinc-100 dark:border-zinc-700/30">
+                        <p className="text-2xl md:text-3xl font-black italic leading-none tracking-tighter">{u.val.toString().padStart(2, "0")}</p>
+                        <p className="text-[7px] font-black text-zinc-400 mt-2 tracking-widest">{u.label}</p>
                       </div>
                     ))}
                   </div>
                 )}
 
-                <div className="pt-4 border-t border-white/5">
-                  <p className="text-[10px] font-bold text-emerald-500 uppercase flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                    {campaign?.urgency || "Allocation limited"}
-                  </p>
+                <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800">
+                   <div className="flex items-center justify-between">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
+                        {campaign?.urgency || "ALOCATED_SLOTS_AVAILABLE"}
+                      </p>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Beta_v.4</span>
+                   </div>
                 </div>
               </div>
 
-              <div className="space-y-6">
+              {/* Purchase Section */}
+              <div className="space-y-8">
                 <SizeSelector
                   sizes={campaign?.sizes || product.sizes || []}
                   selectedSize={selectedSize}
                   onSelectSize={setSelectedSize}
                 />
-                <AddToCart
-                  onAdd={handleAddToCart}
-                  onBuyNow={handleBuyNow}
-                  disabled={!selectedSize}
-                  price={product.price}
+                
+                <div className="pt-2">
+                  <AddToCart
+                    onAdd={handleAddToCart}
+                    onBuyNow={handleBuyNow}
+                    disabled={!selectedSize}
+                    price={product.price}
+                  />
+                </div>
+              </div>
+
+              {/* Metadata Details */}
+              <div className="pt-12 border-t border-zinc-100 dark:border-zinc-900">
+                <ProductAccordion
+                  description={product.description}
+                  specifications={product.specifications}
                 />
               </div>
 
-              <TrustBadges />
+              {/* Trust & Policy */}
+              <div className="grid grid-cols-2 gap-4">
+                 <div className="flex items-center gap-3 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
+                    <Shield size={16} className="text-zinc-400" />
+                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400">Authentic_Registry</span>
+                 </div>
+                 <div className="flex items-center gap-3 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
+                    <Truck size={16} className="text-zinc-400" />
+                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400">Global_Fulfillment</span>
+                 </div>
+              </div>
 
-              <ProductAccordion
-                description={product.description}
-                specifications={product.specifications}
-              />
             </div>
           </div>
+
         </div>
       </div>
     </div>
