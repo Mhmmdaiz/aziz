@@ -16,18 +16,25 @@ export function ProductAccordion({ description, specifications }: ProductAccordi
     setOpenSection(openSection === section ? "" : section);
   };
 
+  const specSections = typeof specifications === 'string'
+    ? [{ id: 'specs', title: 'SPECIFICATIONS', content: specifications }]
+    : (Array.isArray(specifications)
+        ? specifications.map((spec, index) => ({
+            id: `spec-${index}`,
+            title: (spec.key || "UNSPECIFIED").toUpperCase(),
+            content: spec.value || "DATA NOT FOUND",
+          }))
+        : []);
+
   const sections = [
     {
       id: "description",
       title: "DESCRIPTION",
       content: description || "Detailed schematic data unavailable. Subject is composed of high-grade materials structurally reinforced for optimal durability.",
     },
-    ...(specifications?.map((spec, index) => ({
-      id: `spec-${index}`,
-      title: spec.key.toUpperCase(),
-      content: spec.value,
-    })) || []),
+    ...specSections
   ];
+
 
   return (
     <div className="w-full flex flex-col gap-2 mt-8">

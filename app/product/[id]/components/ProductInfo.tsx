@@ -83,19 +83,19 @@ export function ProductInfo({
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
               </span>
               <p className="text-xs font-black uppercase tracking-widest text-red-500 m-0">
-                Produk Populer
+                Popular Product
               </p>
             </div>
           )}
           
           <div className="flex items-center justify-between text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
-            {sold_today > 0 && <span>🔥 {sold_today} unit telah diklaim</span>}
+            {sold_today > 0 && <span>🔥 {sold_today} units claimed</span>}
             {stock <= 0 ? (
                <span className="text-red-500 font-bold">SOLD OUT</span>
             ) : isLowStock ? (
-              <span className="text-red-500 dark:text-red-400 font-bold">Sisa {stock} unit!</span>
+              <span className="text-red-500 dark:text-red-400 font-bold">{stock} units left!</span>
             ) : (
-              <span className="text-emerald-600 dark:text-emerald-500">Tersedia</span>
+              <span className="text-emerald-600 dark:text-emerald-500">In Stock</span>
             )}
           </div>
           
@@ -113,7 +113,7 @@ export function ProductInfo({
       
       {/* Short Description */}
       <p className="text-sm md:text-base text-zinc-600 dark:text-zinc-400 font-mono leading-relaxed mt-2 transition-colors duration-500 italic">
-        {short_description || "Siluet taktis yang dirancang untuk gaya hidup urban. Dibuat dengan material berkualitas tinggi untuk durabilitas maksimal. Dapatkan koleksi eksklusif ini segera."}
+        {short_description || "Tactical silhouette designed for urban lifestyle. Crafted with high-quality materials for maximum durability. Get this exclusive collection now."}
       </p>
     </div>
   );

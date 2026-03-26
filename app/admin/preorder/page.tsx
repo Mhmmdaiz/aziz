@@ -53,9 +53,13 @@ const DEFAULT_SECTIONS = [
       badge: "PRE-ORDER",
       headline: "CRITICAL BATCH.",
       description: "Architected specifically for its owner.",
+      sizes: "S, M, L, XL, XXL",
+      details: "Premium tactical fabric, water-resistant finish, modular pockets.",
       estimation: "14 Days",
+      price: 0,
       countdown_target: new Date(Date.now() + 7 * 86400000).toISOString(),
       cta: "AMANKAN SLOT",
+      product_id: "",
       carousel_images: []
     }
   },
@@ -91,7 +95,11 @@ const DEFAULT_SECTIONS = [
     visible: true, 
     theme: "dark",
     content: {
-      title: "Lookbook_Archive",
+      title: "Lookbook Archive",
+      badge: "VISUAL MANIFESTO",
+      subtitle: "Every shadow tells a story of rebellion and refined silence. Architected for those who walk the void.",
+      cta_text: "WATCH FILM",
+      video_url: "",
       images: []
     }
   },
@@ -475,14 +483,37 @@ function PreOrderEditor({ content, onUpdate }: any) {
             <option value="">SELECT_FROM_GALLERY</option>
             {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
+          {content.product_id && (
+            <p className="text-[8px] font-mono text-zinc-400 mt-2 uppercase tracking-widest">Linked_UID: {content.product_id}</p>
+          )}
+
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="space-y-2"><label className="label-style">Badge</label><input className="input-style" value={content.badge} onChange={e => update("badge", e.target.value)} /></div>
-        <div className="space-y-2"><label className="label-style">CTA</label><input className="input-style" value={content.cta} onChange={e => update("cta", e.target.value)} /></div>
-        <div className="md:col-span-2 space-y-2"><label className="label-style">Headline</label><input className="input-style font-black italic uppercase" value={content.headline} onChange={e => update("headline", e.target.value)} /></div>
-        <div className="space-y-2"><label className="label-style">ETA</label><input className="input-style" value={content.estimation} onChange={e => update("estimation", e.target.value)} /></div>
-        <div className="space-y-2"><label className="label-style">Countdown</label><input type="datetime-local" className="input-style" value={content.countdown_target?.slice(0, 16)} onChange={e => update("countdown_target", new Date(e.target.value).toISOString())} /></div>
+        <div className="space-y-2"><label className="label-style">Badge</label><input className="input-style" value={content.badge || ""} onChange={e => update("badge", e.target.value)} /></div>
+        <div className="space-y-2"><label className="label-style">CTA Button Text</label><input className="input-style" value={content.cta || ""} onChange={e => update("cta", e.target.value)} /></div>
+        <div className="md:col-span-2 space-y-2"><label className="label-style">Headline</label><input className="input-style font-black italic uppercase" value={content.headline || ""} onChange={e => update("headline", e.target.value)} /></div>
+        <div className="md:col-span-2 space-y-2"><label className="label-style text-fuchsia-500">Deskripsi Ringkas</label><textarea className="input-style h-20 resize-none pt-4" value={content.description || ""} onChange={e => update("description", e.target.value)} /></div>
+        <div className="space-y-2"><label className="label-style text-fuchsia-500">Ukuran (Pisahkan dengan koma)</label><input className="input-style" value={content.sizes || ""} onChange={e => update("sizes", e.target.value)} placeholder="S, M, L, XL" /></div>
+        <div className="space-y-2"><label className="label-style text-fuchsia-500">Estimasi Pengiriman (ETA)</label><input className="input-style" value={content.estimation || ""} onChange={e => update("estimation", e.target.value)} /></div>
+        <div className="space-y-2"><label className="label-style text-emerald-500">Harga Khusus (Opsional)</label><input type="number" className="input-style font-mono" placeholder="Kosongkan untuk pakai harga asli" value={content.price || ""} onChange={e => update("price", e.target.value ? parseInt(e.target.value) : 0)} /></div>
+        <div className="md:col-span-2 space-y-2"><label className="label-style text-fuchsia-500">Detail Produk / Spesifikasi</label><textarea className="input-style h-32 resize-none pt-4" value={content.details || ""} onChange={e => update("details", e.target.value)} /></div>
+        <div className="md:col-span-2 space-y-2">
+          <label className="label-style">Countdown Target (Waktu Berakhir)</label>
+          <input 
+            type="datetime-local" 
+            className="input-style" 
+            value={content.countdown_target?.slice(0, 16) || ""} 
+            onChange={e => {
+              if (!e.target.value) return;
+              const date = new Date(e.target.value);
+              if (!isNaN(date.getTime())) {
+                update("countdown_target", date.toISOString());
+              }
+            }} 
+          />
+        </div>
+
       </div>
 
       <div className="space-y-6 pt-10 border-t border-zinc-100 dark:border-zinc-900">
@@ -654,7 +685,30 @@ function LookbookEditor({ content, onUpdate }: any) {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-      <div className="flex justify-between items-center">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <label className="label-style">Badge (Atas)</label>
+          <input className="input-style uppercase" value={content.badge || ""} onChange={e => onUpdate({...content, badge: e.target.value})} placeholder="VISUAL MANIFESTO" />
+        </div>
+        <div className="space-y-2">
+          <label className="label-style">Judul Utama</label>
+          <input className="input-style font-black italic uppercase" value={content.title || ""} onChange={e => onUpdate({...content, title: e.target.value})} placeholder="LOOKBOOK ARCHIVE" />
+        </div>
+        <div className="md:col-span-2 space-y-2">
+          <label className="label-style">Deskripsi / Subjudul</label>
+          <textarea className="input-style h-24 resize-none pt-4" value={content.subtitle || ""} onChange={e => onUpdate({...content, subtitle: e.target.value})} placeholder="Every shadow tells a story..." />
+        </div>
+        <div className="space-y-2">
+          <label className="label-style">Teks Tombol (CTA)</label>
+          <input className="input-style uppercase" value={content.cta_text || ""} onChange={e => onUpdate({...content, cta_text: e.target.value})} placeholder="WATCH FILM" />
+        </div>
+        <div className="space-y-2">
+          <label className="label-style">URL Video / Film</label>
+          <input className="input-style font-mono text-[10px]" value={content.video_url || ""} onChange={e => onUpdate({...content, video_url: e.target.value})} placeholder="https://..." />
+        </div>
+      </div>
+
+      <div className="pt-8 border-t border-zinc-100 dark:border-zinc-900 flex justify-between items-center">
         <div>
           <label className="label-style">Lookbook_Frames ({content.images?.length})</label>
           <p className="text-[7px] text-zinc-500 uppercase mt-1">Editorial-style visual grid matrix</p>

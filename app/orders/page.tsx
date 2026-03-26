@@ -82,7 +82,7 @@ export default function UserOrders() {
 
   const getStatusDisplay = (status: string) => {
     const s = status.toLowerCase();
-    if (s === "paid") return { text: "SUDAH BAYAR", color: "text-emerald-500 border-emerald-500/20 bg-emerald-500/5" };
+    if (s === "paid") return { text: "PAID", color: "text-emerald-500 border-emerald-500/20 bg-emerald-500/5" };
     if (s === "pending") return { text: "PENDING", color: "text-amber-500 border-amber-500/20 bg-amber-500/5" };
     if (s === "shipped") return { text: "SHIPPED", color: "text-blue-500 border-blue-500/20 bg-blue-500/5" };
     if (s === "completed") return { text: "COMPLETED", color: "text-cyan-500 border-cyan-500/20 bg-cyan-500/5" };
@@ -129,7 +129,7 @@ export default function UserOrders() {
             <div className="py-32 flex flex-col items-center justify-center text-zinc-400 border-2 border-dashed border-zinc-200 dark:border-zinc-900 rounded-[3rem]">
               <FiPackage size={48} className="mb-6 opacity-10" />
               <p className="text-[12px] font-black uppercase tracking-[0.5em] italic opacity-40">
-                Manifest_Zero
+                Manifest Zero
               </p>
               <button 
                 onClick={() => router.push("/shop")}

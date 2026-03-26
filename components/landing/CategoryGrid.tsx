@@ -6,10 +6,10 @@ import { FiArrowUpRight } from "react-icons/fi";
 import { useSettings } from "@/components/providers/SettingsProvider";
 
 const defaultCategories = [
-  { name: "Oversize", count: "12 Produk", img: "https://images.unsplash.com/photo-1571945153237-4929e783ee4a?q=80&w=800" },
-  { name: "Graphic", count: "08 Produk", img: "https://images.unsplash.com/photo-1554568218-0f1715e72254?q=80&w=800" },
-  { name: "Minimal", count: "05 Produk", img: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=800" },
-  { name: "Dark Series", count: "07 Produk", img: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800" }
+  { name: "Oversize", count: "12 Products", img: "https://images.unsplash.com/photo-1571945153237-4929e783ee4a?q=80&w=800" },
+  { name: "Graphic", count: "08 Products", img: "https://images.unsplash.com/photo-1554568218-0f1715e72254?q=80&w=800" },
+  { name: "Minimal", count: "05 Products", img: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=800" },
+  { name: "Dark Series", count: "07 Products", img: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800" }
 ];
 
 export default function CategoryGrid({ theme = "dark", data }: { theme?: "dark" | "light", data?: any }) {
@@ -42,7 +42,7 @@ export default function CategoryGrid({ theme = "dark", data }: { theme?: "dark" 
               {/* Konten teks dengan ukuran yang disesuaikan skala mobile */}
               <div className="absolute inset-0 p-4 md:p-12 flex flex-col justify-end gap-1 md:gap-2 text-white">
                 <span className="text-[6px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.4em] opacity-60 italic">
-                  {cat.count || "EXPLORE_COLLECTION"}
+                  {cat.count || "EXPLORE COLLECTION"}
                 </span>
                 <h3 className="text-lg md:text-6xl font-black italic uppercase tracking-tighter leading-none">
                   {cat.title || cat.name}

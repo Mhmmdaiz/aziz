@@ -51,11 +51,11 @@ export default function CartItem({ item }: CartItemProps) {
           
           <div className="mt-4 flex flex-wrap gap-2">
              <span className="px-3 py-1 rounded-full bg-white/5 border border-white/5 text-[8px] font-black uppercase tracking-widest text-zinc-400">
-                STREETWEAR_ARTIFACT
+                STREETWEAR ARTIFACT
              </span>
              {item.quantity > 5 && (
                <span className="px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-[8px] font-black uppercase tracking-widest text-orange-500">
-                  HIGH_VOLUME_ORDER
+                  HIGH VOLUME ORDER
                </span>
              )}
           </div>
@@ -84,7 +84,7 @@ export default function CartItem({ item }: CartItemProps) {
           {/* Price */}
           <div className="text-right">
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">
-              Unit_Valuation
+              Unit Valuation
             </p>
             <p className="text-xl font-black italic text-white tracking-tighter">
               Rp {(item.price * item.quantity).toLocaleString()}

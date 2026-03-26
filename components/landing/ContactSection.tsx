@@ -36,7 +36,7 @@ export default function ContactSection({ theme = "dark" }: { theme?: "dark" | "l
         <div className="flex items-center gap-3 mb-4">
           <span className="w-10 h-px bg-[var(--color-primary-accent)]" />
           <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--color-primary-accent)]">
-            Kontak
+            Contact
           </span>
         </div>
         <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-none mb-4">

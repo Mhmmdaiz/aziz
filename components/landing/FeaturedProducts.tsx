@@ -24,7 +24,7 @@ export default function FeaturedProducts({ theme = "dark", data }: { theme?: "da
   const { settings, loading: settingsLoading } = useSettings();
 
   const content = data || settings?.landing_content?.featured_products?.content || {};
-  const sectionTitle = content.title || "Koleksi Terbaru.";
+  const sectionTitle = content.title || "New Collections.";
   const sectionSubtitle = content.subtitle || "";
   const featuredIds = content.product_ids || [];
 
@@ -60,7 +60,7 @@ export default function FeaturedProducts({ theme = "dark", data }: { theme?: "da
 
   const handleQuickAdd = (p: any) => {
     if (p.stock <= 0) {
-      toast.error("Stok Habis");
+      toast.error("Out of Stock");
       return;
     }
     addToCart({
@@ -70,8 +70,9 @@ export default function FeaturedProducts({ theme = "dark", data }: { theme?: "da
       image: p.image_url,
       size: p.sizes?.[0] || "All Size",
       quantity: 1,
+      is_preorder: !!p.is_preorder,
     });
-    toast.success(`${p.name} DITAMBAHKAN`);
+    toast.success(`${p.name} ADDED`);
   };
 
   return (
@@ -91,7 +92,7 @@ export default function FeaturedProducts({ theme = "dark", data }: { theme?: "da
             href="/shop"
             className="group flex items-center gap-2 text-[8px] md:text-xs font-black uppercase tracking-widest py-1 border-b border-[var(--color-primary-accent)] md:border-b-2"
           >
-            Katalog <FiArrowRight className="text-[var(--color-primary-accent)]" />
+            Catalog <FiArrowRight className="text-[var(--color-primary-accent)]" />
           </Link>
         </div>
 

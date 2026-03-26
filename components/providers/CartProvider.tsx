@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 
 interface CartItem {
   cartId: string;
@@ -10,7 +11,9 @@ interface CartItem {
   image: string;
   size: string;
   quantity: number;
+  is_preorder: boolean;
 }
+
 
 interface CartContextType {
   cart: CartItem[];
@@ -57,6 +60,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addToCart = (product: any) => {
     setCart((prev) => {
+      // Rule: No mix between Pre-Order and Ready Stock
+      if (prev.length > 0) {
+        const hasPreOrder = prev.some(item => item.is_preorder);
+        const newItemIsPreOrder = !!product.is_preorder;
+
+        if (hasPreOrder !== newItemIsPreOrder) {
+          Swal.fire({
+            title: "Shipping Protocol Conflict",
+            text: "Pre-Order items cannot be combined with Ready Stock items in a single cart for streamlined fulfillment.",
+            icon: "warning",
+            confirmButtonColor: "#1d4ed8"
+          });
+          return prev;
+        }
+      }
+
       const existing = prev.find(
         (item) => item.id === product.id && item.size === product.size
       );
@@ -73,6 +92,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           ...product,
           cartId: `${product.id}-${product.size || 'default'}-${Date.now()}`,
           quantity: 1,
+          is_preorder: !!product.is_preorder
         },
       ];
     });

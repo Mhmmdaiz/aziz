@@ -44,7 +44,7 @@ export default function MobileFilter({
             className="fixed inset-x-0 bottom-0 bg-white dark:bg-[#0B0B0B] border-t border-zinc-200 dark:border-white/10 rounded-t-[3rem] z-[101] p-10 max-h-[85vh] overflow-y-auto"
           >
             <div className="flex justify-between items-center mb-10">
-               <h2 className="text-2xl font-black italic uppercase tracking-tighter text-zinc-900 dark:text-white">Filter_Vault.</h2>
+               <h2 className="text-2xl font-black italic uppercase tracking-tighter text-zinc-900 dark:text-white">Filter Vault.</h2>
                <button onClick={onClose} className="p-3 bg-zinc-100 dark:bg-zinc-900 rounded-full text-zinc-400 dark:text-white shadow-sm">
                  <FiX size={20} />
                </button>

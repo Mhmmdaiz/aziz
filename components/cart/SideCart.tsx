@@ -106,7 +106,7 @@ export default function SideCart() {
                           </button>
                         </div>
                         <p className="font-black text-sm italic">
-                          ${(item.price * item.quantity).toLocaleString()}
+                          Rp {(item.price * item.quantity).toLocaleString()}
                         </p>
                       </div>
                     </div>
@@ -120,7 +120,7 @@ export default function SideCart() {
               <div className="p-6 bg-zinc-50 dark:bg-[#0D0D0D] border-t border-zinc-200 dark:border-white/5">
                 <div className="flex justify-between items-center mb-6">
                   <p className="text-zinc-400 text-xs font-bold uppercase tracking-widest">Subtotal</p>
-                  <p className="text-2xl font-black italic">${cartTotal.toLocaleString()}</p>
+                  <p className="text-2xl font-black italic">Rp {cartTotal.toLocaleString()}</p>
                 </div>
                 <Link
                   href="/checkout"

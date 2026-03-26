@@ -14,6 +14,7 @@ import {
 } from "react-icons/fi";
 import { supabase } from "@/utils/supabase/client";
 import { useSettings } from "@/components/providers/SettingsProvider";
+import { validatePreOrderEligibility } from "@/utils/preorder";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -77,6 +78,24 @@ export default function CheckoutPage() {
       }
 
       setCheckoutItems(savedItems);
+
+      // --- VALIDATE PO ELIGIBILITY ---
+      for (const item of savedItems) {
+        if (item.is_preorder) {
+          const check = await validatePreOrderEligibility(item.id);
+          if (!check.valid) {
+            Swal.fire({
+              title: "Pre-Order Unavailable",
+              text: check.message || "This product is no longer available for Pre-Order.",
+              icon: "error",
+              confirmButtonColor: "#1d4ed8"
+            }).then(() => {
+              router.push("/shop");
+            });
+            return;
+          }
+        }
+      }
 
       if (!session) {
         router.push("/auth?redirect=/checkout");
@@ -158,6 +177,23 @@ export default function CheckoutPage() {
       allowOutsideClick: false,
       didOpen: () => Swal.showLoading(),
     });
+
+    // RE-VALIDATE ELIGIBILITY BEFORE PAYMENT
+    for (const item of checkoutItems) {
+      if (item.is_preorder) {
+        const check = await validatePreOrderEligibility(item.id);
+        if (!check.valid) {
+          Swal.fire({
+            title: "Pre-Order expired/Sold out",
+            text: `Sorry, the stock or time for ${item.name} just expired.`,
+            icon: "error"
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      }
+    }
+
 
     try {
       const {
@@ -393,7 +429,7 @@ export default function CheckoutPage() {
 
             {/* Payment Method */}
             <div className="pt-2 border-t border-zinc-100 italic mb-[-20px]">
-               <p className="text-[10px] text-zinc-400 text-center">Seluruh transaksi diproses aman melalui enkripsi DOKU.</p>
+               <p className="text-[10px] text-zinc-400 text-center">All transactions are processed securely via DOKU encryption.</p>
             </div>
 
             {/* Action Buttons */}
@@ -457,11 +493,11 @@ export default function CheckoutPage() {
 
           <div className="mt-10 space-y-4 border-t border-zinc-200 dark:border-white/10 pt-8">
             <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-zinc-500">
-              <p>Subtotal_Vault</p>
+              <p>Subtotal Vault</p>
               <p className="text-zinc-900 dark:text-white">Rp {subtotal.toLocaleString()}</p>
             </div>
             <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-zinc-500">
-              <p>Shipping_Protocol ({selectedShipping?.name || "Regular"})</p>
+              <p>Shipping Protocol ({selectedShipping?.name || "Regular"})</p>
               <p className="text-zinc-900 dark:text-white">
                 {shippingCost > 0 ? `Rp ${Number(shippingCost).toLocaleString()}` : "FREE"}
               </p>

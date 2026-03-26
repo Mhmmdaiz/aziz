@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabase/client";
 import { useCart } from "@/components/providers/CartProvider";
@@ -27,9 +28,17 @@ export default function PreOrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState("");
   const [timeLeft, setTimeLeft] = useState<any>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  
+  const campaignPrice = useMemo(() => {
+    if (campaign?.price > 0) return campaign.price;
+    return campaign?.price_override || product?.price || 0;
+  }, [campaign, product]);
+
 
   const isUuid =
-    id &&
+    id && id !== "default" && id !== "preorder" &&
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
   useEffect(() => {
@@ -38,53 +47,71 @@ export default function PreOrderDetailPage() {
       return;
     }
 
-    const fetchData = async () => {
-      setLoading(true);
-
-      // Safety timeout: jika fetch > 8 detik, stop loading spinner
-      const timeout = setTimeout(() => setLoading(false), 8000);
-
+    const init = async () => {
       try {
-        let setting: any = null;
+        setLoading(true);
+        let currentCampaign = null;
 
-        if (isUuid) {
-          const { data } = await supabase
-            .from("site_settings")
+        if (id && isUuid) {
+          const { data, error } = await supabase
+            .from("po_campaigns")
             .select("*")
             .eq("id", id)
             .single();
-          setting = data;
-        }
-
-        if (!setting) {
-          const { data: fallback } = await supabase
+          if (data) currentCampaign = data;
+          else if (error) setFetchError(error.message);
+        } else {
+          const { data: setting } = await supabase
             .from("site_settings")
             .select("*")
-            .eq("key", "preorder")
+            .eq("key", "landing_content")
             .single();
-          setting = fallback;
-        }
-
-        if (setting) {
-          setCampaign(setting.value);
-          if (setting.value?.product_id) {
-            const { data: pData } = await supabase
-              .from("products")
-              .select("*")
-              .eq("id", setting.value.product_id)
-              .single();
-            if (pData) setProduct(pData);
+          if (setting?.value?.sections) {
+            const poSection = setting.value.sections.find((s: any) => s.type === 'preorder');
+            if (poSection) {
+              currentCampaign = { 
+                ...poSection.content,
+                id: "preorder", // alias id
+                visible: poSection.visible 
+              };
+            }
           }
         }
-      } catch (err) {
-        console.error("Fetch error:", err);
+
+
+        if (currentCampaign) {
+          setCampaign(currentCampaign);
+          if (currentCampaign.product_id) {
+            const { data: pData, error: pError } = await supabase
+              .from("products")
+              .select("*")
+              .eq("id", currentCampaign.product_id);
+              
+            if (pData && pData.length > 0) {
+              setProduct(pData[0]);
+              if (pData.length > 1) {
+                console.warn(`Multiple products found for ID: ${currentCampaign.product_id}`);
+              }
+            } else if (pError) {
+              setFetchError(pError.message);
+            } else {
+              setFetchError(`PRODUCT_NOT_FOUND_IN_DB (ID: ${currentCampaign.product_id})`);
+            }
+          } else {
+
+            setFetchError("NO_PRODUCT_ID_IN_CAMPAIGN");
+          }
+        } else if (!fetchError) {
+          setFetchError("CAMPAIGN_NOT_FOUND");
+        }
+      } catch (err: any) {
+        setFetchError(err.message);
       } finally {
-        clearTimeout(timeout);
         setLoading(false);
       }
     };
 
-    fetchData();
+    init();
 
     // Setup Campaign Realtime
     let campaignChannel: any;
@@ -94,7 +121,7 @@ export default function PreOrderDetailPage() {
         .select("id")
         .eq(
           id && id !== "default" && isUuid ? "id" : "key",
-          id && id !== "default" && isUuid ? id : "preorder",
+          id && id !== "default" && isUuid ? id : "landing_content",
         )
         .single();
 
@@ -110,12 +137,18 @@ export default function PreOrderDetailPage() {
               filter: `id=eq.${currentSetting.id}`,
             },
             (p) => {
-              setCampaign(p.new.value);
+              if (p.new.key === "landing_content") {
+                const poSection = p.new.value.sections.find((s: any) => s.type === 'preorder');
+                if (poSection) setCampaign({ ...poSection.content, id: "preorder", visible: poSection.visible });
+              } else {
+                setCampaign(p.new.value);
+              }
             },
           )
           .subscribe();
       }
     };
+
 
     setupCampaignRealtime();
 
@@ -124,9 +157,21 @@ export default function PreOrderDetailPage() {
     };
   }, [id, isUuid]);
 
+
   // Separate Product Realtime to react to product_id changes
   useEffect(() => {
     if (!campaign?.product_id) return;
+
+    const fetchCurrentProduct = async () => {
+      const { data: pData } = await supabase
+        .from("products")
+        .select("*")
+        .eq("id", campaign.product_id);
+      if (pData && pData.length > 0) setProduct(pData[0]);
+    };
+
+
+    fetchCurrentProduct();
 
     const productChannel = supabase
       .channel(`preorder_product_${campaign.product_id}`)
@@ -148,6 +193,7 @@ export default function PreOrderDetailPage() {
       supabase.removeChannel(productChannel);
     };
   }, [campaign?.product_id]);
+
 
   // Countdown Logic
   useEffect(() => {
@@ -179,12 +225,21 @@ export default function PreOrderDetailPage() {
     return () => clearInterval(timer);
   }, [campaign?.countdown_target]);
 
+  const isExpired = !timeLeft && campaign?.countdown_target && new Date(campaign.countdown_target).getTime() < new Date().getTime();
+
+  const campaignSizes = campaign?.sizes 
+    ? (typeof campaign.sizes === 'string' 
+        ? campaign.sizes.split(',').map((s: string) => s.trim()).filter(Boolean) 
+        : campaign.sizes)
+    : (product?.sizes || []);
+
+
   const handleAddToCart = () => {
-    if (!product) return;
+    if (!product || isExpired) return;
     addToCart({
       id: product.id,
       name: product.name,
-      price: campaign.price_override || product.price,
+      price: campaignPrice,
       image: product.image_url,
       size: selectedSize || "Default",
       quantity: 1,
@@ -194,12 +249,12 @@ export default function PreOrderDetailPage() {
   };
 
   const handleBuyNow = () => {
-    if (!product) return;
+    if (!product || isExpired) return;
 
     const checkoutItem = {
       id: product.id,
       name: product.name,
-      price: campaign.price_override || product.price,
+      price: campaignPrice,
       image: product.image_url,
       size: selectedSize || "Default",
       quantity: 1,
@@ -211,61 +266,76 @@ export default function PreOrderDetailPage() {
     router.push("/checkout");
   };
 
+
   if (loading) return <LoadingSequence />;
 
   if (!product)
-    return <NotFound campaignStatus={!!campaign} productStatus={!!product} />;
+    return <NotFound 
+      campaignStatus={!!campaign} 
+      productStatus={!!product} 
+      productId={campaign?.product_id}
+      errorMessage={fetchError || undefined}
+    />;
 
   const images = campaign?.carousel_images?.length 
     ? campaign.carousel_images 
     : (product.image_urls?.length ? product.image_urls : [product.image_url]);
 
-  return (
-    <div className="min-h-screen pt-24 pb-20 selection:bg-fuchsia-500 relative overflow-hidden bg-white dark:bg-[#030303] transition-colors duration-500">
-      {/* Decorative Elements */}
-      <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-fuchsia-500/5 blur-[120px] rounded-full -mr-64 -mt-32 pointer-events-none" />
-      <div className="fixed bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/5 blur-[120px] rounded-full -ml-64 -mb-32 pointer-events-none" />
 
-      <div className="max-w-[1400px] mx-auto px-4 md:px-8 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-20">
+
+
+  return (
+    <div className="min-h-screen bg-[#FBFBFD] dark:bg-[#0B0B0B] text-zinc-900 dark:text-white pt-24 pb-32 md:pb-24 selection:bg-red-600 selection:text-white relative overflow-hidden transition-colors duration-500">
+      {/* Brutalist Noise Texture Override */}
+      <div
+        className="fixed inset-0 pointer-events-none opacity-[0.03] mix-blend-overlay z-50 dark:opacity-[0.05]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+        }}
+      />
+
+      <div className="max-w-[1400px] mx-auto px-4 md:px-8 mt-5">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 xl:gap-24 uppercase">
           
           {/* LEFT: GALLERY */}
-          <div className="lg:col-span-7">
-            <div className="sticky top-28">
+          <div className="lg:col-span-7 relative z-10 w-full">
+             <motion.div
+               initial={{ opacity: 0, x: -20 }}
+               animate={{ opacity: 1, x: 0 }}
+               transition={{ duration: 0.6, ease: "easeOut" }}
+             >
                <ProductGallery images={images} productName={product.name} />
-               
-               {/* Campaign Highlight (Deskripsi Tambahan dari CMS) */}
-               {campaign?.description && (
-                 <motion.div 
-                   initial={{ opacity: 0, y: 20 }}
-                   whileInView={{ opacity: 1, y: 0 }}
-                   className="mt-12 p-10 rounded-[3rem] bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-100 dark:border-zinc-800"
-                 >
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-6">Campaign_Manifesto</h4>
-                    <p className="text-lg md:text-2xl font-medium leading-relaxed italic text-zinc-600 dark:text-zinc-300">
-                      "{campaign.description}"
-                    </p>
-                 </motion.div>
+               {isExpired && (
+                 <div className="absolute inset-0 z-20 bg-black/40 flex items-center justify-center rounded-[3rem]">
+                   <div className="border-8 border-white px-8 py-4 rotate-[-15deg]">
+                     <span className="text-white text-5xl md:text-8xl font-black uppercase italic tracking-tighter">EXPIRED</span>
+                   </div>
+                 </div>
                )}
-            </div>
+             </motion.div>
           </div>
 
-          {/* RIGHT: CONTENT */}
-          <div className="lg:col-span-5">
-            <div className="space-y-12">
+          {/* RIGHT: INFO & ACTIONS */}
+          <div className="lg:col-span-5 flex flex-col">
+            <motion.div
+               initial={{ opacity: 0, y: 20 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ duration: 0.8, delay: 0.2, ease: "circOut" }}
+               className="sticky top-28 h-fit pb-10 space-y-12"
+            >
               
               {/* Header Info */}
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
                   <span className="px-3 py-1 rounded-full bg-fuchsia-100 dark:bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 text-[9px] font-black uppercase tracking-widest border border-fuchsia-200 dark:border-fuchsia-500/20">
-                    {campaign?.badge || "LTD EDITION"}
+                    {isExpired ? "CAMPAIGN ENDED" : (campaign?.badge || "LTD EDITION")}
                   </span>
                   <span className="w-12 h-px bg-zinc-200 dark:bg-zinc-800" />
                 </div>
 
                 <div className="space-y-2">
                   <h2 className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-400">
-                    {campaign?.headline || "PRE-ORDER_PROTOCOL"}
+                    {campaign?.headline || "PRE-ORDER PROTOCOL"}
                   </h2>
                   <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none text-zinc-900 dark:text-white">
                     {product.name}
@@ -274,11 +344,11 @@ export default function PreOrderDetailPage() {
 
                 <div className="flex items-baseline gap-4 pt-2">
                    <p className="text-4xl font-black italic tracking-tight text-fuchsia-600 dark:text-fuchsia-400">
-                     Rp {(campaign.price_override || product.price)?.toLocaleString()}
+                     Rp {campaignPrice?.toLocaleString()}
                    </p>
-                   {(product.stock <= 5 || campaign.urgency) && (
+                   {campaign?.urgency && (
                      <span className="text-[10px] font-bold text-red-500 uppercase animate-pulse">
-                       {campaign.urgency || "Low Stock Alert"}
+                       {campaign.urgency}
                      </span>
                    )}
                 </div>
@@ -292,79 +362,76 @@ export default function PreOrderDetailPage() {
                       <Clock size={24} />
                     </div>
                     <div>
-                      <p className="text-[9px] font-black uppercase text-zinc-500 tracking-widest">Est. Deployment</p>
+                      <p className="text-[9px] font-black uppercase text-zinc-500 tracking-widest">Estimated Shipping</p>
                       <p className="text-xl font-black italic uppercase">{campaign?.estimation || "14 Days"}</p>
                     </div>
                   </div>
                   <Zap className="text-amber-500 animate-pulse" size={20} />
                 </div>
 
-                {timeLeft && (
+                {timeLeft ? (
                   <div className="grid grid-cols-4 gap-3">
                     {[
                       { label: "DAYS", val: timeLeft.d },
-                      { label: "HOURS", val: timeLeft.h },
-                      { label: "MINS", val: timeLeft.m },
-                      { label: "SECS", val: timeLeft.s },
-                    ].map((u, i) => (
-                      <div key={i} className="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl text-center border border-zinc-100 dark:border-zinc-700/30">
-                        <p className="text-2xl md:text-3xl font-black italic leading-none tracking-tighter">{u.val.toString().padStart(2, "0")}</p>
-                        <p className="text-[7px] font-black text-zinc-400 mt-2 tracking-widest">{u.label}</p>
+                      { label: "HRS", val: timeLeft.h },
+                      { label: "MIN", val: timeLeft.m },
+                      { label: "SEC", val: timeLeft.s },
+                    ].map((unit, i) => (
+                      <div key={i} className="flex flex-col items-center p-3 rounded-2xl bg-zinc-50 dark:bg-black/40 border border-zinc-100 dark:border-white/5">
+                        <span className="text-2xl font-black italic tracking-tighter tabular-nums">{unit.val?.toString().padStart(2, "0")}</span>
+                        <span className="text-[7px] font-black text-zinc-500 tracking-[0.2em]">{unit.label}</span>
                       </div>
                     ))}
                   </div>
+                ) : (
+                  <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-center text-red-500 font-bold uppercase tracking-widest text-[10px]">
+                     BATCH CLOSED
+                  </div>
                 )}
-
-                <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800">
-                   <div className="flex items-center justify-between">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
-                        {campaign?.urgency || "ALOCATED_SLOTS_AVAILABLE"}
-                      </p>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Beta_v.4</span>
-                   </div>
-                </div>
               </div>
 
-              {/* Purchase Section */}
-              <div className="space-y-8">
+              {/* Selection Area */}
+              <div className="space-y-8 p-1">
                 <SizeSelector
-                  sizes={campaign?.sizes || product.sizes || []}
+                  sizes={campaignSizes}
                   selectedSize={selectedSize}
                   onSelectSize={setSelectedSize}
                 />
-                
-                <div className="pt-2">
+
+                <div className="grid grid-cols-1 gap-4">
                   <AddToCart
                     onAdd={handleAddToCart}
                     onBuyNow={handleBuyNow}
-                    disabled={!selectedSize}
-                    price={product.price}
+                    disabled={!selectedSize || isExpired}
+                    price={campaignPrice}
+                    isExpired={isExpired}
                   />
                 </div>
+
               </div>
 
               {/* Metadata Details */}
               <div className="pt-12 border-t border-zinc-100 dark:border-zinc-900">
-                <ProductAccordion
-                  description={product.description}
-                  specifications={product.specifications}
-                />
+                {/* Campaign Accordion Override */}
+              <ProductAccordion
+                description={campaign?.description || product.description}
+                specifications={campaign?.details || product.specifications}
+              />
               </div>
 
               {/* Trust & Policy */}
-              <div className="grid grid-cols-2 gap-4">
-                 <div className="flex items-center gap-3 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
+              <div className="grid grid-cols-2 gap-4 text-center">
+                 <div className="flex items-center justify-center gap-3 p-4 rounded-3xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
                     <Shield size={16} className="text-zinc-400" />
-                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400">Authentic_Registry</span>
+                    <span className="text-[8px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 italic">Authentic Registry</span>
                  </div>
-                 <div className="flex items-center gap-3 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
+                 <div className="flex items-center justify-center gap-3 p-4 rounded-3xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
                     <Truck size={16} className="text-zinc-400" />
-                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400">Global_Fulfillment</span>
+                    <span className="text-[8px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 italic">Global Fulfillment</span>
                  </div>
               </div>
 
-            </div>
+            </motion.div>
           </div>
 
         </div>
@@ -378,7 +445,7 @@ function LoadingSequence() {
     <div className="min-h-screen bg-black flex flex-col items-center justify-center font-mono gap-6">
       <div className="w-16 h-16 border-2 border-fuchsia-500/20 border-t-fuchsia-500 rounded-full animate-spin" />
       <p className="text-[10px] text-fuchsia-500 font-black uppercase tracking-[0.5em] animate-pulse">
-        Syncing Vault...
+        Initializing...
       </p>
     </div>
   );
@@ -387,28 +454,48 @@ function LoadingSequence() {
 function NotFound({
   campaignStatus,
   productStatus,
+  productId,
+  errorMessage,
 }: {
   campaignStatus: boolean;
   productStatus: boolean;
+  productId?: string;
+  errorMessage?: string;
 }) {
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center font-mono gap-4">
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center font-mono gap-4 text-center px-4">
       <h1 className="text-4xl font-black uppercase italic tracking-tighter text-red-600">
-        404 // Archive Missing
+        404 // Item Not Found
       </h1>
-      <div className="text-[10px] text-zinc-500 uppercase tracking-widest space-y-1 text-center">
-        <p>Campaign Loaded: {campaignStatus ? "YES" : "NO"}</p>
-        <p>Product Linked: {productStatus ? "YES" : "NO"}</p>
-        <p className="mt-4 text-zinc-600 italic">
-          Please initialize campaign settings in Admin CMS
+      <div className="text-[10px] text-zinc-500 uppercase tracking-widest space-y-1">
+        <p>Campaign Status: {campaignStatus ? "ACTIVE" : "MISSING"}</p>
+        <p>Product Link: {productStatus ? "LINKED" : "UNLINKED"}</p>
+        {campaignStatus && (
+          <p className="mt-2 text-[8px] text-zinc-700">Ref ID: {productId || "EMPTY"}</p>
+        )}
+        {errorMessage && (
+          <p className="mt-2 text-[8px] text-red-500 font-mono italic uppercase bg-red-500/10 px-4 py-2 rounded-lg">Log: {errorMessage}</p>
+        )}
+        <p className="mt-8 text-zinc-600 italic">
+          Please initialize campaign settings in the Admin CMS to proceed.
         </p>
       </div>
-      <Link
-        href="/"
-        className="mt-8 px-6 py-3 border border-white/10 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all"
-      >
-        Return to Portal
-      </Link>
+
+      <div className="flex flex-col sm:flex-row gap-4 mt-12">
+        <Link
+          href="/"
+          className="px-8 py-4 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all text-center"
+        >
+          Return to Portal
+        </Link>
+        <Link
+          href="/admin/preorder"
+          className="px-8 py-4 bg-fuchsia-600 border border-fuchsia-500 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white hover:bg-fuchsia-700 transition-all text-center"
+        >
+          Configure in Admin CMS
+        </Link>
+      </div>
+
     </div>
   );
 }

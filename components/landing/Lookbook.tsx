@@ -10,10 +10,20 @@ export default function Lookbook({ theme = "dark", data }: { theme?: "dark" | "l
   
   const title = content.title || "The Dark Visions.";
   const subtitle = content.subtitle || "Every shadow tells a story of rebellion and refined silence. Architected for those who walk the void.";
+  const badge = content.badge || "Visual Manifesto";
+  const cta = content.cta_text || "Watch Film";
+  const videoUrl = content.video_url || "";
+  
   const images = content.images || [
     { url: "https://images.unsplash.com/photo-1544441893-675973e31985?q=80&w=800", caption: "" },
     { url: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=800", caption: "" }
   ];
+
+  const handleCtaClick = () => {
+    if (videoUrl) {
+      window.open(videoUrl, "_blank");
+    }
+  };
 
   return (
     <section
@@ -26,7 +36,7 @@ export default function Lookbook({ theme = "dark", data }: { theme?: "dark" | "l
           <div className="w-full lg:col-span-5 space-y-6 md:space-y-10">
             <div className="space-y-3 md:space-y-4 text-center lg:text-left">
               <span className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.4em] text-[var(--color-primary-accent)] italic block">
-                Manifesto Visual
+                {badge}
               </span>
               <h2 className="text-4xl md:text-8xl font-black italic uppercase tracking-tighter leading-[0.85] break-words max-w-full">
                 {title.split(" ").slice(0, 2).join(" ")} <br />
@@ -42,9 +52,10 @@ export default function Lookbook({ theme = "dark", data }: { theme?: "dark" | "l
 
             <div className="flex justify-center lg:justify-start">
               <button
+                onClick={handleCtaClick}
                 className="flex items-center gap-3 md:gap-4 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] border-b-2 border-zinc-200 dark:border-zinc-900 pb-2 hover:border-red-500 transition-colors duration-500 group"
               >
-                Watch Film{" "}
+                {cta}{" "}
                 <FiPlayCircle className="group-hover:scale-125 transition-transform" />
               </button>
             </div>

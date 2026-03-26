@@ -18,7 +18,9 @@ interface Product {
   created_at: string;
   is_high_demand?: boolean;
   sold_today?: number;
+  is_preorder?: boolean;
 }
+
 
 interface ProductCardProps {
   product: Product;
@@ -34,7 +36,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     if (!selectedSize) {
-      toast.error("Silakan pilih ukuran terlebih dahulu", {
+      toast.error("Please select a size first", {
         style: { background: '#000', color: '#fff', borderRadius: '2rem', fontSize: '10px', fontWeight: 'bold' }
       });
       return;
@@ -46,10 +48,11 @@ export default function ProductCard({ product }: ProductCardProps) {
       price: product.price,
       image: product.image_url,
       size: selectedSize,
-      quantity: 1
+      quantity: 1,
+      is_preorder: !!product.is_preorder,
     });
 
-    toast.success(`${product.name} [${selectedSize}] ditambahkan ke keranjang`, {
+    toast.success(`${product.name} [${selectedSize}] added to bag`, {
       style: {
         background: "#000",
         color: "#fff",

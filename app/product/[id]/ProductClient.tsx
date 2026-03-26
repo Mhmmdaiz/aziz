@@ -79,6 +79,7 @@ export default function ProductClient({ initialProduct, relatedProducts }: Produ
       image: product.image_url,
       size: selectedSize || "Default",
       quantity: 1,
+      is_preorder: !!product.is_preorder,
     });
   };
 
@@ -92,6 +93,7 @@ export default function ProductClient({ initialProduct, relatedProducts }: Produ
       image: product.image_url,
       size: selectedSize || "Default",
       quantity: 1,
+      is_preorder: !!product.is_preorder,
     };
 
     localStorage.setItem("checkout_items", JSON.stringify([checkoutItem]));

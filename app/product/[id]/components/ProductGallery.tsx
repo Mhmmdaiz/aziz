@@ -117,7 +117,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
         <div className="absolute top-4 left-4 flex flex-col gap-2 pointer-events-none">
           <div className="px-3 py-1.5 bg-red-600/90 text-white text-[10px] font-black uppercase tracking-widest backdrop-blur-md shadow-lg shadow-red-900/50 flex items-center gap-2">
             <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-            LIVE_VIEW
+            LIVE VIEW
           </div>
         </div>
 

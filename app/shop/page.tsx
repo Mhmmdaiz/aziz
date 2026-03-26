@@ -115,7 +115,7 @@ export default function ShopPage() {
               className="space-y-4"
             >
               <h1 className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter leading-[0.8]">
-                Katalog <br /> <span className="text-zinc-300 dark:text-zinc-800 italic">Produk.</span>
+                Product <br /> <span className="text-zinc-300 dark:text-zinc-800 italic">Catalog.</span>
               </h1>
               <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.4em]">
                 Registry of dark architectural artifacts
@@ -127,7 +127,7 @@ export default function ShopPage() {
                 <FiSearch className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-500" />
                 <input
                   type="text"
-                  placeholder="CARI ARTIFAK"
+                  placeholder="SEARCH ARTIFACTS"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-white/5 p-6 pl-16 rounded-full text-[10px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-red-600 transition-all text-zinc-900 dark:text-white backdrop-blur-xl"
@@ -162,26 +162,26 @@ export default function ShopPage() {
             <div className="flex flex-col sm:flex-row justify-between items-center bg-zinc-50/50 dark:bg-[#0A0A0A] p-4 md:p-6 rounded-[2rem] border border-zinc-200 dark:border-white/5 gap-4 backdrop-blur-md">
               <div className="flex items-center gap-4 md:gap-6 w-full sm:w-auto justify-between sm:justify-start">
                 <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase text-zinc-500">
-                  <FiGrid className="text-zinc-900 dark:text-white" /> Tampilan Grid
+                  <FiGrid className="text-zinc-900 dark:text-white" /> Grid View
                 </div>
                 <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 hidden sm:block" />
                 <p className="text-[9px] md:text-[10px] font-black uppercase text-zinc-500 italic">
-                  Menampilkan {displayedProducts.length} Produk
+                  Showing {displayedProducts.length} Products
                 </p>
               </div>
 
               <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start border-t sm:border-t-0 border-zinc-200 dark:border-white/5 pt-4 sm:pt-0">
                 <span className="text-[9px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">
-                  Urutkan:
+                  Sort By:
                 </span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
                   className="bg-transparent text-[9px] md:text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer text-zinc-900 dark:text-white hover:text-red-500 transition-colors"
                 >
-                  <option value="newest">Terbaru</option>
-                  <option value="price-low">Harga Terendah</option>
-                  <option value="price-high">Harga Tertinggi</option>
+                  <option value="newest">Newest First</option>
+                  <option value="price-low">Price: Low to High</option>
+                  <option value="price-high">Price: High to Low</option>
                 </select>
               </div>
             </div>

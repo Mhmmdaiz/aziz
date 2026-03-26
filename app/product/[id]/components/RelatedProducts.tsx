@@ -56,7 +56,7 @@ export function RelatedProducts({ products }: RelatedProductsProps) {
               {/* Overlay on Hover */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
                 <span className="text-[9px] font-black text-white tracking-widest uppercase italic">
-                  View_Artifact // 001
+                  View Artifact // 001
                 </span>
               </div>
             </div>

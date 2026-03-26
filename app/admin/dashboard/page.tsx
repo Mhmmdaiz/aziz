@@ -196,7 +196,7 @@ export default function AdminDashboard() {
         {/* STATS GRID */}
         <section className="grid grid-cols-1 sm:grid-cols-4 xl:grid-cols-4 gap-6">
           <StatsCard
-            label="Pendapatan"
+            label="Revenue"
             value={`Rp ${data.stats.revenue.toLocaleString()}`}
             icon={<FiDollarSign />}
             trend="+12.5%"
@@ -204,7 +204,7 @@ export default function AdminDashboard() {
             delay={0.1}
           />
           <StatsCard
-            label="Pesanan"
+            label="Orders"
             value={data.stats.orders}
             icon={<FiActivity />}
             trend="+8"
@@ -212,17 +212,17 @@ export default function AdminDashboard() {
             delay={0.2}
           />
           <StatsCard
-            label="Jumlah Unit"
+            label="Total Units"
             value={data.stats.products}
             icon={<FiBox />}
             color="text-orange-500"
             delay={0.3}
           />
           <StatsCard
-            label="Anggota"
+            label="Pending"
             value={data.stats.pending}
             icon={<FiZap />}
-            trend="Needs_Review"
+            trend="Needs Review"
             color="text-purple-500"
             delay={0.4}
           />
@@ -250,7 +250,7 @@ export default function AdminDashboard() {
 
         {/* FOOTER METADATA */}
         <footer className="pt-20 text-[8px] font-black uppercase tracking-[0.5em] text-zinc-300 dark:text-zinc-800 flex justify-between">
-          <span>Encrypted_Terminal // DMNM v2.1</span>
+          <span>Encrypted Terminal // DMNM v2.1</span>
           <span>© 2026 AZZ</span>
         </footer>
       </div>
@@ -264,7 +264,7 @@ function LoadingSkeleton() {
       <div className="text-center">
         <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent animate-spin rounded-full mb-6 mx-auto" />
         <p className="font-black italic uppercase tracking-[0.5em] text-xs text-zinc-400 animate-pulse">
-          Initializing_Control_Center...
+          Initializing Control Center...
         </p>
       </div>
     </div>

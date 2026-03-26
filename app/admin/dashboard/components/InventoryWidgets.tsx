@@ -27,7 +27,7 @@ export default function InventoryWidgets({
 
         <div className="flex items-center justify-between mb-8">
           <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-red-500">
-            Priority_Shortage
+            Priority Shortage
           </h4>
           <FiAlertCircle className="text-red-500" />
         </div>
@@ -48,7 +48,7 @@ export default function InventoryWidgets({
                     {item.name}
                   </p>
                   <p className="text-[9px] font-bold text-red-500 uppercase">
-                    STOCK_CRITICAL: {item.stock}
+                    STOCK CRITICAL: {item.stock}
                   </p>
                 </div>
                 <div className="h-1.5 w-16 bg-zinc-100 dark:bg-zinc-900 rounded-full overflow-hidden shadow-inner">
@@ -64,7 +64,7 @@ export default function InventoryWidgets({
             ))
           ) : (
             <p className="text-[9px] font-black uppercase tracking-widest text-zinc-600 italic">
-              No_Shortage_Detected
+              No Shortage Detected
             </p>
           )}
         </div>
@@ -98,7 +98,7 @@ export default function InventoryWidgets({
                     {item.name}
                   </p>
                   <p className="text-[9px] font-bold text-zinc-400 uppercase">
-                    UNITS_DISPATCHED: {item.total_sold}
+                    UNITS DISPATCHED: {item.total_sold}
                   </p>
                 </div>
                 <div className="text-[10px] font-black italic text-zinc-300">
@@ -108,7 +108,7 @@ export default function InventoryWidgets({
             ))
           ) : (
             <p className="text-[9px] font-black uppercase tracking-widest text-zinc-300 italic">
-              Data_Insufficiency
+              Data Insufficiency
             </p>
           )}
         </div>

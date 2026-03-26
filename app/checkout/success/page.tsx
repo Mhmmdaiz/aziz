@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { FiCheckCircle, FiArrowRight, FiPackage, FiZap } from "react-icons/fi";
 import confetti from "canvas-confetti";
+import { supabase } from "@/utils/supabase/client";
+
 
 function SuccessContent() {
   const searchParams = useSearchParams();
@@ -34,6 +36,28 @@ function SuccessContent() {
     return () => clearInterval(interval);
   }, []);
 
+  const [status, setStatus] = useState<string | null>(null);
+  const [paymentLink, setPaymentLink] = useState<string | null>(null);
+  const [loadingStatus, setLoadingStatus] = useState(true);
+
+  useEffect(() => {
+    const fetchStatus = async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("status, payment_payload")
+        .eq("order_id", orderId)
+        .single();
+      
+      if (!error && data) {
+        setStatus(data.status);
+        setPaymentLink(data.payment_payload);
+      }
+      setLoadingStatus(false);
+    };
+
+    if (orderId) fetchStatus();
+  }, [orderId]);
+
   return (
     <main className="min-h-screen bg-white dark:bg-[#030303] text-black dark:text-white flex flex-col items-center justify-center px-6 py-20 font-mono overflow-hidden transition-colors duration-500">
       {/* Noise Texture */}
@@ -47,9 +71,9 @@ function SuccessContent() {
           initial={{ scale: 0, rotate: -20 }}
           animate={{ scale: 1, rotate: 0 }}
           transition={{ type: "spring", damping: 12 }}
-          className="inline-flex items-center gap-3 px-6 py-2 bg-emerald-500 text-white rounded-full text-[10px] font-black uppercase tracking-[0.3em] shadow-2xl shadow-emerald-500/20"
+          className={`inline-flex items-center gap-3 px-6 py-2 ${status === 'paid' ? 'bg-emerald-500 shadow-emerald-500/20' : 'bg-amber-500 shadow-amber-500/20'} text-white rounded-full text-[10px] font-black uppercase tracking-[0.3em] shadow-2xl`}
         >
-          <FiZap className="animate-pulse" /> Transaksi Berhasil
+          <FiZap className="animate-pulse" /> {status === 'paid' ? 'Transaction Successful' : 'Order Secured'}
         </motion.div>
 
         {/* Hero Text */}
@@ -67,7 +91,7 @@ function SuccessContent() {
             transition={{ delay: 0.4 }}
             className="text-[11px] md:text-xs font-black uppercase tracking-[0.5em] text-zinc-500 max-w-lg mx-auto leading-relaxed"
           >
-            Artifak Anda telah diamankan dalam garis waktu ini. Logistik sedang menyiapkan pengiriman.
+            Your items have been secured. {status === 'paid' ? 'We are now preparing them for shipment.' : 'Please complete your payment to process the shipment.'}
           </motion.p>
         </div>
 
@@ -80,33 +104,51 @@ function SuccessContent() {
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
             <div className="space-y-1">
-              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Order_ID</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Order ID</p>
               <p className="text-xl font-black italic text-red-600">{orderId}</p>
             </div>
             <div className="space-y-1">
               <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Status</p>
-              <div className="flex items-center gap-2 text-emerald-500 font-black italic">
-                <FiCheckCircle /> PAID & VERIFIED
+              <div className={`flex items-center gap-2 ${status === 'paid' ? 'text-emerald-500' : 'text-amber-500'} font-black italic`}>
+                {loadingStatus ? (
+                   <span className="animate-pulse opacity-50">VERIFYING STATUS...</span>
+                ) : (
+                  <>
+                    <FiCheckCircle className={status === 'paid' ? 'text-emerald-500' : 'text-amber-500 animate-pulse'} /> 
+                    {status === 'paid' ? 'PAID & VERIFIED' : 'AWAITING PAYMENT'}
+                  </>
+                )}
               </div>
             </div>
           </div>
 
+
           <div className="pt-8 border-t border-zinc-200 dark:border-white/5">
              <div className="flex flex-col md:flex-row gap-4">
+                {status !== 'paid' && paymentLink && (
+                  <a 
+                    href={paymentLink}
+                    className="flex-1 px-8 py-5 bg-red-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all flex items-center justify-center gap-3 shadow-xl shadow-red-500/20"
+                  >
+                    <FiZap className="animate-bounce" /> PAY NOW
+                  </a>
+                )}
                 <Link 
                   href="/orders" 
-                  className="flex-1 px-8 py-5 bg-black dark:bg-white text-white dark:text-black rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-red-600 dark:hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3"
+                  className="flex-1 px-8 py-5 bg-black dark:bg-white text-white dark:text-black rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all flex items-center justify-center gap-3"
                 >
-                  <FiPackage /> Pantau Pengiriman <FiArrowRight />
+                  <FiPackage /> Track Order <FiArrowRight />
                 </Link>
                 <Link 
                   href="/shop" 
                   className="flex-1 px-8 py-5 border-2 border-zinc-200 dark:border-zinc-800 text-zinc-500 rounded-full text-[10px] font-black uppercase tracking-widest hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white transition-all flex items-center justify-center"
                 >
-                  Kembali Belanja
+                  Continue Shopping
                 </Link>
              </div>
           </div>
+
+
         </motion.div>
 
         {/* Footer Credit */}

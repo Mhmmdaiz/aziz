@@ -21,10 +21,10 @@ export function SizeSelector({
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <label className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 flex items-center gap-2 transition-colors duration-500">
-          Pilih Ukuran
+          Select Size
         </label>
         <button className="text-[9px] font-bold text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white uppercase tracking-widest border-b border-zinc-300 dark:border-zinc-700 pb-0.5 transition-all flex items-center gap-1">
-          <Info size={10} /> Panduan Ukuran
+          <Info size={10} /> Size Guide
         </button>
       </div>
 
@@ -59,7 +59,7 @@ export function SizeSelector({
       
       {!selectedSize && (
         <p className="text-[10px] text-red-500 font-mono italic animate-pulse">
-          * Menunggu pilihan ukuran...
+          * Awaiting size selection...
         </p>
       )}
     </div>

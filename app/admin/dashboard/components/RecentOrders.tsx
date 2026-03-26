@@ -19,10 +19,10 @@ export default function RecentOrders({ orders }: RecentOrdersProps) {
       <div className="p-5 md:p-8 border-b border-zinc-100 dark:border-zinc-900 flex justify-between items-center bg-zinc-50 dark:bg-zinc-900/50">
         <div>
           <h3 className="text-xs md:text-sm font-black italic uppercase tracking-[0.2em] text-zinc-900 dark:text-white">
-            Transaksi Baru
+            Recent Transactions
           </h3>
           <p className="text-[7px] md:text-[8px] font-bold text-zinc-400 uppercase tracking-[0.3em] mt-1">
-            Registry_Log // Live_Feed
+            Registry Log // Live Feed
           </p>
         </div>
         <FiClock className="animate-pulse text-blue-500 text-sm" />
@@ -54,7 +54,7 @@ export default function RecentOrders({ orders }: RecentOrdersProps) {
               <div className="flex justify-between items-end">
                 <div>
                   <p className="text-[11px] font-black uppercase italic mb-1">
-                    {order.profiles?.full_name || "Unknown_Entity"}
+                    {order.profiles?.full_name || "Unknown Entity"}
                   </p>
                   <p className="text-[8px] text-zinc-400 font-bold uppercase tracking-wider">
                     {new Date(order.created_at).toLocaleDateString("id-ID")}
@@ -70,7 +70,7 @@ export default function RecentOrders({ orders }: RecentOrdersProps) {
           ))
         ) : (
           <div className="p-10 text-center italic font-black uppercase text-[10px] text-zinc-300 tracking-widest">
-            Empty_Registry_Set
+            Empty Registry Set
           </div>
         )}
       </div>
@@ -80,7 +80,7 @@ export default function RecentOrders({ orders }: RecentOrdersProps) {
         <table className="w-full text-left">
           <thead>
             <tr className="text-[9px] font-black uppercase tracking-[0.3em] bg-zinc-50/50 dark:bg-zinc-900/20 text-zinc-400 dark:text-zinc-600 border-b border-zinc-100 dark:border-zinc-900">
-              <th className="p-6">Manifest_ID</th>
+              <th className="p-6">Manifest ID</th>
               <th className="p-6">Identity</th>
               <th className="p-6">Status</th>
               <th className="p-6 text-right">Valuation</th>

@@ -8,10 +8,10 @@ import { useSettings } from "@/components/providers/SettingsProvider";
 export default function FAQSection({ theme = "dark" }: { theme?: "dark" | "light" }) {
   const { settings } = useSettings();
   const faqs: { q: string; a: string }[] = settings?.landing_content?.faqs || [
-    { q: "Berapa lama waktu pengiriman?", a: "Estimasi pengiriman standar 2–4 hari kerja setelah pesanan dikonfirmasi." },
-    { q: "Apakah ukuran bisa dikustomisasi?", a: "Untuk produk pre-order tertentu, ukuran dapat disesuaikan. Cek halaman pre-order untuk info lebih lanjut." },
-    { q: "Bagaimana cara melacak pesanan saya?", a: "Setelah pesanan diproses, kami akan mengirimkan nomor resi melalui email atau WhatsApp." },
-    { q: "Apakah ada kebijakan pengembalian?", a: "Kami menerima pengembalian dalam 7 hari jika produk cacat atau tidak sesuai pesanan." },
+    { q: "How long does shipping take?", a: "Standard shipping takes 2–4 business days after the order is confirmed." },
+    { q: "Can sizes be customized?", a: "For certain pre-order products, sizes can be adjusted. Check the product page for more information." },
+    { q: "How do I track my order?", a: "Once the order is processed, we will send a tracking number via email or WhatsApp." },
+    { q: "Is there a return policy?", a: "We accept returns within 7 days if the product is defective or does not match the order." },
   ];
 
   const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -30,7 +30,7 @@ export default function FAQSection({ theme = "dark" }: { theme?: "dark" | "light
           </span>
         </div>
         <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-none mb-14">
-          PERTANYAAN<br />UMUM.
+          FREQUENTLY ASKED<br />QUESTIONS.
         </h2>
 
         <div className="space-y-3">

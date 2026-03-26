@@ -29,7 +29,7 @@ export default function FilterSidebar({
        <section className="space-y-6">
           <div className="flex items-center gap-3">
              <span className="text-lg font-black italic opacity-20">01</span>
-             <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">Kategori Warna</h3>
+             <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">Product Categories</h3>
           </div>
           <div className="space-y-2">
              {CATEGORIES.map((cat) => (
@@ -53,7 +53,7 @@ export default function FilterSidebar({
        <section className="space-y-6">
           <div className="flex items-center gap-3">
              <span className="text-lg font-black italic opacity-20">02</span>
-             <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">Rentang Harga</h3>
+             <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">Price Range</h3>
           </div>
           <div className="space-y-4 px-2">
              <input 
@@ -67,7 +67,7 @@ export default function FilterSidebar({
              />
              <div className="flex justify-between items-center text-[10px] font-black text-zinc-500 uppercase tracking-widest">
                 <span>Rp 0</span>
-                <span className="text-zinc-900 dark:text-white">Di bawah Rp {priceRange[1].toLocaleString()}</span>
+                <span className="text-zinc-900 dark:text-white">Under Rp {priceRange[1].toLocaleString()}</span>
              </div>
           </div>
        </section>
@@ -76,7 +76,7 @@ export default function FilterSidebar({
        <section className="space-y-6">
           <div className="flex items-center gap-3">
              <span className="text-lg font-black italic opacity-20">03</span>
-             <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">Pilihan Ukuran</h3>
+             <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">Size Options</h3>
           </div>
           <div className="grid grid-cols-2 gap-3">
              {SIZES.map((size) => (
@@ -103,7 +103,7 @@ export default function FilterSidebar({
          }}
          className="w-full py-4 rounded-full border border-zinc-800 text-[9px] font-black uppercase tracking-[0.3em] text-zinc-700 hover:text-red-500 hover:border-red-500 transition-all flex items-center justify-center gap-2"
        >
-         <FiX /> Reset Filter
+         <FiX /> Reset Filters
        </button>
     </aside>
   );

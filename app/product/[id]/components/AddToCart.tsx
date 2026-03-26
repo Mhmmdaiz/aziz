@@ -10,26 +10,30 @@ interface AddToCartProps {
   disabled: boolean;
   price: number;
   isSoldOut?: boolean;
+  isExpired?: boolean;
 }
 
-export function AddToCart({ onAdd, onBuyNow, disabled, price, isSoldOut }: AddToCartProps) {
+export function AddToCart({ onAdd, onBuyNow, disabled, price, isSoldOut, isExpired }: AddToCartProps) {
   const [loadingCart, setLoadingCart] = useState(false);
   const [loadingBuy, setLoadingBuy] = useState(false);
 
   const showError = () => {
+
     Swal.fire({
-      title: "Akses Ditolak",
-      text: "Silakan pilih ukuran terlebih dahulu sebelum melanjutkan.",
-      icon: "error",
-      background: "#FBFBFD", // Will be overridden in actual DOM via theme but setting base
+      title: isExpired ? "Batch Expired" : "Selection Required",
+      text: isExpired 
+        ? "We're sorry, the pre-order period for this batch has closed. Stay tuned for the next drop!" 
+        : "Please select a size before proceeding to checkout.",
+      icon: isExpired ? "warning" : "error",
+      background: "#FBFBFD", 
       color: "#1D1D1F",
-      confirmButtonColor: "#dc2626",
-      customClass: { popup: "rounded-[1rem] font-mono border border-red-200 dark:border-red-900 bg-white dark:bg-[#111] text-zinc-900 dark:text-white" }
+      confirmButtonColor: isExpired ? "#3F3F46" : "#dc2626",
+      customClass: { popup: "rounded-[1rem] font-mono border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#111] text-zinc-900 dark:text-white" }
     });
   };
 
   const handleCartClick = async () => {
-    if (disabled || isSoldOut) return showError();
+    if (disabled || isSoldOut || isExpired) return showError();
     setLoadingCart(true);
     await new Promise((r) => setTimeout(r, 600));
     onAdd();
@@ -37,7 +41,7 @@ export function AddToCart({ onAdd, onBuyNow, disabled, price, isSoldOut }: AddTo
   };
 
   const handleBuyClick = async () => {
-    if (disabled || isSoldOut) return showError();
+    if (disabled || isSoldOut || isExpired) return showError();
     setLoadingBuy(true);
     await new Promise((r) => setTimeout(r, 600));
     onBuyNow();
@@ -50,7 +54,7 @@ export function AddToCart({ onAdd, onBuyNow, disabled, price, isSoldOut }: AddTo
       <button
         onClick={handleCartClick}
         className={`relative flex-1 py-5 flex items-center justify-center gap-3 text-[11px] font-black uppercase tracking-[0.3em] transition-all duration-500 overflow-hidden group rounded-full
-          ${(disabled || isSoldOut)
+          ${(disabled || isSoldOut || isExpired)
             ? "bg-zinc-100 dark:bg-[#111] text-zinc-400 dark:text-zinc-700 cursor-not-allowed border border-zinc-200 dark:border-white/5" 
             : "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-white/10 shadow-sm"
           }
@@ -59,10 +63,10 @@ export function AddToCart({ onAdd, onBuyNow, disabled, price, isSoldOut }: AddTo
         {loadingCart ? (
           <Loader2 size={18} className="animate-spin" />
         ) : (
-          <ShoppingBag size={18} className={(disabled || isSoldOut) ? "opacity-30" : ""} />
+          <ShoppingBag size={18} className={(disabled || isSoldOut || isExpired) ? "opacity-30" : ""} />
         )}
         <span className="relative z-10">
-          {loadingCart ? "LOADING_VAULT..." : isSoldOut ? "SOLD OUT" : disabled ? "SELECT_SIZE" : "ADD_TO_BAG"}
+          {loadingCart ? "LOADING..." : isExpired ? "BATCH EXPIRED" : isSoldOut ? "SOLD OUT" : disabled ? "SELECT SIZE" : "ADD TO BAG"}
         </span>
       </button>
 
@@ -70,7 +74,7 @@ export function AddToCart({ onAdd, onBuyNow, disabled, price, isSoldOut }: AddTo
       <button
         onClick={handleBuyClick}
         className={`relative flex-1 py-5 flex items-center justify-center gap-3 text-[11px] font-black uppercase tracking-[0.3em] transition-all duration-500 overflow-hidden group rounded-full
-          ${(disabled || isSoldOut)
+          ${(disabled || isSoldOut || isExpired)
             ? "bg-zinc-100 dark:bg-[#111] text-zinc-400 dark:text-zinc-700 cursor-not-allowed border border-zinc-200 dark:border-white/5" 
             : "bg-red-600 text-white hover:bg-red-500 border border-red-500 shadow-xl"
           }
@@ -80,15 +84,15 @@ export function AddToCart({ onAdd, onBuyNow, disabled, price, isSoldOut }: AddTo
         
         {loadingBuy ? (
           <Loader2 size={18} className="animate-spin" />
-        ) : isSoldOut ? null : (
+        ) : (isSoldOut || isExpired) ? null : (
           <span className="font-mono font-bold text-lg">⚡</span>
         )}
         
         <span className="relative z-10">
-          {loadingBuy ? "EXECUTING..." : isSoldOut ? "SOLD OUT" : disabled ? "SELECT_SIZE" : "BUY_INSTANT"}
+          {loadingBuy ? "PROCESSING..." : isExpired ? "CLOSED" : isSoldOut ? "SOLD OUT" : disabled ? "SELECT SIZE" : "BUY NOW"}
         </span>
 
-        {!(disabled || isSoldOut) && (
+        {!(disabled || isSoldOut || isExpired) && (
           <div className="absolute top-0 right-0 p-1 opacity-20">
              <div className="w-1 h-1 bg-white rounded-full" />
           </div>
