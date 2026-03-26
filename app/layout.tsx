@@ -8,6 +8,7 @@ import { CartProvider } from "@/components/providers/CartProvider";
 import Script from "next/script";
 import DynamicStyle from "@/components/DynamicStyle";
 import Footer from "@/components/landing/Footer";
+import { getBaseUrl } from "@/utils/url";
 
 export const metadata = {
   title: {
@@ -15,7 +16,7 @@ export const metadata = {
     template: "%s | DAEMONIUM"
   },
   description: "Non-conformist streetwear. Architectural precision meets brutalist aesthetics. Engineered for the elite by CHCKT.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://chckt-store.vercel.app'),
+  metadataBase: new URL(getBaseUrl()),
   openGraph: {
     title: "DAEMONIUM | Art of Streetwear",
     description: "Architectural precision meets brutalist aesthetics. Engineered for the elite.",
