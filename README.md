@@ -35,7 +35,7 @@ Designed to blend cyber aesthetics, smooth animation, and premium digital storyt
 Clone the repository:
 
 ```bash
-git clone [https://github.com/yourusername/daemonium.git](https://github.com/muhammadaiznuraziz/daemonium)
+git clone (https://github.com/muhammadaiznuraziz/daemonium)
 ```
 
 Install dependencies:
